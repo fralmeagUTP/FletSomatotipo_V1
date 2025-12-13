@@ -89,3 +89,21 @@ def historial_vista(identi: str, db: Session = Depends(get_db)):
     Obtiene el historial de mediciones usando la VISTA CDRVistaValoracionCorporal.
     """
     return db.query(VistaValoracionCorporal).filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi).all()
+
+@router.delete("/{id_somatotipo}")
+def delete_somatotipo(id_somatotipo: int, db: Session = Depends(get_db)):
+    """
+    Elimina un registro de somatotipo y todos sus detalles asociados.
+    """
+    somatotipo = db.query(Somatotipo).filter(Somatotipo.id_Somatotipo == id_somatotipo).first()
+    if not somatotipo:
+        raise HTTPException(status_code=404, detail="Somatotipo no encontrado")
+    
+    # Details should be deleted via Cascade or manually if relationship not set to cascade.
+    # To be safe, we can manually delete details first.
+    db.query(SomatotipoDetalle).filter(SomatotipoDetalle.id_Somatotipo == id_somatotipo).delete()
+    
+    db.delete(somatotipo)
+    db.commit()
+    
+    return {"message": "Somatotipo eliminado con éxito"}

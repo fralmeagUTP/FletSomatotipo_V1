@@ -3,6 +3,7 @@ import requests
 from views.dashboard import DashboardView
 
 API_URL = "http://127.0.0.1:8085"
+APP_VERSION = "v1.1.0"
 
 def main(page: ft.Page):
     """
@@ -133,6 +134,7 @@ def main(page: ft.Page):
                 ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color="#2c3e50", text_align=ft.TextAlign.CENTER),
                 # Subtitle
                 ft.Text("Aplicación de somatotipo", size=18, color=SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
+                ft.Text(f"Versión: {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER),
                 
                 ft.Container(height=20), 
                 

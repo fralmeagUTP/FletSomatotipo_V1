@@ -38,7 +38,32 @@ def ValoracionView(page: ft.Page):
         on_submit=lambda e: search_athlete(e.control.value)
     )
     
-    athlete_info_text = ft.Text("Ningún deportista seleccionado", color="red")
+    athlete_info_text = ft.Text("Ningún deportista seleccionado", color="red") # Restored
+
+    # Athlete Info Containers
+    info_nombre = ft.Text("-", weight="bold", size=16)
+    info_edad = ft.Text("-")
+    info_ciudad = ft.Text("-")
+    info_institucion = ft.Text("-")
+    info_email = ft.Text("-")
+
+    athlete_info_container = ft.Column([
+        ft.Row([ft.Text("Nombre:", weight="bold"), info_nombre]),
+        ft.Row([ft.Text("Edad:", weight="bold"), info_edad]),
+        ft.Row([ft.Text("Ciudad:", weight="bold"), info_ciudad, ft.Text(" | Institución:", weight="bold"), info_institucion]),
+        ft.Row([ft.Text("Email:", weight="bold"), info_email]),
+    ], spacing=2, visible=False)
+
+    def calculate_age(birth_date_str, measure_date_str):
+        if not birth_date_str:
+            return "Sin fecha nacimiento"
+        try:
+            birth = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+            measure = datetime.strptime(measure_date_str, '%Y-%m-%d').date()
+            age = measure.year - birth.year - ((measure.month, measure.day) < (birth.month, birth.day))
+            return f"{age} años"
+        except Exception as e:
+            return "Error Calc."
 
     def search_athlete(query):
         nonlocal selected_athlete_id
@@ -46,25 +71,40 @@ def ValoracionView(page: ft.Page):
             return
         
         try:
-            # Simple search logic: Get all and filter locally or use backend search if available
-            # Ideally backend should support search. using same endpoint as deportistas view
             resp = requests.get(f"{API_URL}/deportistas/", params={"search": query})
             if resp.status_code == 200:
                 data = resp.json()
                 if data:
-                    # Select the first match for simplicity or show a dialog (simplified here to first match)
+                    # Select the first match
                     first_match = data[0]
                     selected_athlete_id = first_match["IDENTI_DEPORTISTA"]
-                    athlete_info_text.value = f"Seleccionado: {first_match['NOMBRE_DEPORTISTA']} ({selected_athlete_id})"
-                    athlete_info_text.color = "green"
+                    
+                    # Update Info
+                    info_nombre.value = f"{first_match['NOMBRE_DEPORTISTA']} ({selected_athlete_id})"
+                    
+                    # Age Calc
+                    fecha_nac = first_match.get("FECHA_NAC")
+                    info_edad.value = calculate_age(fecha_nac, fecha_medida.value)
+                    
+                    # Other Info
+                    info_ciudad.value = first_match.get("CIUDAD_RESI") or "N/A"
+                    info_institucion.value = first_match.get("NOMBRE_INSTITU") or "N/A"
+                    info_email.value = first_match.get("E_MAIL") or "N/A"
+                    
+                    athlete_info_container.visible = True
+                    athlete_info_text.visible = False # Hide the old simple text
                 else:
                     selected_athlete_id = None
                     athlete_info_text.value = "No se encontraron deportistas."
                     athlete_info_text.color = "red"
+                    athlete_info_text.visible = True
+                    athlete_info_container.visible = False
             else:
                 athlete_info_text.value = "Error al buscar."
+                athlete_info_text.visible = True
         except Exception as e:
             athlete_info_text.value = f"Error: {e}"
+            athlete_info_text.visible = True
         page.update()
 
     # 2. Date
@@ -221,7 +261,11 @@ def ValoracionView(page: ft.Page):
             if resp.status_code == 200:
                 page.snack_bar = ft.SnackBar(ft.Text("Valoración guardada exitosamente!"))
                 page.snack_bar.open = True
-                # Clean fields?
+                page.update()
+                # Redirect to Dashboard
+                import time
+                time.sleep(1) # Brief delay to see the message
+                go_back(e)
             else:
                 page.snack_bar = ft.SnackBar(ft.Text(f"Error: {resp.text}"))
                 page.snack_bar.open = True
@@ -260,9 +304,9 @@ def ValoracionView(page: ft.Page):
                         [
                             ft.Text("Datos del Deportista", size=18, weight="bold", color=PRIMARY_COLOR),
                             ft.ResponsiveRow([
-                                ft.Container(content=athlete_search, col={"xs": 12, "md": 6}),
-                                ft.Container(content=athlete_info_text, col={"xs": 12, "md": 6}, alignment=ft.alignment.center_left),
-                            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                                ft.Container(content=athlete_search, col={"xs": 12, "md": 5}),
+                                ft.Container(content=ft.Column([athlete_info_text, athlete_info_container]), col={"xs": 12, "md": 7}, alignment=ft.alignment.center_left),
+                            ], vertical_alignment=ft.CrossAxisAlignment.START),
                             
                             ft.Divider(),
                             

@@ -232,6 +232,46 @@ def HistorialView(page: ft.Page):
 
     history_list = ft.ListView(expand=True, spacing=10)
 
+    
+    def delete_somatotipo(sid):
+        def close_dlg(e):
+            page.dialog.open = False
+            page.update()
+
+        def confirm_delete(e):
+            try:
+                resp = requests.delete(f"{API_URL}/somatotipo/{sid}")
+                if resp.status_code == 200:
+                    page.snack_bar = ft.SnackBar(ft.Text("Registro eliminado correctamente"))
+                    page.snack_bar.open = True
+                    # Refresh list
+                    search_historial(search_field.value)
+                    # Clear details if deleted one was showing
+                    current_details_view.controls.clear()
+                    update_layout()
+                else:
+                    page.snack_bar = ft.SnackBar(ft.Text("Error al eliminar"))
+                    page.snack_bar.open = True
+            except Exception as ex:
+                print(ex)
+            finally:
+                page.dialog.open = False
+                page.update()
+
+        dlg = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirmar eliminación"),
+            content=ft.Text("¿Estás seguro de que deseas eliminar este registro y todos sus detalles?"),
+            actions=[
+                ft.TextButton("Sí, eliminar", on_click=confirm_delete),
+                ft.TextButton("Cancelar", on_click=close_dlg),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        page.dialog = dlg
+        dlg.open = True
+        page.update()
+
     def render_history_list(data):
         history_list.controls.clear()
         if not data:
@@ -258,10 +298,18 @@ def HistorialView(page: ft.Page):
             for sid, item in grouped.items():
                 history_list.controls.append(
                     ft.Container(
-                        content=ft.Column([
-                            ft.Text(f"Fecha: {item['FECHA_MEDIDA']}", weight="bold"),
-                            ft.Text(f"{item['NOMBRE_DEPORTISTA']}", size=12, no_wrap=True, color="#666666"),
-                        ]),
+                        content=ft.Row([
+                            ft.Column([
+                                ft.Text(f"Fecha: {item['FECHA_MEDIDA']}", weight="bold"),
+                                ft.Text(f"{item['NOMBRE_DEPORTISTA']}", size=12, no_wrap=True, color="#666666"),
+                            ], expand=True),
+                            ft.IconButton(
+                                ft.Icons.DELETE_OUTLINE, 
+                                icon_color="red", 
+                                tooltip="Eliminar Evaluación",
+                                on_click=lambda e, s_id=sid: delete_somatotipo(s_id)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                         padding=10,
                         bgcolor=ft.Colors.WHITE,
                         border_radius=8,

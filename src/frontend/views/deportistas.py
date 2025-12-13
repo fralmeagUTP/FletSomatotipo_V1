@@ -69,15 +69,16 @@ def DeportistasView(page: ft.Page):
     date_picker = ft.DatePicker(
         on_change=on_date_change,
         first_date=datetime(1900, 1, 1),
-        last_date=datetime.now(),
+        # last_date=datetime.now(), # Removed to prevent timezone/time issues blocking "today"
     )
     
     if date_picker not in page.overlay:
         page.overlay.append(date_picker)
+        page.update()
 
     fecha_nac_btn = ft.IconButton(
         icon=ft.Icons.CALENDAR_MONTH,
-        on_click=lambda _: date_picker.pick_date(),
+        on_click=lambda _: page.open(date_picker),
     )
     
     # Photo Upload Logic
