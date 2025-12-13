@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+.gemini/
+
+# Build
+build/
+dist/
+*.spec
+
+# Logs
+*.log
+
+# Sensitive/Local
+inspect_view.py

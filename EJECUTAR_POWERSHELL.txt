@@ -1,0 +1,34 @@
+INSTRUCCIONES PARA EJECUTAR LA APP DESDE POWERSHELL
+
+Para ejecutar la aplicación correctamente, necesitas correr tanto el Backend (servidor) como el Frontend (interfaz gráfica). Se recomienda usar dos terminales de PowerShell.
+
+__________________________________________________________________________________
+TERMINAL 1: BACKEND
+
+1. Abre PowerShell y navegue a la carpeta del proyecto:
+   cd "C:\Users\fralm\Desktop\FletSomatotipo_V1"
+
+2. Ejecuta el servidor Uvicorn usando el Python del entorno virtual:
+   .\venv\Scripts\python.exe -m uvicorn src.backend.main:app --port 8085 --reload
+
+   * Mantén esta ventana abierta. Deberías ver logs indicando que el servidor ha iniciado.
+__________________________________________________________________________________
+TERMINAL 2: FRONTEND
+
+1. Abre una NUEVA pestaña o ventana de PowerShell.
+
+2. Navega nuevamente a la carpeta del proyecto:
+   cd "C:\Users\fralm\Desktop\FletSomatotipo_V1"
+
+3. Ejecuta la aplicación Flet:
+   .\venv\Scripts\python.exe src/frontend/main.py
+
+__________________________________________________________________________________
+OPCIONAL: ACTIVAR ENTORNO VIRTUAL
+
+Si prefieres trabajar con el entorno activado, puedes usar:
+   .\venv\Scripts\Activate.ps1
+
+Y luego simplemente ejecutar:
+   uvicorn src.backend.main:app --port 8085 --reload
+   python src/frontend/main.py
