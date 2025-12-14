@@ -6,3 +6,4 @@ flet
 python-dotenv
 pydantic
 email-validator
+requests

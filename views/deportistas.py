@@ -3,7 +3,7 @@ import requests
 from datetime import datetime
 import os
 
-API_URL = "http://127.0.0.1:8085"
+API_URL = "http://192.168.1.105:8085"
 
 def DeportistasView(page: ft.Page):
     """

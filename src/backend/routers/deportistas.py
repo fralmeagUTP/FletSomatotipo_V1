@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import date
 from ..database import get_db
 from ..models import Deportista, TipoDocumento, Estrato, NivelEducativo
@@ -32,8 +32,7 @@ class DeportistaCreate(BaseModel):
 class DeportistaResponse(DeportistaCreate):
     FOTO_DEPORTISTA: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.get("/", response_model=List[DeportistaResponse])
 def listar_deportistas(search: Optional[str] = None, db: Session = Depends(get_db)):

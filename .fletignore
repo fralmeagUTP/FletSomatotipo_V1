@@ -1,0 +1,12 @@
+.git/
+.venv/
+venv/
+build/
+__pycache__/
+*.pyc
+.env
+*.txt
+*.zip
+.git
+.git/**
+**/.git/**

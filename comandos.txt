@@ -1,0 +1,30 @@
+* para instalar las dependencias:
+pip install -r requirements.txt
+
+* para crear el entorno virtual:
+python -m venv .venv
+
+* para activar el entorno virtual:
+.venv\Scripts\activate
+
+* para desactivar el entorno virtual:
+.venv\Scripts\deactivate
+
+***********************************************
+* para ejecutar el servidor:
+.\venv\Scripts\python.exe -m uvicorn src.backend.main:app --host 0.0.0.0 --port 8085 --reload
+
+* para ejecutar la aplicacion:
+.\venv\Scripts\python.exe src/frontend/main.py
+
+***********************************************
+* para crear el apk en flet:
+.\venv\Scripts\flet.exe build apk
+
+**********************************************
+
+* Para Sincronizar el repositorio (Pull):
+git pull origin main
+
+* Para Actualizar el repositorio (crear tags):
+git push origin main --tags

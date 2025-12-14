@@ -2,7 +2,7 @@ import flet as ft
 import requests
 from datetime import datetime
 
-API_URL = "http://127.0.0.1:8085"
+API_URL = "http://192.168.1.105:8085"
 
 def ValoracionView(page: ft.Page):
     """
