@@ -1,41 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
-from datetime import date
+from typing import Optional
 from ..database import get_db
-from ..models import Deportista, TipoDocumento, Estrato, NivelEducativo
+from ..auth_utils import get_current_user
+from ..schemas.deportistas import DeportistaCreate, DeportistaPage, DeportistaResponse
+from ..services import deportistas_service
 
-router = APIRouter(prefix="/deportistas", tags=["Deportistas"])
+router = APIRouter(prefix="/deportistas", tags=["Deportistas"], dependencies=[Depends(get_current_user)])
 
-# Pydantic models for request/response
-class DeportistaCreate(BaseModel):
-    IDENTI_DEPORTISTA: str
-    TIPO_IDENTI: int
-    NOMBRE_DEPORTISTA: str
-    SEXO_DEPORTISTA: str
-    FECHA_NAC: Optional[date] = None
-    CIUDAD_NAC: Optional[str] = None
-    DEPARTA_NAC: Optional[str] = None
-    PAIS_NAC: Optional[str] = None
-    DEPARTA_RESI: Optional[str] = None
-    CIUDAD_RESI: Optional[str] = None
-    DIRECC_RESI: Optional[str] = None
-    TELEFONO: Optional[str] = None
-    E_MAIL: Optional[str] = None
-    ID_ESTRATO: Optional[int] = None
-    ID_NIVEL: Optional[int] = None
-    NOMBRE_INSTITU: Optional[str] = None
-    OBSERVACIONES: Optional[str] = None
-
-class DeportistaResponse(DeportistaCreate):
-    FOTO_DEPORTISTA: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-@router.get("/", response_model=List[DeportistaResponse])
-def listar_deportistas(search: Optional[str] = None, db: Session = Depends(get_db)):
+@router.get("/", response_model=DeportistaPage)
+def listar_deportistas(
+    search: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50,
+    db: Session = Depends(get_db),
+):
     """
     Lista los deportistas registrados, opcionalmente filtrando por nombre o identificación.
 
@@ -46,16 +25,7 @@ def listar_deportistas(search: Optional[str] = None, db: Session = Depends(get_d
     Returns:
         List[DeportistaResponse]: Lista de deportistas (máximo 50).
     """
-    query = db.query(Deportista)
-    if search:
-        search_filter = f"%{search}%"
-        query = query.filter(
-            or_(
-                Deportista.NOMBRE_DEPORTISTA.ilike(search_filter),
-                Deportista.IDENTI_DEPORTISTA.ilike(search_filter)
-            )
-        )
-    return query.limit(50).all()
+    return deportistas_service.list_deportistas_page(db, search, page=max(page, 1), page_size=min(max(page_size, 1), 100))
 
 @router.get("/{identi}", response_model=DeportistaResponse)
 def obtener_deportista(identi: str, db: Session = Depends(get_db)):
@@ -72,10 +42,7 @@ def obtener_deportista(identi: str, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Si el deportista no existe.
     """
-    deportista = db.query(Deportista).filter(Deportista.IDENTI_DEPORTISTA == identi).first()
-    if not deportista:
-        raise HTTPException(status_code=404, detail="Deportista no encontrado")
-    return deportista
+    return deportistas_service.get_deportista_or_404(db, identi)
 
 @router.post("/", response_model=DeportistaResponse)
 def crear_deportista(d: DeportistaCreate, db: Session = Depends(get_db)):
@@ -92,15 +59,7 @@ def crear_deportista(d: DeportistaCreate, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Si ya existe un deportista con la misma identificación.
     """
-    existing = db.query(Deportista).filter(Deportista.IDENTI_DEPORTISTA == d.IDENTI_DEPORTISTA).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Ya existe un deportista con esa identificación")
-    
-    nuevo_deportista = Deportista(**d.dict())
-    db.add(nuevo_deportista)
-    db.commit()
-    db.refresh(nuevo_deportista)
-    return nuevo_deportista
+    return deportistas_service.create_deportista(db, d.model_dump())
 
 @router.put("/{identi}", response_model=DeportistaResponse)
 def actualizar_deportista(identi: str, d: DeportistaCreate, db: Session = Depends(get_db)):
@@ -118,16 +77,7 @@ def actualizar_deportista(identi: str, d: DeportistaCreate, db: Session = Depend
     Raises:
         HTTPException: Si el deportista no existe.
     """
-    deportista = db.query(Deportista).filter(Deportista.IDENTI_DEPORTISTA == identi).first()
-    if not deportista:
-        raise HTTPException(status_code=404, detail="Deportista no encontrado")
-    
-    for key, value in d.dict().items():
-        setattr(deportista, key, value)
-    
-    db.commit()
-    db.refresh(deportista)
-    return deportista
+    return deportistas_service.update_deportista(db, identi, d.model_dump())
 
 @router.delete("/{identi}")
 def eliminar_deportista(identi: str, db: Session = Depends(get_db)):
@@ -144,11 +94,4 @@ def eliminar_deportista(identi: str, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Si el deportista no existe.
     """
-    deportista = db.query(Deportista).filter(Deportista.IDENTI_DEPORTISTA == identi).first()
-    if not deportista:
-        raise HTTPException(status_code=404, detail="Deportista no encontrado")
-    
-    # Check for dependencies (Somatotipos) before delete could be added here
-    db.delete(deportista)
-    db.commit()
-    return {"message": "Deportista eliminado correctamente"}
+    return deportistas_service.delete_deportista(db, identi)

@@ -1,0 +1,52 @@
+import unittest
+from datetime import date, timedelta
+
+from pydantic import ValidationError
+
+from src.backend.schemas.deportistas import DeportistaCreate
+from src.backend.schemas.somatotipo import SomatotipoCreate
+
+
+class BackendSchemasTests(unittest.TestCase):
+    def test_deportista_schema_normalizes_empty_optional_email(self):
+        payload = {
+            "IDENTI_DEPORTISTA": " 123 ",
+            "TIPO_IDENTI": 1,
+            "NOMBRE_DEPORTISTA": " Ana ",
+            "SEXO_DEPORTISTA": "f",
+            "E_MAIL": "",
+        }
+
+        model = DeportistaCreate(**payload)
+
+        self.assertEqual(model.IDENTI_DEPORTISTA, "123")
+        self.assertEqual(model.NOMBRE_DEPORTISTA, "Ana")
+        self.assertEqual(model.SEXO_DEPORTISTA, "F")
+        self.assertIsNone(model.E_MAIL)
+
+    def test_deportista_schema_rejects_future_birth_date(self):
+        payload = {
+            "IDENTI_DEPORTISTA": "123",
+            "TIPO_IDENTI": 1,
+            "NOMBRE_DEPORTISTA": "Ana",
+            "SEXO_DEPORTISTA": "F",
+            "FECHA_NAC": date.today() + timedelta(days=1),
+        }
+
+        with self.assertRaises(ValidationError):
+            DeportistaCreate(**payload)
+
+    def test_somatotipo_schema_requires_at_least_one_detail(self):
+        payload = {
+            "IDENTI_DEPORTISTA": "123",
+            "LOGIN_USER": "admin",
+            "FECHA_MEDIDA": date.today(),
+            "DETALLES": [],
+        }
+
+        with self.assertRaises(ValidationError):
+            SomatotipoCreate(**payload)
+
+
+if __name__ == "__main__":
+    unittest.main()

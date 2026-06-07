@@ -1,8 +1,12 @@
 import flet as ft
-import requests
 from datetime import datetime
-
-API_URL = "http://192.168.1.105:8085"
+from app_config import show_snack
+from src.frontend.components import inline_status, page_header, section_title
+from src.frontend.api_client import ApiClient, ApiError
+from src.frontend.form_helpers import build_measurement_detail, build_somatotipo_payload
+from src.frontend.navigation import show_dashboard
+from src.frontend.table_builders import build_measurement_row
+from src.frontend import theme
 
 def ValoracionView(page: ft.Page):
     """
@@ -10,14 +14,17 @@ def ValoracionView(page: ft.Page):
     Permite registrar mediciones antropométricas.
     """
     # Colors
-    PRIMARY_COLOR = "#2e5cb8"
-    BG_COLOR = "#f5f7fb"
-    CARD_BG = ft.Colors.WHITE
-    TEXT_COLOR = "#333333"
+    PRIMARY_COLOR = theme.PRIMARY_COLOR
+    BG_COLOR = theme.BACKGROUND_COLOR
+    CARD_BG = theme.CARD_BACKGROUND
+    TEXT_COLOR = theme.TEXT_COLOR
+    SUCCESS_COLOR = ft.Colors.GREEN_700
+    MUTED_COLOR = theme.SUBTITLE_COLOR
 
     # State
     selected_athlete_id = None
     added_details_list = [] # List to store local details
+    api = ApiClient(page)
     
     details_table = ft.DataTable(
         columns=[
@@ -27,6 +34,19 @@ def ValoracionView(page: ft.Page):
             ft.DataColumn(ft.Text("Acciones")),
         ],
         rows=[]
+    )
+    progress_text = ft.Text("1. Selecciona deportista  |  2. Captura medidas  |  3. Guarda valoración", color=MUTED_COLOR, size=13)
+    summary_text = ft.Text("Sin mediciones agregadas", color=MUTED_COLOR, size=13)
+    empty_measurements = ft.Container(
+        content=ft.Row(
+            [
+                ft.Icon(ft.Icons.INFO_OUTLINE, color=PRIMARY_COLOR, size=20),
+                ft.Text("Agrega una medición para revisar el resumen antes de guardar.", color=MUTED_COLOR),
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        padding=12,
+        visible=True,
     )
     
     # --- Components ---
@@ -71,37 +91,38 @@ def ValoracionView(page: ft.Page):
             return
         
         try:
-            resp = requests.get(f"{API_URL}/deportistas/", params={"search": query})
-            if resp.status_code == 200:
-                data = resp.json()
-                if data:
-                    # Select the first match
-                    first_match = data[0]
-                    selected_athlete_id = first_match["IDENTI_DEPORTISTA"]
-                    
-                    # Update Info
-                    info_nombre.value = f"{first_match['NOMBRE_DEPORTISTA']} ({selected_athlete_id})"
-                    
-                    # Age Calc
-                    fecha_nac = first_match.get("FECHA_NAC")
-                    info_edad.value = calculate_age(fecha_nac, fecha_medida.value)
-                    
-                    # Other Info
-                    info_ciudad.value = first_match.get("CIUDAD_RESI") or "N/A"
-                    info_institucion.value = first_match.get("NOMBRE_INSTITU") or "N/A"
-                    info_email.value = first_match.get("E_MAIL") or "N/A"
-                    
-                    athlete_info_container.visible = True
-                    athlete_info_text.visible = False # Hide the old simple text
-                else:
-                    selected_athlete_id = None
-                    athlete_info_text.value = "No se encontraron deportistas."
-                    athlete_info_text.color = "red"
-                    athlete_info_text.visible = True
-                    athlete_info_container.visible = False
+            data = api.list_deportistas(query)
+            if data:
+                # Select the first match
+                first_match = data[0]
+                selected_athlete_id = first_match["IDENTI_DEPORTISTA"]
+
+                # Update Info
+                info_nombre.value = f"{first_match['NOMBRE_DEPORTISTA']} ({selected_athlete_id})"
+
+                # Age Calc
+                fecha_nac = first_match.get("FECHA_NAC")
+                info_edad.value = calculate_age(fecha_nac, fecha_medida.value)
+
+                # Other Info
+                info_ciudad.value = first_match.get("CIUDAD_RESI") or "N/A"
+                info_institucion.value = first_match.get("NOMBRE_INSTITU") or "N/A"
+                info_email.value = first_match.get("E_MAIL") or "N/A"
+
+                athlete_info_container.visible = True
+                athlete_info_text.visible = False # Hide the old simple text
+                update_progress()
             else:
-                athlete_info_text.value = "Error al buscar."
+                selected_athlete_id = None
+                athlete_info_text.value = "No se encontraron deportistas."
+                athlete_info_text.color = "red"
                 athlete_info_text.visible = True
+                athlete_info_container.visible = False
+                update_progress()
+        except ApiError as error:
+            show_snack(page, str(error))
+            athlete_info_text.value = "Error al buscar."
+            athlete_info_text.visible = True
         except Exception as e:
             athlete_info_text.value = f"Error: {e}"
             athlete_info_text.visible = True
@@ -149,160 +170,135 @@ def ValoracionView(page: ft.Page):
     perim_bicep = num_field("Bíceps Contraído", "cm")
     perim_pierna = num_field("Pierna", "cm")
 
+    measurement_fields = {
+        "estatura": estatura,
+        "peso": peso,
+        "p_tricipital": p_tricipital,
+        "p_subescapular": p_subescapular,
+        "p_suprailiaco": p_suprailiaco,
+        "p_abdominal": p_abdominal,
+        "p_muslo": p_muslo,
+        "p_pierna": p_pierna,
+        "d_muneca": d_muneca,
+        "d_femur": d_femur,
+        "d_codo": d_codo,
+        "c_carpo": c_carpo,
+        "perim_bicep": perim_bicep,
+        "perim_pierna": perim_pierna,
+    }
+
+    def update_progress():
+        if selected_athlete_id and added_details_list:
+            progress_text.value = "1. Deportista seleccionado  |  2. Medidas listas  |  3. Pendiente guardar"
+            progress_text.color = SUCCESS_COLOR
+        elif selected_athlete_id:
+            progress_text.value = "1. Deportista seleccionado  |  2. Captura medidas  |  3. Guarda valoración"
+            progress_text.color = PRIMARY_COLOR
+        else:
+            progress_text.value = "1. Selecciona deportista  |  2. Captura medidas  |  3. Guarda valoración"
+            progress_text.color = MUTED_COLOR
+
+    def render_measurements():
+        details_table.rows.clear()
+        empty_measurements.visible = not added_details_list
+        if not added_details_list:
+            summary_text.value = "Sin mediciones agregadas"
+        else:
+            last = added_details_list[-1]
+            summary_text.value = (
+                f"{len(added_details_list)} medicion(es) agregada(s). "
+                f"Ultima: {last['PESO_kg']} kg, {last['ESTA_USER_CM']} cm"
+            )
+        for detail in added_details_list:
+            details_table.rows.append(build_measurement_row(detail, remove_medicion))
+        update_progress()
+
     def add_medicion(e):
         try:
-            # Validate numeric fields
-            det = {
-                "ESTA_USER_CM": float(estatura.value or 0),
-                "PESO_kg": float(peso.value or 0),
-                "PLIEGUE_TRICIPITAL": float(p_tricipital.value or 0),
-                "PLIEGUE_SUBESCAPULAR": float(p_subescapular.value or 0),
-                "PLIEGUE_SUPRAILIACO": float(p_suprailiaco.value or 0),
-                "PLIEGUE_ABDOMINAL": float(p_abdominal.value or 0),
-                "PLIEGUE_MUSLO_ANT": float(p_muslo.value or 0),
-                "PLIEGUE_MEDIAL_PIERNA": float(p_pierna.value or 0),
-                "DIAMETRO_BIEPI_MUNECA": float(d_muneca.value or 0),
-                "DIAMETRO_BIEPI_FEMUR": float(d_femur.value or 0),
-                "DIAMETRO_CODO": float(d_codo.value or 0),
-                "PERIMETRO_BICED_CONTRAIDO": float(perim_bicep.value or 0),
-                "PERIMETRO_PIERNA": float(perim_pierna.value or 0),
-                "CIRCUNFERENCIA_CARPO": float(c_carpo.value or 0)
-            }
+            det = build_measurement_detail(measurement_fields)
             
-            # Add to list
             added_details_list.append(det)
-            
-            # Update Table
-            details_table.rows.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text(str(det["PESO_kg"]))),
-                        ft.DataCell(ft.Text(str(det["ESTA_USER_CM"]))),
-                        ft.DataCell(ft.Text(f"Tri:{det['PLIEGUE_TRICIPITAL']} Sub:{det['PLIEGUE_SUBESCAPULAR']}...")),
-                        ft.DataCell(
-                            ft.IconButton(
-                                ft.Icons.DELETE, 
-                                icon_color="red", 
-                                on_click=lambda e: remove_medicion(det)
-                            )
-                        ),
-                    ]
-                )
-            )
+            render_measurements()
             
             # Clear fields (Optional, but good UX)
             # estatura.value = "" 
             # peso.value = ""
             # ... clear others ...
             
-            page.snack_bar = ft.SnackBar(ft.Text("Medición agregada a la lista"))
-            page.snack_bar.open = True
+            show_snack(page, "Medición agregada a la lista")
             page.update()
 
-        except ValueError:
-            page.snack_bar = ft.SnackBar(ft.Text("Por favor verifique que todos los campos numéricos sean válidos"))
-            page.snack_bar.open = True
+        except ValueError as ex:
+            show_snack(page, str(ex))
             page.update()
 
     def remove_medicion(det):
         if det in added_details_list:
             added_details_list.remove(det)
-            # Rebuild rows to keep index sync simple or just clear/repopulate
-            details_table.rows.clear()
-            for d in added_details_list:
-                 details_table.rows.append(
-                    ft.DataRow(
-                        cells=[
-                            ft.DataCell(ft.Text(str(d["PESO_kg"]))),
-                            ft.DataCell(ft.Text(str(d["ESTA_USER_CM"]))),
-                            ft.DataCell(ft.Text(f"Tri:{d['PLIEGUE_TRICIPITAL']} Sub:{d['PLIEGUE_SUBESCAPULAR']}...")),
-                            ft.DataCell(
-                                ft.IconButton(
-                                    ft.Icons.DELETE, 
-                                    icon_color="red", 
-                                    on_click=lambda e, item=d: remove_medicion(item)
-                                )
-                            ),
-                        ]
-                    )
-                )
+            render_measurements()
             page.update()
 
 
     def save_valoracion(e):
         if not selected_athlete_id:
-            page.snack_bar = ft.SnackBar(ft.Text("Debe seleccionar un deportista primero"))
-            page.snack_bar.open = True
+            show_snack(page, "Debe seleccionar un deportista primero")
             page.update()
             return
 
-        current_user = page.session.get("username")
+        current_user = page.session.get("login_user")
         if not current_user:
-             # Fallback if session lost or dev mode
-             current_user = "admin" 
+             show_snack(page, "Sesion expirada. Inicia sesion nuevamente.")
+             page.update()
+             return
 
         if not added_details_list:
-             page.snack_bar = ft.SnackBar(ft.Text("Debe agregar al menos una medición a la lista"))
-             page.snack_bar.open = True
+             show_snack(page, "Debe agregar al menos una medición a la lista")
              page.update()
              return
 
         try:
-            payload = {
-                "IDENTI_DEPORTISTA": selected_athlete_id,
-                "LOGIN_USER": current_user,
-                "FECHA_MEDIDA": fecha_medida.value,
-                "OBSERV": observaciones.value,
-                "DETALLES": added_details_list
-            }
+            payload = build_somatotipo_payload(
+                selected_athlete_id,
+                current_user,
+                fecha_medida.value,
+                observaciones.value,
+                added_details_list,
+            )
 
-            resp = requests.post(f"{API_URL}/somatotipo/", json=payload)
-            
-            if resp.status_code == 200:
-                page.snack_bar = ft.SnackBar(ft.Text("Valoración guardada exitosamente!"))
-                page.snack_bar.open = True
-                page.update()
-                # Redirect to Dashboard
-                import time
-                time.sleep(1) # Brief delay to see the message
-                go_back(e)
-            else:
-                page.snack_bar = ft.SnackBar(ft.Text(f"Error: {resp.text}"))
-                page.snack_bar.open = True
+            api.create_somatotipo(payload)
+            show_snack(page, "Valoración guardada exitosamente")
+            page.update()
+            # Redirect to Dashboard
+            import time
+            time.sleep(1) # Brief delay to see the message
+            go_back(e)
             
         except ValueError:
-            page.snack_bar = ft.SnackBar(ft.Text("Por favor verifique que todos los campos numéricos sean válidos"))
-            page.snack_bar.open = True
+            show_snack(page, "Por favor verifique que todos los campos numéricos sean válidos")
+        except ApiError as error:
+            show_snack(page, str(error))
         except Exception as ex:
-            page.snack_bar = ft.SnackBar(ft.Text(f"Error de conexión: {ex}"))
-            page.snack_bar.open = True
+            show_snack(page, f"Error de conexión: {ex}")
         
         page.update()
 
     def go_back(e):
-        from .dashboard import DashboardView
-        page.clean()
-        page.add(DashboardView(page))
+        show_dashboard(page)
 
     # Layout
     return ft.Container(
         content=ft.Column(
             [
                 # Header
-                ft.Row(
-                    [
-                        ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_back, icon_color=TEXT_COLOR),
-                        ft.Text("Valoración Corporal", size=32, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
-                    ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER
-                ),
+                page_header("Valoración Corporal", on_back=go_back, color=TEXT_COLOR),
                 ft.Container(height=20),
                 
                 # Card Container
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Text("Datos del Deportista", size=18, weight="bold", color=PRIMARY_COLOR),
+                            inline_status(progress_text, icon=ft.Icons.TASK_ALT),
+                            section_title("Datos del Deportista"),
                             ft.ResponsiveRow([
                                 ft.Container(content=athlete_search, col={"xs": 12, "md": 5}),
                                 ft.Container(content=ft.Column([athlete_info_text, athlete_info_container]), col={"xs": 12, "md": 7}, alignment=ft.alignment.center_left),
@@ -310,7 +306,7 @@ def ValoracionView(page: ft.Page):
                             
                             ft.Divider(),
                             
-                            ft.Text("Datos Básicos", size=18, weight="bold", color=PRIMARY_COLOR),
+                            section_title("Datos Básicos"),
                             ft.ResponsiveRow([
                                 ft.Container(content=fecha_medida, col={"xs": 12, "sm": 6, "md": 4}),
                                 ft.Container(content=estatura, col={"xs": 6, "sm": 3, "md": 4}),
@@ -319,7 +315,7 @@ def ValoracionView(page: ft.Page):
 
                             ft.Divider(),
                             
-                            ft.Text("Pliegues Cutáneos (mm)", size=18, weight="bold", color=PRIMARY_COLOR),
+                            section_title("Pliegues Cutáneos (mm)"),
                             ft.ResponsiveRow([
                                 ft.Container(content=p_tricipital, col={"xs": 6, "md": 4}),
                                 ft.Container(content=p_subescapular, col={"xs": 6, "md": 4}),
@@ -331,7 +327,7 @@ def ValoracionView(page: ft.Page):
 
                             ft.Divider(),
 
-                            ft.Text("Diámetros y Perímetros", size=18, weight="bold", color=PRIMARY_COLOR),
+                            section_title("Diámetros y Perímetros"),
                             ft.ResponsiveRow([
                                 ft.Container(content=d_muneca, col={"xs": 6, "md": 3}),
                                 ft.Container(content=d_femur, col={"xs": 6, "md": 3}),
@@ -363,8 +359,17 @@ def ValoracionView(page: ft.Page):
                             ),
                             
                             ft.Text("Lista de Mediciones a Guardar:", weight="bold"),
+                            summary_text,
                             ft.Container(
-                                content=details_table,
+                                content=ft.Column(
+                                    [
+                                        ft.Row(
+                                            [details_table],
+                                            scroll=ft.ScrollMode.ALWAYS
+                                        ),
+                                        empty_measurements,
+                                    ]
+                                ),
                                 border=ft.border.all(1, "#eeeeee"),
                                 border_radius=10
                             ),

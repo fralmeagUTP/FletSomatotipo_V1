@@ -22,6 +22,14 @@ build/
 dist/
 *.spec
 
+# Backups / generated archives
+Respaldo*.zip
+*.bak
+
+# User uploads generated at runtime
+src/backend/static/uploads/*
+!src/backend/static/uploads/.gitkeep
+
 # Logs
 *.log
 

@@ -43,10 +43,11 @@ def fix_flattened_files():
 fix_flattened_files()
 
 import flet as ft
-import requests
+from src.frontend.api_client import ApiClient, ApiError
+from src.frontend.navigation import show_dashboard
+from src.frontend import theme
 # from views.dashboard import DashboardView (Deferred import)
 
-API_URL = "http://192.168.1.105:8085"
 APP_VERSION = "v1.1.1"
 
 def main(page: ft.Page):
@@ -67,9 +68,9 @@ def main(page: ft.Page):
     page.bgcolor = ft.Colors.WHITE
 
     # Colors based on image
-    PRIMARY_COLOR = "#2e5cb8" # Approximation of the blue in the image
-    TEXT_COLOR = "#333333"
-    SUBTITLE_COLOR = "#666666"
+    PRIMARY_COLOR = theme.PRIMARY_COLOR
+    TEXT_COLOR = theme.TEXT_COLOR
+    SUBTITLE_COLOR = theme.SUBTITLE_COLOR
 
     # --- UI Elements ---
     
@@ -160,36 +161,24 @@ def main(page: ft.Page):
                 page.update()
                 return
 
-            response = requests.post(f"{API_URL}/auth/login", json={
-                "username": username_field.value,
-                "password": password_field.value
-            })
-            
-            if response.status_code == 200:
-                data = response.json()
+            data = ApiClient(page).login(username_field.value, password_field.value)
+            if data:
                 page.snack_bar = ft.SnackBar(ft.Text(f"Bienvenido {data['username']}!"))
                 page.snack_bar.open = True
                 
                 # Store session user
                 page.session.set("username", data["username"])
+                page.session.set("login_user", data["login_user"])
+                page.session.set("access_token", data["access_token"])
+                page.session.set("user_id", str(data["user_id"]))
                 
-                page.clean()
-                # page.add(ft.Text("Login Exitoso! Dashboard en construcción...", size=20, color=TEXT_COLOR))
-                page.bgcolor = "#f5f7fb" # Match dashboard bg
-                
-                # Import here properly
-                from views.dashboard import DashboardView
-                page.add(DashboardView(page))
-            else:
-                try:
-                    detail = response.json().get("detail", "Credenciales incorrectas")
-                except:
-                    detail = "Error en el servidor"
-                error_text.value = detail
-                error_text.visible = True
+                page.bgcolor = theme.BACKGROUND_COLOR
+                show_dashboard(page)
+        except ApiError as error:
+            error_text.value = str(error) or "Credenciales incorrectas"
+            error_text.visible = True
         except Exception as ex:
-            import traceback
-            error_text.value = f"Error: {str(ex)}\n{traceback.format_exc()}"
+            error_text.value = f"Error inesperado: {str(ex)}"
             error_text.visible = True
         
         page.update()
@@ -219,7 +208,7 @@ def main(page: ft.Page):
                     margin=ft.margin.only(bottom=10)
                 ),
                 # Title
-                ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color="#2c3e50", text_align=ft.TextAlign.CENTER),
+                ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color=theme.APP_TITLE_COLOR, text_align=ft.TextAlign.CENTER),
                 # Subtitle
                 ft.Text("Aplicación de somatotipo", size=18, color=SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
                 ft.Text(f"Versión: {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER),
@@ -244,9 +233,9 @@ def main(page: ft.Page):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Centered content inside the box
             spacing=10
         ),
-        col={"xs": 10, "sm": 8, "md": 6, "lg": 4}, # Responsive width
+        col={"xs": 12, "sm": 8, "md": 6, "lg": 4}, # Responsive width
         bgcolor=ft.Colors.WHITE,
-        # padding=20, # Optional: add padding if it was a card
+        padding=20,
     )
 
     page.add(

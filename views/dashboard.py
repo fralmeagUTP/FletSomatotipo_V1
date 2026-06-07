@@ -1,4 +1,7 @@
 import flet as ft
+from src.frontend.components import info_banner, page_header
+from src.frontend.navigation import show_deportistas, show_historial, show_valoracion
+from src.frontend import theme
 
 def DashboardView(page: ft.Page):
     """
@@ -13,25 +16,19 @@ def DashboardView(page: ft.Page):
         ft.Container: El contenedor principal con el diseño del dashboard.
     """
     # Colors
-    PRIMARY_COLOR = "#2e5cb8"
-    BG_COLOR = "#f5f7fb" # Light blueish grey background seen in image
-    CARD_BG = ft.Colors.WHITE
-    TEXT_COLOR = "#333333"
+    PRIMARY_COLOR = theme.PRIMARY_COLOR
+    BG_COLOR = theme.BACKGROUND_COLOR
+    CARD_BG = theme.CARD_BACKGROUND
+    TEXT_COLOR = theme.TEXT_COLOR
 
     def go_deportistas(e):
-        from .deportistas import DeportistasView
-        page.clean()
-        page.add(DeportistasView(page))
+        show_deportistas(page)
 
     def go_valoracion(e):
-        from .valoracion import ValoracionView
-        page.clean()
-        page.add(ValoracionView(page))
+        show_valoracion(page)
 
     def go_historial(e):
-        from .historial import HistorialView
-        page.clean()
-        page.add(HistorialView(page))
+        show_historial(page)
 
     def card_item(icon, label, on_click=None):
         return ft.Container(
@@ -51,34 +48,9 @@ def DashboardView(page: ft.Page):
             padding=20,
             ink=True,
             on_click=on_click,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=5,
-                color=ft.Colors.BLUE_GREY_50,
-                offset=ft.Offset(0, 5),
-            ),
+            shadow=theme.card_shadow(),
             col={"xs": 12, "sm": 6, "md": 4, "lg": 3}
         )
-
-    # Info Banner
-    info_banner = ft.Container(
-        content=ft.Row(
-            [
-                ft.Icon(ft.Icons.INFO_OUTLINE, color=PRIMARY_COLOR, size=30),
-                ft.Container(width=15),
-                ft.Text(
-                    "Bienvenido al sistema de somatocarta y\nvaloración deportiva.",
-                    size=16,
-                    color=TEXT_COLOR
-                )
-            ],
-            vertical_alignment=ft.CrossAxisAlignment.CENTER
-        ),
-        bgcolor="#e8f0fe", # Light blue background matching image
-        padding=20,
-        border_radius=10,
-        width=float("inf") # Full width
-    )
 
     # Grid of options
     options_grid = ft.ResponsiveRow(
@@ -96,10 +68,10 @@ def DashboardView(page: ft.Page):
     return ft.Container(
         content=ft.Column(
             [
-                ft.Text("Dashboard", size=32, weight=ft.FontWeight.BOLD, color="#1a1a1a"),
-                ft.Text("Dashboard", size=16, color="#666666"), # Breadcrumb style
+                page_header("Dashboard", color=theme.HEADING_COLOR),
+                ft.Text("Dashboard", size=16, color=theme.SUBTITLE_COLOR),
                 ft.Container(height=20),
-                info_banner,
+                info_banner("Bienvenido al sistema de somatocarta y\nvaloración deportiva."),
                 ft.Container(height=30),
                 options_grid
             ],

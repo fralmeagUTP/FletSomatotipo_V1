@@ -16,6 +16,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     username: str
+    login_user: str
     user_id: int
 
 @router.post("/login", response_model=Token)
@@ -48,5 +49,6 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "access_token": access_token, 
         "token_type": "bearer",
         "username": user.NOM_USER,
+        "login_user": user.LOGIN_USER,
         "user_id": user.ID_USER
     }

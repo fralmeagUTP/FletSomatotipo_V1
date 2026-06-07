@@ -1,35 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional
-from pydantic import BaseModel
-from datetime import date
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Somatotipo, SomatotipoDetalle, VistaValoracionCorporal
+from ..auth_utils import get_current_user
+from ..schemas.somatotipo import SomatotipoCreate
+from ..services import somatotipo_service
 
-router = APIRouter(prefix="/somatotipo", tags=["Somatotipo"])
-
-class SomatotipoDetalleBase(BaseModel):
-    ESTA_USER_CM: float
-    PESO_kg: float
-    PLIEGUE_TRICIPITAL: float
-    PLIEGUE_SUBESCAPULAR: float
-    PLIEGUE_SUPRAILIACO: float
-    PLIEGUE_ABDOMINAL: float
-    PLIEGUE_MUSLO_ANT: float
-    PLIEGUE_MEDIAL_PIERNA: float
-    DIAMETRO_BIEPI_MUNECA: float
-    DIAMETRO_BIEPI_FEMUR: float
-    DIAMETRO_CODO: float
-    PERIMETRO_BICED_CONTRAIDO: float
-    PERIMETRO_PIERNA: float
-    CIRCUNFERENCIA_CARPO: float
-
-class SomatotipoCreate(BaseModel):
-    IDENTI_DEPORTISTA: str
-    LOGIN_USER: str
-    FECHA_MEDIDA: date
-    OBSERV: Optional[str] = ""
-    DETALLES: List[SomatotipoDetalleBase]
+router = APIRouter(prefix="/somatotipo", tags=["Somatotipo"], dependencies=[Depends(get_current_user)])
 
 @router.post("/")
 def registrar_somatotipo(s: SomatotipoCreate, db: Session = Depends(get_db)):
@@ -45,29 +21,7 @@ def registrar_somatotipo(s: SomatotipoCreate, db: Session = Depends(get_db)):
     Returns:
         dict: Mensaje de éxito e ID del nuevo registro.
     """
-    # 1. Create Header
-    nuevo_header = Somatotipo(
-        IDENTI_DEPORTISTA=s.IDENTI_DEPORTISTA,
-        LOGIN_USER=s.LOGIN_USER,
-        FECHA_MEDIDA=s.FECHA_MEDIDA,
-        OBSERV=s.OBSERV
-    )
-    db.add(nuevo_header)
-    db.commit()
-    db.refresh(nuevo_header)
-    
-    # 2. Create Detail
-    # 2. Create Details
-    for detalle in s.DETALLES:
-        nuevo_detalle = SomatotipoDetalle(
-            id_Somatotipo=nuevo_header.id_Somatotipo,
-            **detalle.dict()
-        )
-        db.add(nuevo_detalle)
-        
-    db.commit()
-    
-    return {"message": "Somatotipo registrado con éxito", "id": nuevo_header.id_Somatotipo}
+    return somatotipo_service.create_somatotipo(db, s)
 
 @router.get("/deportista/{identi}")
 def historial_somatotipos(identi: str, db: Session = Depends(get_db)):
@@ -81,29 +35,28 @@ def historial_somatotipos(identi: str, db: Session = Depends(get_db)):
     Returns:
         List[Somatotipo]: Lista de registros de somatotipo.
     """
-    return db.query(Somatotipo).options(joinedload(Somatotipo.detalles)).filter(Somatotipo.IDENTI_DEPORTISTA == identi).all()
+    return somatotipo_service.get_historial_somatotipos(db, identi)
     
 @router.get("/vista/deportista/{identi}")
-def historial_vista(identi: str, db: Session = Depends(get_db)):
+def historial_vista(
+    identi: str,
+    page: int = 1,
+    page_size: int = 20,
+    db: Session = Depends(get_db),
+):
     """
     Obtiene el historial de mediciones usando la VISTA CDRVistaValoracionCorporal.
     """
-    return db.query(VistaValoracionCorporal).filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi).all()
+    return somatotipo_service.get_historial_vista_page(
+        db,
+        identi,
+        page=max(page, 1),
+        page_size=min(max(page_size, 1), 100),
+    )
 
 @router.delete("/{id_somatotipo}")
 def delete_somatotipo(id_somatotipo: int, db: Session = Depends(get_db)):
     """
     Elimina un registro de somatotipo y todos sus detalles asociados.
     """
-    somatotipo = db.query(Somatotipo).filter(Somatotipo.id_Somatotipo == id_somatotipo).first()
-    if not somatotipo:
-        raise HTTPException(status_code=404, detail="Somatotipo no encontrado")
-    
-    # Details should be deleted via Cascade or manually if relationship not set to cascade.
-    # To be safe, we can manually delete details first.
-    db.query(SomatotipoDetalle).filter(SomatotipoDetalle.id_Somatotipo == id_somatotipo).delete()
-    
-    db.delete(somatotipo)
-    db.commit()
-    
-    return {"message": "Somatotipo eliminado con éxito"}
+    return somatotipo_service.delete_somatotipo(db, id_somatotipo)

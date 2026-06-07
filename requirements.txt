@@ -7,3 +7,8 @@ python-dotenv
 pydantic
 email-validator
 requests
+python-jose
+passlib[bcrypt]
+python-multipart
+pytest
+a2wsgi

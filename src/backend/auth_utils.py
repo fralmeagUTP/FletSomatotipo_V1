@@ -6,6 +6,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
+from .database import get_db
+from .models import Usuario
 
 load_dotenv()
 
@@ -80,3 +83,30 @@ def decode_token(token: str):
         return payload
     except JWTError:
         return None
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalido o expirado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token sin usuario",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = db.query(Usuario).filter(Usuario.LOGIN_USER == username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user

@@ -1,9 +1,12 @@
 import flet as ft
-import requests
 from datetime import datetime
-import os
-
-API_URL = "http://192.168.1.105:8085"
+from app_config import show_snack
+from src.frontend.components import content_card, empty_state as make_empty_state, page_header
+from src.frontend.api_client import ApiClient, ApiError
+from src.frontend.form_helpers import build_deportista_payload, required_missing
+from src.frontend.navigation import show_dashboard
+from src.frontend.table_builders import build_deportista_row
+from src.frontend import theme
 
 def DeportistasView(page: ft.Page):
     """
@@ -19,14 +22,15 @@ def DeportistasView(page: ft.Page):
         ft.Container: El contenedor principal con el diseño de la vista de deportistas.
     """
     # Colors
-    PRIMARY_COLOR = "#2e5cb8"
-    BG_COLOR = "#f5f7fb"
-    CARD_BG = ft.Colors.WHITE
-    TEXT_COLOR = "#333333"
+    PRIMARY_COLOR = theme.PRIMARY_COLOR
+    BG_COLOR = theme.BACKGROUND_COLOR
+    CARD_BG = theme.CARD_BACKGROUND
+    TEXT_COLOR = theme.TEXT_COLOR
 
     # State
     current_edit_id = None 
     selected_file_path = None # Store selected file path locally
+    api = ApiClient(page)
 
     # Catalogs
     tipos_documentos = []
@@ -36,11 +40,14 @@ def DeportistasView(page: ft.Page):
     def load_catalogs():
         nonlocal tipos_documentos, estratos, niveles_educativos
         try:
-            tipos_documentos = requests.get(f"{API_URL}/catalogos/tipos_documento").json()
-            estratos = requests.get(f"{API_URL}/catalogos/estratos").json()
-            niveles_educativos = requests.get(f"{API_URL}/catalogos/niveles_educativos").json()
-        except Exception as e:
-            print(f"Error loading catalogs: {e}")
+            catalogs = api.get_catalogs()
+            tipos_documentos = catalogs["tipos_documentos"]
+            estratos = catalogs["estratos"]
+            niveles_educativos = catalogs["niveles_educativos"]
+        except ApiError as error:
+            show_snack(page, str(error))
+        except Exception as error:
+            show_snack(page, f"Error de conexion: {error}")
 
     load_catalogs()
 
@@ -134,6 +141,25 @@ def DeportistasView(page: ft.Page):
     # Extra
     observaciones = ft.TextField(label="Observaciones", multiline=True, height=80)
 
+    deportista_fields = {
+        "identi": identi,
+        "tipo_identi": tipo_identi,
+        "nombre": nombre,
+        "sexo": sexo,
+        "fecha_nac": fecha_nac,
+        "pais_nac": pais_nac,
+        "dep_nac": dep_nac,
+        "ciudad_nac": ciudad_nac,
+        "dep_resi": dep_resi,
+        "ciudad_resi": ciudad_resi,
+        "direcc_resi": direcc_resi,
+        "telefono": telefono,
+        "email": email,
+        "estrato_dd": estrato_dd,
+        "nivel_edu_dd": nivel_edu_dd,
+        "nombre_institu": nombre_institu,
+        "observaciones": observaciones,
+    }
 
     search_field = ft.TextField(
         label="Buscar por nombre o ID", 
@@ -168,17 +194,26 @@ def DeportistasView(page: ft.Page):
 
     def upload_photo(file_path):
         try:
-            url = f"{API_URL}/files/upload"
-            with open(file_path, "rb") as f:
-                files = {"file": f}
-                resp = requests.post(url, files=files)
-                if resp.status_code == 200:
-                    return f"{API_URL}{resp.json()['url']}"
-        except Exception as e:
-            print(f"Error uploading file: {e}")
+            return api.upload_photo(file_path)
+        except ApiError as error:
+            show_snack(page, str(error))
+        except Exception as error:
+            show_snack(page, f"Error al subir foto: {error}")
         return None
 
     def save_deportista(e):
+        required_fields = [
+            (identi, "La identificacion es obligatoria"),
+            (tipo_identi, "El tipo de documento es obligatorio"),
+            (nombre, "El nombre es obligatorio"),
+            (sexo, "El sexo es obligatorio"),
+        ]
+        missing_message = required_missing(required_fields)
+        if missing_message:
+            show_snack(page, missing_message)
+            page.update()
+            return
+
         # 1. Upload photo if selected
         final_photo_url = img_preview.src
         if selected_file_path:
@@ -186,47 +221,24 @@ def DeportistasView(page: ft.Page):
             if uploaded_url:
                 final_photo_url = uploaded_url
 
-        data = {
-            "IDENTI_DEPORTISTA": identi.value,
-            "TIPO_IDENTI": int(tipo_identi.value) if tipo_identi.value else 0,
-            "NOMBRE_DEPORTISTA": nombre.value,
-            "SEXO_DEPORTISTA": sexo.value,
-            "FECHA_NAC": fecha_nac.value if fecha_nac.value else None,
-            "FOTO_DEPORTISTA": final_photo_url,
-            "PAIS_NAC": pais_nac.value,
-            "DEPARTA_NAC": dep_nac.value,
-            "CIUDAD_NAC": ciudad_nac.value,
-            "DEPARTA_RESI": dep_resi.value,
-            "CIUDAD_RESI": ciudad_resi.value,
-            "DIRECC_RESI": direcc_resi.value,
-            "TELEFONO": telefono.value,
-            "E_MAIL": email.value,
-            "ID_ESTRATO": int(estrato_dd.value) if estrato_dd.value else None,
-            "ID_NIVEL": int(nivel_edu_dd.value) if nivel_edu_dd.value else None,
-            "NOMBRE_INSTITU": nombre_institu.value,
-            "OBSERVACIONES": observaciones.value
-        }
+        data = build_deportista_payload(deportista_fields, final_photo_url)
 
         try:
             if current_edit_id:
                 # Update
-                resp = requests.put(f"{API_URL}/deportistas/{current_edit_id}", json=data)
+                api.update_deportista(current_edit_id, data)
             else:
                 # Create
-                resp = requests.post(f"{API_URL}/deportistas/", json=data)
+                api.create_deportista(data)
 
-            if resp.status_code == 200:
-                page.snack_bar = ft.SnackBar(ft.Text("Deportista guardado exitosamente"))
-                page.snack_bar.open = True
-                clean_form()
-                page.close(dlg_modal)
-                load_deportistas() 
-            else:
-                page.snack_bar = ft.SnackBar(ft.Text(f"Error: {resp.text}"))
-                page.snack_bar.open = True
+            show_snack(page, "Deportista guardado exitosamente")
+            clean_form()
+            page.close(dlg_modal)
+            load_deportistas()
+        except ApiError as error:
+            show_snack(page, str(error))
         except Exception as ex:
-            page.snack_bar = ft.SnackBar(ft.Text(f"Error de conexión: {ex}"))
-            page.snack_bar.open = True
+            show_snack(page, f"Error de conexion: {ex}")
         page.update()
 
     # Modal for Add/Edit using Tabs for organization
@@ -368,17 +380,13 @@ def DeportistasView(page: ft.Page):
     # Delete Confirmation Logic
     def delete_deportista(id_deportista):
         try:
-            resp = requests.delete(f"{API_URL}/deportistas/{id_deportista}")
-            if resp.status_code == 200:
-                page.snack_bar = ft.SnackBar(ft.Text("Deportista eliminado"))
-                page.snack_bar.open = True
-                load_deportistas()
-            else:
-                page.snack_bar = ft.SnackBar(ft.Text(f"Error al eliminar: {resp.text}"))
-                page.snack_bar.open = True
+            api.delete_deportista(id_deportista)
+            show_snack(page, "Deportista eliminado")
+            load_deportistas()
+        except ApiError as error:
+            show_snack(page, str(error))
         except Exception as ex:
-             page.snack_bar = ft.SnackBar(ft.Text(f"Error de conexión: {ex}"))
-             page.snack_bar.open = True
+             show_snack(page, f"Error de conexion: {ex}")
         page.update()
 
     def confirm_delete(id_deportista):
@@ -407,75 +415,101 @@ def DeportistasView(page: ft.Page):
             ft.DataColumn(ft.Text("ID")),
             ft.DataColumn(ft.Text("Nombre")),
             ft.DataColumn(ft.Text("Sexo")),
+            ft.DataColumn(ft.Text("Edad")),
+            ft.DataColumn(ft.Text("Ciudad")),
+            ft.DataColumn(ft.Text("Contacto")),
             ft.DataColumn(ft.Text("Acciones")),
         ],
         rows=[]
     )
+    result_text = ft.Text("Cargando deportistas...", color=theme.SUBTITLE_COLOR, size=13)
+    empty_state = make_empty_state("No hay deportistas para mostrar")
+    empty_state.visible = False
+    current_page = 1
+    page_size = 10
+    total_count = 0
+    pagination_text = ft.Text("", color=theme.SUBTITLE_COLOR, size=13)
 
-    def load_deportistas(search_query=""):
+    def update_pagination_controls():
+        total_pages = max(1, (total_count + page_size - 1) // page_size)
+        pagination_text.value = f"Página {current_page} de {total_pages}"
+        prev_button.disabled = current_page <= 1
+        next_button.disabled = current_page >= total_pages
+
+    def change_page(delta):
+        nonlocal current_page
+        current_page = max(1, current_page + delta)
+        load_deportistas(search_field.value, current_page)
+
+    prev_button = ft.IconButton(
+        ft.Icons.CHEVRON_LEFT,
+        icon_color=PRIMARY_COLOR,
+        tooltip="Página anterior",
+        on_click=lambda e: change_page(-1),
+    )
+    next_button = ft.IconButton(
+        ft.Icons.CHEVRON_RIGHT,
+        icon_color=PRIMARY_COLOR,
+        tooltip="Página siguiente",
+        on_click=lambda e: change_page(1),
+    )
+
+    def load_deportistas(search_query="", requested_page=1):
+        nonlocal current_page, total_count
+        current_page = max(1, requested_page)
+        result_text.value = "Cargando deportistas..."
+        page.update()
         try:
-            params = {}
-            if search_query:
-                params["search"] = search_query
-                
-            resp = requests.get(f"{API_URL}/deportistas/", params=params)
-            
-            if resp.status_code == 200:
-                data = resp.json()
-                table.rows = []
-                for d in data:
-                    id_d = d["IDENTI_DEPORTISTA"]
-                    table.rows.append(
-                        ft.DataRow(
-                            cells=[
-                                ft.DataCell(ft.Text(str(d["IDENTI_DEPORTISTA"]))),
-                                ft.DataCell(ft.Text(d["NOMBRE_DEPORTISTA"])),
-                                ft.DataCell(ft.Text(d["SEXO_DEPORTISTA"])),
-                                ft.DataCell(
-                                    ft.Row(
-                                        [
-                                            ft.IconButton(
-                                                ft.Icons.EDIT, 
-                                                icon_color=PRIMARY_COLOR,
-                                                on_click=lambda e, dept=d: open_edit_modal(dept)
-                                            ),
-                                            ft.IconButton(
-                                                ft.Icons.DELETE, 
-                                                icon_color="red",
-                                                on_click=lambda e, i=id_d: confirm_delete(i)
-                                            ),
-                                        ]
-                                    )
-                                ),
-                            ]
-                        )
-                    )
-                page.update()
-        except Exception as e:
-            print(f"Error loading deportistas: {e}")
+            page_data = api.list_deportistas_page(search_query, current_page, page_size)
+            data = page_data["items"]
+            total_count = page_data["total"]
+            table.rows = []
+            empty_state.visible = not data
+            result_text.value = f"{len(data)} de {total_count} deportistas"
+            for d in data:
+                table.rows.append(build_deportista_row(d, open_edit_modal, confirm_delete))
+            update_pagination_controls()
+            page.update()
+        except ApiError as error:
+            table.rows = []
+            empty_state.visible = True
+            result_text.value = "No se pudo cargar la lista"
+            total_count = 0
+            update_pagination_controls()
+            show_snack(page, str(error))
+            page.update()
+        except Exception as error:
+            table.rows = []
+            empty_state.visible = True
+            result_text.value = "No se pudo cargar la lista"
+            total_count = 0
+            update_pagination_controls()
+            show_snack(page, f"Error de conexion: {error}")
+            page.update()
 
     load_deportistas()
 
     def go_back(e):
-        from .dashboard import DashboardView
-        page.clean()
-        page.add(DashboardView(page))
+        show_dashboard(page)
 
     return ft.Container(
         content=ft.Column(
             [
-                ft.Row(
-                    [
-                        ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_back, icon_color=TEXT_COLOR),
-                        ft.Text("Deportistas", size=32, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
-                    ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER
-                ),
+                page_header("Deportistas", on_back=go_back, color=TEXT_COLOR),
                 ft.Container(height=20),
                 ft.ResponsiveRow(
                     [
-                        ft.Container(content=search_field, col={"xs": 12, "md": 6, "lg": 4}),
+                        ft.Container(content=search_field, col={"xs": 8, "md": 6, "lg": 4}),
                         ft.Container(content=ft.IconButton(ft.Icons.SEARCH, icon_color=PRIMARY_COLOR, on_click=lambda e: load_deportistas(search_field.value)), col={"xs": 2, "md": 1}),
+                        ft.Container(
+                            content=ft.IconButton(
+                                ft.Icons.REFRESH,
+                                icon_color=PRIMARY_COLOR,
+                                tooltip="Actualizar",
+                                on_click=lambda e: load_deportistas(search_field.value, current_page),
+                            ),
+                            col={"xs": 2, "md": 1},
+                        ),
                         # Spacer or just alignment? RRow fits.
                         # ft.Container(expand=True), # ResponsiveRow doesn't use expand like Row.
                         ft.Container(
@@ -494,12 +528,33 @@ def DeportistasView(page: ft.Page):
                     vertical_alignment=ft.CrossAxisAlignment.CENTER
                 ),
                 ft.Container(height=20),
-                ft.Container(
-                    content=table,
-                    bgcolor=CARD_BG,
-                    border_radius=10,
-                    padding=10,
-                    shadow=ft.BoxShadow(blur_radius=5, color=ft.Colors.BLUE_GREY_50)
+                content_card(
+                    ft.Column(
+                        [
+                            ft.Row(
+                                [
+                                    ft.Text("Listado", weight="bold", color=TEXT_COLOR),
+                                    result_text,
+                                ],
+                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            ),
+                            ft.Divider(),
+                            ft.Row(
+                                [table],
+                                scroll=ft.ScrollMode.ALWAYS, # Scroll horizontal
+                            ),
+                            empty_state,
+                            ft.Row(
+                                [
+                                    prev_button,
+                                    pagination_text,
+                                    next_button,
+                                ],
+                                alignment=ft.MainAxisAlignment.END,
+                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            ),
+                        ]
+                    )
                 )
             ],
             scroll=ft.ScrollMode.AUTO

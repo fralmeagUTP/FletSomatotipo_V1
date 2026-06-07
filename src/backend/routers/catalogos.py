@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import TipoDocumento, Estrato, NivelEducativo
+from ..auth_utils import get_current_user
 
-router = APIRouter(prefix="/catalogos", tags=["Catalogos"])
+router = APIRouter(prefix="/catalogos", tags=["Catalogos"], dependencies=[Depends(get_current_user)])
 
 @router.get("/tipos_documento")
 def get_tipos_documento(db: Session = Depends(get_db)):
