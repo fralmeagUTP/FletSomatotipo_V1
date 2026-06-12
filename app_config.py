@@ -11,6 +11,7 @@ def _clean_base_url(value: str) -> str:
 
 
 API_URL = _clean_base_url(os.getenv("API_URL", "http://127.0.0.1:8085"))
+#API_URL = _clean_base_url(os.getenv("API_URL", "https://nyquist.app/somatocarta"))
 BACKEND_HOST = os.getenv("BACKEND_HOST", "0.0.0.0")
 BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8085"))
 
@@ -27,6 +28,8 @@ def show_snack(page, message: str):
 
     page.snack_bar = ft.SnackBar(ft.Text(message))
     page.snack_bar.open = True
+    if hasattr(page, "update"):
+        page.update()
 
 
 def api_error_message(response) -> str:

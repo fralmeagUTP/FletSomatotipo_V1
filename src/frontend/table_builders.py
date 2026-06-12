@@ -35,19 +35,32 @@ def build_deportista_row(deportista: dict, on_edit, on_delete):
     )
 
 
-def build_measurement_row(detail: dict, on_delete):
+def build_measurement_row(detail: dict, on_delete, on_edit=None, index=None):
+    actions = []
+    if on_edit is not None:
+        actions.append(
+            ft.IconButton(
+                ft.Icons.EDIT,
+                icon_color=theme.PRIMARY_COLOR,
+                tooltip="Editar medición",
+                on_click=lambda event, item=detail: on_edit(item),
+            )
+        )
+    actions.append(
+        ft.IconButton(
+            ft.Icons.DELETE,
+            icon_color="red",
+            tooltip="Eliminar medición",
+            on_click=lambda event, item=detail: on_delete(item),
+        )
+    )
     return ft.DataRow(
         cells=[
+            ft.DataCell(ft.Text(f"#{index}" if index is not None else display_value(detail.get("ID"), "-"))),
             ft.DataCell(ft.Text(str(detail["PESO_kg"]))),
             ft.DataCell(ft.Text(str(detail["ESTA_USER_CM"]))),
             ft.DataCell(ft.Text(f"Tri:{detail['PLIEGUE_TRICIPITAL']} Sub:{detail['PLIEGUE_SUBESCAPULAR']}...")),
-            ft.DataCell(
-                ft.IconButton(
-                    ft.Icons.DELETE,
-                    icon_color="red",
-                    on_click=lambda event, item=detail: on_delete(item),
-                )
-            ),
+            ft.DataCell(ft.Row(actions, spacing=0)),
         ]
     )
 
@@ -62,6 +75,9 @@ def group_historial_rows(rows: list[dict]):
                 "NOMBRE_DEPORTISTA": row.get("NOMBRE_DEPORTISTA", ""),
                 "EDAD": row.get("EDAD"),
                 "SEXO_DEPORTISTA": row.get("SEXO_DEPORTISTA"),
+                "PESO_kg": row.get("PESO_kg"),
+                "IMC": row.get("IMC"),
+                "PorcRasoYuasz": row.get("PorcRasoYuasz"),
                 "detalles": [],
             }
         grouped[sid]["detalles"].append(row)
@@ -69,24 +85,20 @@ def group_historial_rows(rows: list[dict]):
 
 
 def build_historial_item(somatotipo_id, item: dict, on_select, on_delete):
+    summary_parts = [f"ID: {somatotipo_id}"]
+    if item.get("PESO_kg") is not None:
+        summary_parts.append(f"Peso: {item['PESO_kg']} kg")
+    if item.get("IMC") is not None:
+        summary_parts.append(f"IMC: {item['IMC']}")
+    if item.get("PorcRasoYuasz") is not None:
+        summary_parts.append(f"Grasa Yuhasz: {item['PorcRasoYuasz']} %")
     return ft.Container(
-        content=ft.Row(
+        content=ft.Column(
             [
-                ft.Column(
-                    [
-                        ft.Text(f"Fecha: {item['FECHA_MEDIDA']}", weight="bold"),
-                        ft.Text(item["NOMBRE_DEPORTISTA"], size=12, no_wrap=True, color=theme.SUBTITLE_COLOR),
-                    ],
-                    expand=True,
-                ),
-                ft.IconButton(
-                    ft.Icons.DELETE_OUTLINE,
-                    icon_color="red",
-                    tooltip="Eliminar Evaluación",
-                    on_click=lambda event, item_id=somatotipo_id: on_delete(item_id),
-                ),
+                ft.Text(f"Fecha: {item['FECHA_MEDIDA']}", weight="bold"),
+                ft.Text(item["NOMBRE_DEPORTISTA"], size=12, no_wrap=True, color=theme.SUBTITLE_COLOR),
+                ft.Text(" · ".join(summary_parts), size=11, color=theme.SUBTITLE_COLOR),
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         ),
         padding=10,
         bgcolor=ft.Colors.WHITE,

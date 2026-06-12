@@ -4,7 +4,7 @@ from sqlalchemy import text
 from .database import engine, get_db, Base
 from . import models
 from fastapi.staticfiles import StaticFiles
-from .routers import auth, deportistas, somatotipo, catalogos, files
+from .routers import auth, catalogos, dashboard, deportistas, entidades_deportes, files, somatotipo
 
 app = FastAPI()
 
@@ -16,6 +16,8 @@ app.include_router(deportistas.router)
 app.include_router(somatotipo.router)
 app.include_router(catalogos.router)
 app.include_router(files.router)
+app.include_router(dashboard.router)
+app.include_router(entidades_deportes.router)
 
 # Base.metadata.create_all(bind=engine)
 

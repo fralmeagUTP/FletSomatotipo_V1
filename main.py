@@ -45,10 +45,11 @@ fix_flattened_files()
 import flet as ft
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.navigation import show_dashboard
+from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, asset_path
 from src.frontend import theme
 # from views.dashboard import DashboardView (Deferred import)
 
-APP_VERSION = "v1.1.1"
+APP_VERSION = "v1.1.2"
 
 def main(page: ft.Page):
     """
@@ -60,8 +61,6 @@ def main(page: ft.Page):
         page (ft.Page): La página principal de Flet.
     """
     page.title = "Somatocarta"
-    # page.window_width = 400
-    # page.window_height = 700
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -74,20 +73,27 @@ def main(page: ft.Page):
 
     # --- UI Elements ---
     
-    # Logo / Icon area
-    # Since we don't have the exact hexagon image, using a placeholder icon stack
-    logo_icon = ft.Stack(
+    logo_icon = ft.Image(
+        src=asset_path(LOGO_SOMATOCARTA),
+        width=116,
+        height=116,
+        fit=ft.ImageFit.CONTAIN,
+    )
+
+    institutional_logos = ft.Row(
         [
-            ft.Icon(ft.Icons.HEXAGON_OUTLINED, size=100, color=PRIMARY_COLOR),
-            ft.Icon(ft.Icons.ACCESSIBILITY_NEW, size=50, color=PRIMARY_COLOR),
+            ft.Image(src=asset_path(LOGO_CDR), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_path(LOGO_ISC), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_path(LOGO_UTP), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_path(LOGO_NYQUIST), height=32, fit=ft.ImageFit.CONTAIN),
         ],
-        alignment=ft.alignment.center
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=12,
     )
 
 
     username_field = ft.TextField(
         hint_text="Usuario",
-        # width=320, removed for responsive
         height=50,
         border_radius=8,
         border_color="#cccccc",
@@ -101,7 +107,6 @@ def main(page: ft.Page):
     password_field = ft.TextField(
         hint_text="Contraseña",
         password=True,
-        # width=320,
         height=50,
         border_radius=8,
         border_color="#cccccc",
@@ -115,47 +120,107 @@ def main(page: ft.Page):
 
     error_text = ft.Text(color="red", visible=False, size=14)
 
+    def build_login_ui():
+        """Construye y retorna la UI de login"""
+        login_button = ft.ElevatedButton(
+            content=ft.Text("Iniciar sesión", size=16, weight="bold"),
+            on_click=login_click,
+            height=50,
+            style=ft.ButtonStyle(
+                color=ft.Colors.WHITE,
+                bgcolor=PRIMARY_COLOR,
+                shape=ft.RoundedRectangleBorder(radius=8),
+            )
+        )
+
+        login_box = ft.Container(
+            content=ft.Column(
+                [
+                    ft.Container(height=20),
+                    ft.Container(
+                        content=logo_icon,
+                        alignment=ft.alignment.center,
+                        margin=ft.margin.only(bottom=10)
+                    ),
+                    ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color=theme.APP_TITLE_COLOR, text_align=ft.TextAlign.CENTER),
+                    ft.Text("Aplicación de somatotipo", size=18, color=SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
+                    ft.Text(f"Versión: {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER),
+                    ft.Container(height=20), 
+                    username_field,
+                    ft.Container(height=5),
+                    password_field,
+                    ft.Container(height=5),
+                    error_text,
+                    ft.Container(height=15),
+                    ft.Container(
+                        content=login_button,
+                        width=float("inf"),
+                    ),
+                    ft.Container(height=6),
+                    institutional_logos,
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10
+            ),
+            col={"xs": 12, "sm": 8, "md": 6, "lg": 4},
+            bgcolor=ft.Colors.WHITE,
+            padding=20,
+        )
+
+        return ft.ResponsiveRow(
+            [login_box],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def show_login():
+        """Muestra la pantalla de login"""
+        page.clean()
+        page.vertical_alignment = ft.MainAxisAlignment.CENTER
+        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        page.bgcolor = ft.Colors.WHITE
+        page.add(build_login_ui())
+        page.update()
+
+    def handle_logout():
+        """Cierra la sesión y vuelve al login"""
+        page.session.clear()
+        username_field.value = ""
+        password_field.value = ""
+        error_text.value = ""
+        error_text.visible = False
+        show_login()
+
     def login_click(e):
         error_text.value = ""
         error_text.visible = False
         page.update()
         
         try:
-            # Try to verify imports early to fail fast if module missing (Debug)
             try:
                 from views.dashboard import DashboardView
             except ImportError as ie:
-                # DEBUG: Show what is wrong
                 import os
                 cwd = os.getcwd()
                 files = sorted(os.listdir('.'))
-                
-                # Check specifics
                 has_views = "views" in files
-                
-                # Check for "flattened" file names (e.g. "views\dashboard.py")
                 flattened_views = [f for f in files if f.startswith("views") and "\\" in f]
-                
                 has_views_init = False
                 if has_views:
                     try:
                         has_views_init = "__init__.py" in os.listdir('views')
                     except:
                         pass
-                
                 has_git = ".git" in files or any(f.startswith(".git") for f in files)
-                
                 error_msg = "INTENTANDO CORREGIR ARCHIVOS...\n"
                 error_msg += f"Archivos Flattened Encontrados: {len(flattened_views)}\n"
                 error_msg += "Por favor reinicia la app si ves esto.\n"
                 error_msg += "Si el error persiste, la auto-reparación falló.\n\n"
-                
                 error_msg += f"VIEWS DIR: {has_views}\n"
                 error_msg += f"GIT PRESENT: {has_git}\n"
                 error_msg += f"CWD: {cwd}\n"
                 error_msg += f"Error: {ie}\n"
                 error_msg += f"Files (first 20): {files[:20]}" 
-                
                 error_text.value = error_msg
                 error_text.visible = True
                 page.update()
@@ -163,17 +228,13 @@ def main(page: ft.Page):
 
             data = ApiClient(page).login(username_field.value, password_field.value)
             if data:
-                page.snack_bar = ft.SnackBar(ft.Text(f"Bienvenido {data['username']}!"))
-                page.snack_bar.open = True
-                
-                # Store session user
                 page.session.set("username", data["username"])
                 page.session.set("login_user", data["login_user"])
                 page.session.set("access_token", data["access_token"])
                 page.session.set("user_id", str(data["user_id"]))
                 
                 page.bgcolor = theme.BACKGROUND_COLOR
-                show_dashboard(page)
+                show_dashboard(page, handle_logout)
         except ApiError as error:
             error_text.value = str(error) or "Credenciales incorrectas"
             error_text.visible = True
@@ -183,70 +244,8 @@ def main(page: ft.Page):
         
         page.update()
 
-    login_button = ft.ElevatedButton(
-        content=ft.Text("Iniciar sesión", size=16, weight="bold"),
-        on_click=login_click,
-        # width=320,
-        height=50,
-        style=ft.ButtonStyle(
-            color=ft.Colors.WHITE,
-            bgcolor=PRIMARY_COLOR,
-            shape=ft.RoundedRectangleBorder(radius=8),
-        )
-    )
-
-    # --- Layout ---
-    # Responsive container for the login box
-    login_box = ft.Container(
-        content=ft.Column(
-            [
-                ft.Container(height=20),
-                # Icon
-                ft.Container(
-                    content=logo_icon,
-                    alignment=ft.alignment.center,
-                    margin=ft.margin.only(bottom=10)
-                ),
-                # Title
-                ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color=theme.APP_TITLE_COLOR, text_align=ft.TextAlign.CENTER),
-                # Subtitle
-                ft.Text("Aplicación de somatotipo", size=18, color=SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
-                ft.Text(f"Versión: {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER),
-                
-                ft.Container(height=20), 
-                
-                # Inputs
-                username_field,
-                ft.Container(height=5),
-                password_field,
-                
-                ft.Container(height=5),
-                error_text,
-                ft.Container(height=15),
-                
-                # Button
-                ft.Container(
-                    content=login_button,
-                    width=float("inf"), # Button expands to full width of this column
-                )
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Centered content inside the box
-            spacing=10
-        ),
-        col={"xs": 12, "sm": 8, "md": 6, "lg": 4}, # Responsive width
-        bgcolor=ft.Colors.WHITE,
-        padding=20,
-    )
-
-    page.add(
-        ft.ResponsiveRow(
-            [
-                login_box
-            ],
-            alignment=ft.MainAxisAlignment.CENTER, # Center the column in the row
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-        )
-    )
+    # Initial login screen
+    page.add(build_login_ui())
 
 if __name__ == "__main__":
     ft.app(target=main)

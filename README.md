@@ -47,13 +47,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 Resultado actual esperado:
 
 ```text
-49 passed
+106 passed
 ```
 
 ## Documentación
 
 - Arquitectura: `docs/arquitectura.md`
+- Fórmulas/cálculos: `docs/formulas_somatotipo.md`
 - Publicación: `docs/publicacion.md`
+- Uploads: `docs/uploads.md`
 - Ejecución detallada: `EJECUTAR_POWERSHELL.txt`
 - Comandos rápidos: `comandos.txt`
 

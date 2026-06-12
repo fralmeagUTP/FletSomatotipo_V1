@@ -1,7 +1,14 @@
 import flet as ft
 from datetime import datetime
 from app_config import show_snack
-from src.frontend.components import content_card, empty_state as make_empty_state, page_header
+from src.frontend.components import (
+    content_card,
+    empty_state as make_empty_state,
+    page_header,
+    responsive_dialog_size,
+    responsive_padding,
+    set_busy,
+)
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.form_helpers import build_deportista_payload, required_missing
 from src.frontend.navigation import show_dashboard
@@ -201,6 +208,8 @@ def DeportistasView(page: ft.Page):
             show_snack(page, f"Error al subir foto: {error}")
         return None
 
+    save_button = ft.ElevatedButton("Guardar")
+
     def save_deportista(e):
         required_fields = [
             (identi, "La identificacion es obligatoria"),
@@ -214,16 +223,17 @@ def DeportistasView(page: ft.Page):
             page.update()
             return
 
-        # 1. Upload photo if selected
-        final_photo_url = img_preview.src
-        if selected_file_path:
-            uploaded_url = upload_photo(selected_file_path)
-            if uploaded_url:
-                final_photo_url = uploaded_url
-
-        data = build_deportista_payload(deportista_fields, final_photo_url)
-
+        set_busy(page, [save_button, btn_upload_photo], True)
         try:
+            # 1. Upload photo if selected
+            final_photo_url = img_preview.src
+            if selected_file_path:
+                uploaded_url = upload_photo(selected_file_path)
+                if uploaded_url:
+                    final_photo_url = uploaded_url
+
+            data = build_deportista_payload(deportista_fields, final_photo_url)
+
             if current_edit_id:
                 # Update
                 api.update_deportista(current_edit_id, data)
@@ -239,7 +249,11 @@ def DeportistasView(page: ft.Page):
             show_snack(page, str(error))
         except Exception as ex:
             show_snack(page, f"Error de conexion: {ex}")
+        finally:
+            set_busy(page, [save_button, btn_upload_photo], False)
         page.update()
+
+    save_button.on_click = save_deportista
 
     # Modal for Add/Edit using Tabs for organization
     tabs = ft.Tabs(
@@ -250,20 +264,20 @@ def DeportistasView(page: ft.Page):
                 content=ft.Column([
                     ft.Container(height=10),
                     ft.ResponsiveRow([
-                        ft.Container(content=identi, col={"xs": 12, "md": 6}),
-                        ft.Container(content=tipo_identi, col={"xs": 12, "md": 6})
+                        ft.Container(content=identi, col={"xs": 12, "sm": 6}),
+                        ft.Container(content=tipo_identi, col={"xs": 12, "sm": 6})
                     ]),
                     ft.ResponsiveRow([
                         ft.Container(content=nombre, col={"xs": 12})
                     ]),
                     ft.ResponsiveRow([
-                        ft.Container(content=sexo, col={"xs": 12, "sm": 5}),
+                        ft.Container(content=sexo, col={"xs": 12, "sm": 4}),
                         ft.Container(content=fecha_nac, col={"xs": 10, "sm": 5}),
-                        ft.Container(content=fecha_nac_btn, col={"xs": 2, "sm": 2})
+                        ft.Container(content=fecha_nac_btn, col={"xs": 2, "sm": 1})
                     ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                     ft.ResponsiveRow([
-                        ft.Container(content=img_preview, col={"xs": 12, "md": 6}), 
-                        ft.Container(content=btn_upload_photo, col={"xs": 12, "md": 6})
+                        ft.Container(content=img_preview, col={"xs": 12, "sm": 6}),
+                        ft.Container(content=btn_upload_photo, col={"xs": 12, "sm": 6})
                     ], vertical_alignment=ft.CrossAxisAlignment.CENTER)
                 ], spacing=10)
             ),
@@ -271,26 +285,24 @@ def DeportistasView(page: ft.Page):
                 text="Ubicación y Contacto",
                 content=ft.Column([
                     ft.Container(height=10),
-                    ft.Text("Lugar de Nacimiento:", weight="bold"),
+                    ft.Text("Lugar de Nacimiento:", weight="bold", size=13),
                     ft.ResponsiveRow([
-                        ft.Container(content=pais_nac, col={"xs": 12, "md": 6}),
-                        ft.Container(content=dep_nac, col={"xs": 12, "md": 6})
-                    ]),
-                    ft.ResponsiveRow([
-                        ft.Container(content=ciudad_nac, col={"xs": 12, "md": 6})
+                        ft.Container(content=pais_nac, col={"xs": 12, "sm": 4}),
+                        ft.Container(content=dep_nac, col={"xs": 12, "sm": 4}),
+                        ft.Container(content=ciudad_nac, col={"xs": 12, "sm": 4})
                     ]),
                     ft.Divider(),
-                    ft.Text("Residencia y Contacto:", weight="bold"),
+                    ft.Text("Residencia y Contacto:", weight="bold", size=13),
                     ft.ResponsiveRow([
-                         ft.Container(content=dep_resi, col={"xs": 12, "md": 6}),
-                         ft.Container(content=ciudad_resi, col={"xs": 12, "md": 6})
+                         ft.Container(content=dep_resi, col={"xs": 12, "sm": 6}),
+                         ft.Container(content=ciudad_resi, col={"xs": 12, "sm": 6})
                     ]),
                     ft.ResponsiveRow([
                         ft.Container(content=direcc_resi, col={"xs": 12})
                     ]),
                     ft.ResponsiveRow([
-                         ft.Container(content=telefono, col={"xs": 12, "md": 6}),
-                         ft.Container(content=email, col={"xs": 12, "md": 6})
+                         ft.Container(content=telefono, col={"xs": 12, "sm": 6}),
+                         ft.Container(content=email, col={"xs": 12, "sm": 6})
                     ])
                 ], spacing=10)
             ),
@@ -299,11 +311,9 @@ def DeportistasView(page: ft.Page):
                 content=ft.Column([
                     ft.Container(height=10),
                     ft.ResponsiveRow([
-                        ft.Container(content=estrato_dd, col={"xs": 12, "md": 4}),
-                        ft.Container(content=nivel_edu_dd, col={"xs": 12, "md": 8})
-                    ]),
-                    ft.ResponsiveRow([
-                        ft.Container(content=nombre_institu, col={"xs": 12})
+                        ft.Container(content=estrato_dd, col={"xs": 12, "sm": 4}),
+                        ft.Container(content=nivel_edu_dd, col={"xs": 12, "sm": 4}),
+                        ft.Container(content=nombre_institu, col={"xs": 12, "sm": 4})
                     ]),
                     ft.Divider(),
                     ft.ResponsiveRow([
@@ -320,12 +330,10 @@ def DeportistasView(page: ft.Page):
         title=ft.Text("Registrar Deportista"),
         content=ft.Container(
             content=tabs,
-            width=650,
-            height=600, # Increased height for photo
         ),
         actions=[
             ft.TextButton("Cancelar", on_click=lambda e: close_dlg()),
-            ft.ElevatedButton("Guardar", on_click=save_deportista),
+            save_button,
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
@@ -337,7 +345,11 @@ def DeportistasView(page: ft.Page):
         print("Opening add modal...")
         try:
             clean_form()
+            size = responsive_dialog_size(page)
+            dlg_modal.content.width = size["width"]
+            dlg_modal.content.height = size["height"]
             dlg_modal.title.value = "Registrar Deportista"
+            dlg_modal.content.content = tabs
             page.open(dlg_modal)
         except Exception as ex:
             print(f"Error opening modal: {ex}")
@@ -374,6 +386,9 @@ def DeportistasView(page: ft.Page):
         nombre_institu.value = deportista["NOMBRE_INSTITU"] or ""
         observaciones.value = deportista["OBSERVACIONES"] or ""
         
+        size = responsive_dialog_size(page)
+        dlg_modal.content.width = size["width"]
+        dlg_modal.content.height = size["height"]
         dlg_modal.title.value = "Editar Deportista"
         page.open(dlg_modal)
 
@@ -453,12 +468,30 @@ def DeportistasView(page: ft.Page):
         tooltip="Página siguiente",
         on_click=lambda e: change_page(1),
     )
+    search_button = ft.IconButton(
+        ft.Icons.SEARCH,
+        icon_color=PRIMARY_COLOR,
+        on_click=lambda e: load_deportistas(search_field.value),
+    )
+    refresh_button = ft.IconButton(
+        ft.Icons.REFRESH,
+        icon_color=PRIMARY_COLOR,
+        tooltip="Actualizar",
+        on_click=lambda e: load_deportistas(search_field.value, current_page),
+    )
+    add_button = ft.ElevatedButton(
+        "Agregar Deportista",
+        icon=ft.Icons.ADD,
+        bgcolor=PRIMARY_COLOR,
+        color="white",
+        on_click=open_add_modal,
+    )
 
     def load_deportistas(search_query="", requested_page=1):
         nonlocal current_page, total_count
         current_page = max(1, requested_page)
-        result_text.value = "Cargando deportistas..."
-        page.update()
+        controls = [search_button, refresh_button, prev_button, next_button, add_button]
+        set_busy(page, controls, True, result_text, "Cargando deportistas...")
         try:
             page_data = api.list_deportistas_page(search_query, current_page, page_size)
             data = page_data["items"]
@@ -486,6 +519,12 @@ def DeportistasView(page: ft.Page):
             update_pagination_controls()
             show_snack(page, f"Error de conexion: {error}")
             page.update()
+        finally:
+            update_pagination_controls()
+            for control in controls:
+                control.disabled = False
+            update_pagination_controls()
+            page.update()
 
     load_deportistas()
 
@@ -496,44 +535,28 @@ def DeportistasView(page: ft.Page):
         content=ft.Column(
             [
                 page_header("Deportistas", on_back=go_back, color=TEXT_COLOR),
-                ft.Container(height=20),
+                ft.Container(height=16),
                 ft.ResponsiveRow(
                     [
-                        ft.Container(content=search_field, col={"xs": 8, "md": 6, "lg": 4}),
-                        ft.Container(content=ft.IconButton(ft.Icons.SEARCH, icon_color=PRIMARY_COLOR, on_click=lambda e: load_deportistas(search_field.value)), col={"xs": 2, "md": 1}),
+                        ft.Container(content=search_field, col={"xs": 8, "sm": 8, "md": 6, "lg": 5}),
+                        ft.Container(content=search_button, col={"xs": 2, "sm": 2, "md": 1}),
+                        ft.Container(content=refresh_button, col={"xs": 2, "sm": 2, "md": 1}),
                         ft.Container(
-                            content=ft.IconButton(
-                                ft.Icons.REFRESH,
-                                icon_color=PRIMARY_COLOR,
-                                tooltip="Actualizar",
-                                on_click=lambda e: load_deportistas(search_field.value, current_page),
-                            ),
-                            col={"xs": 2, "md": 1},
-                        ),
-                        # Spacer or just alignment? RRow fits.
-                        # ft.Container(expand=True), # ResponsiveRow doesn't use expand like Row.
-                        ft.Container(
-                            content=ft.ElevatedButton(
-                                "Agregar Deportista", 
-                                icon=ft.Icons.ADD, 
-                                bgcolor=PRIMARY_COLOR, 
-                                color="white",
-                                on_click=open_add_modal,
-                                width=200 # Fixed width for button is okay, or make it expand
-                            ),
-                            col={"xs": 12, "md": 4},
-                            alignment=ft.alignment.center_right
+                            content=add_button,
+                            col={"xs": 12, "sm": 12, "md": 4, "lg": 5},
+                            alignment=ft.alignment.center_right if (page.width or 1024) >= 768 else ft.alignment.center,
                         ),
                     ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    run_spacing=10,
                 ),
-                ft.Container(height=20),
+                ft.Container(height=16),
                 content_card(
                     ft.Column(
                         [
                             ft.Row(
                                 [
-                                    ft.Text("Listado", weight="bold", color=TEXT_COLOR),
+                                    ft.Text("Listado", weight="bold", color=TEXT_COLOR, size=15),
                                     result_text,
                                 ],
                                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -541,7 +564,7 @@ def DeportistasView(page: ft.Page):
                             ft.Divider(),
                             ft.Row(
                                 [table],
-                                scroll=ft.ScrollMode.ALWAYS, # Scroll horizontal
+                                scroll=ft.ScrollMode.ALWAYS,
                             ),
                             empty_state,
                             ft.Row(
@@ -550,7 +573,7 @@ def DeportistasView(page: ft.Page):
                                     pagination_text,
                                     next_button,
                                 ],
-                                alignment=ft.MainAxisAlignment.END,
+                                alignment=ft.MainAxisAlignment.CENTER,
                                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
                         ]
@@ -559,7 +582,7 @@ def DeportistasView(page: ft.Page):
             ],
             scroll=ft.ScrollMode.AUTO
         ),
-        padding=40,
+        padding=responsive_padding(page),
         bgcolor=BG_COLOR,
         expand=True
     )

@@ -65,6 +65,10 @@ git status --short
 - `Respaldo_v1.1.1.zip`: aparece modificado y ya está versionado. No conviene incluirlo salvo que sea intencional.
 - Imágenes históricas ya versionadas en `src/backend/static/uploads/`: decidir si deben permanecer en Git o migrarse fuera del repositorio.
 
+## Uploads
+
+La política operativa de archivos subidos está documentada en `docs/uploads.md`.
+
 ## Comando de commit sugerido
 
 ```powershell

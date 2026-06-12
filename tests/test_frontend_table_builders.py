@@ -2,6 +2,7 @@ import unittest
 
 from src.frontend.table_builders import (
     build_deportista_row,
+    build_historial_item,
     build_measurement_row,
     group_historial_rows,
 )
@@ -40,6 +41,21 @@ class TableBuildersTests(unittest.TestCase):
         self.assertEqual(row.cells[1].content.value, "Ana")
         self.assertEqual(row.cells[5].content.value, "300")
 
+    def test_build_historial_item_shows_measurement_summary(self):
+        item = {
+            "FECHA_MEDIDA": "2026-06-01",
+            "NOMBRE_DEPORTISTA": "Ana",
+            "PESO_kg": 65,
+            "IMC": 22.5,
+            "PorcRasoYuasz": 15,
+        }
+
+        card = build_historial_item(10, item, on_select=lambda selected: None, on_delete=lambda item_id: None)
+        summary = card.content.controls[2].value
+
+        self.assertIn("ID: 10", summary)
+        self.assertIn("Peso: 65 kg", summary)
+
     def test_build_measurement_row_contains_summary_values(self):
         row = build_measurement_row(
             {
@@ -51,9 +67,41 @@ class TableBuildersTests(unittest.TestCase):
             on_delete=lambda item: None,
         )
 
-        self.assertEqual(row.cells[0].content.value, "75")
-        self.assertEqual(row.cells[1].content.value, "180")
-        self.assertIn("Tri:10", row.cells[2].content.value)
+        self.assertEqual(row.cells[1].content.value, "75")
+        self.assertEqual(row.cells[2].content.value, "180")
+        self.assertIn("Tri:10", row.cells[3].content.value)
+
+    def test_build_measurement_row_can_include_edit_action(self):
+        row = build_measurement_row(
+            {
+                "PESO_kg": 75,
+                "ESTA_USER_CM": 180,
+                "PLIEGUE_TRICIPITAL": 10,
+                "PLIEGUE_SUBESCAPULAR": 11,
+            },
+            on_delete=lambda item: None,
+            on_edit=lambda item: None,
+        )
+
+        actions = row.cells[4].content.controls
+
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].tooltip, "Editar medición")
+        self.assertEqual(actions[1].tooltip, "Eliminar medición")
+
+    def test_build_measurement_row_shows_take_index(self):
+        row = build_measurement_row(
+            {
+                "PESO_kg": 75,
+                "ESTA_USER_CM": 180,
+                "PLIEGUE_TRICIPITAL": 10,
+                "PLIEGUE_SUBESCAPULAR": 11,
+            },
+            on_delete=lambda item: None,
+            index=2,
+        )
+
+        self.assertEqual(row.cells[0].content.value, "#2")
 
 
 if __name__ == "__main__":

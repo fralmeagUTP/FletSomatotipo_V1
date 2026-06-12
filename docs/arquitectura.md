@@ -36,6 +36,12 @@ tests/                          # Pruebas automatizadas
 4. Los servicios usan modelos SQLAlchemy y controlan `commit()` / `rollback()`.
 5. Las rutas privadas usan `Depends(get_current_user)`.
 
+## Cálculos de somatotipo
+
+El código Python no calcula actualmente los indicadores clínicos. El backend guarda mediciones y consulta resultados desde la vista SQL `CDRVistaValoracionCorporal`.
+
+La documentación de campos, riesgos y checklist clínico está en `docs/formulas_somatotipo.md`.
+
 ## Endpoints principales
 
 - `POST /auth/login`: autenticación.
@@ -69,6 +75,7 @@ La suite cubre:
 - seguridad básica de API;
 - validación de schemas;
 - servicios backend y rollback;
+- integración de servicios con SQLite temporal;
 - cliente API frontend;
 - helpers de formularios;
 - componentes UI;
@@ -90,7 +97,6 @@ Comando:
 
 ## Pendientes recomendados
 
-- Añadir base de datos de test controlada para pruebas de integración reales.
-- Documentar fórmulas clínicas/cálculos de somatotipo si se editan.
+- Validar clínicamente la definición SQL de `CDRVistaValoracionCorporal`.
 - Añadir migraciones de base de datos si el modelo empieza a cambiar.
 - Limpiar binarios/backups e imágenes generadas antes de publicar cambios.

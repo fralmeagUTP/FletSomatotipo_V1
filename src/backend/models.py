@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, DECIMAL
+import os
+
+from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, DECIMAL
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -84,6 +86,49 @@ class Deportista(Base):
     estrato = relationship("Estrato")
     nivel_educativo = relationship("NivelEducativo")
 
+
+class Entidad(Base):
+    """
+    Modelo que mapea a la tabla CDRTablaEntidades.
+    Representa entidades o instituciones asociadas a deportistas/deportes.
+    """
+    __tablename__ = "CDRTablaEntidades"
+
+    NIT_ENTIDAD = Column(String(20), primary_key=True)
+    RAZON_SOCIAL = Column(String(50))
+    TELEFONO = Column(String(20))
+    CONTACTO = Column(String(50))
+    E_MAIL = Column(String(50))
+
+
+class Deporte(Base):
+    """
+    Modelo que mapea a la tabla CDRTablaDeportes.
+    Catálogo de deportes.
+    """
+    __tablename__ = "CDRTablaDeportes"
+
+    ID_DEPORTE = Column(Integer, primary_key=True, autoincrement=True)
+    DEPORTE = Column(String(50))
+
+
+class DeporteDeportista(Base):
+    """
+    Modelo que mapea a CDRTablaDeportesDeportistas.
+    Relaciona deportistas con deportes y entidades.
+    """
+    __tablename__ = "CDRTablaDeportesDeportistas"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ID_DEPORTE = Column(Integer, ForeignKey("CDRTablaDeportes.ID_DEPORTE"))
+    IDENTI_DEPORTISTA = Column(String(20), ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA"))
+    NIT_ENTIDAD = Column(String(20), ForeignKey("CDRTablaEntidades.NIT_ENTIDAD"))
+
+    deporte = relationship("Deporte")
+    deportista = relationship("Deportista")
+    entidad = relationship("Entidad")
+
+
 class Somatotipo(Base):
     """
     Modelo que mapea a la tabla CDRTablaSomatotipo.
@@ -101,10 +146,10 @@ class Somatotipo(Base):
 
 class SomatotipoDetalle(Base):
     """
-    Modelo que mapea a la tabla CDRTablaSomatotipoDetalle.
+    Modelo que mapea a la tabla secundaria de detalles de somatotipo.
     Almacena los detalles de las mediciones antropométricas para el cálculo del somatotipo.
     """
-    __tablename__ = "CDRTablaSomatotipoDetalle"
+    __tablename__ = os.getenv("SOMATOTIPO_DETALLE_TABLE", "CDRTablaSomatotipoDetalle")
     ID = Column(Integer, primary_key=True, autoincrement=True)
     id_Somatotipo = Column(Integer, ForeignKey("CDRTablaSomatotipo.id_Somatotipo"))
     ESTA_USER_CM = Column(DECIMAL(8, 2))
@@ -190,3 +235,29 @@ class VistaValoracionCorporal(Base):
     EscalaEctomorfismo = Column(Text)
     X = Column(DECIMAL(12, 6))
     Y = Column(DECIMAL(12, 6))
+
+
+class Auditoria(Base):
+    """
+    Modelo que mapea a la tabla CDRTablaAuditoria.
+    Registra todas las acciones de auditoría del sistema.
+    """
+    __tablename__ = "CDRTablaAuditoria"
+    
+    ID_AUDIT = Column(Integer, primary_key=True, autoincrement=True)
+    OCCURRED_AT_UTC = Column(DateTime(6), nullable=False)
+    ACTOR_USER_ID = Column(Integer, nullable=True)
+    ACTOR_LOGIN = Column(String(60), nullable=True)
+    ACTION_CODE = Column(String(80), nullable=False)
+    RESOURCE_TYPE = Column(String(80), nullable=True)
+    RESOURCE_ID = Column(String(120), nullable=True)
+    EVENT_RESULT = Column(String(20), nullable=False)
+    HTTP_METHOD = Column(String(10), nullable=True)
+    ENDPOINT = Column(String(255), nullable=True)
+    STATUS_CODE = Column(Integer, nullable=True)
+    CLIENT_IP = Column(String(45), nullable=True)
+    USER_AGENT = Column(String(500), nullable=True)
+    CORRELATION_ID = Column(String(36), nullable=True)
+    REQUEST_JSON = Column(Text, nullable=True)
+    RESPONSE_JSON = Column(Text, nullable=True)
+    ERROR_MESSAGE = Column(Text, nullable=True)

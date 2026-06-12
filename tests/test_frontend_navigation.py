@@ -5,11 +5,10 @@ from src.frontend.navigation import show_view
 
 class FakePage:
     def __init__(self):
-        self.cleaned = False
-        self.controls = []
+        self.controls = [{"old": "content"}]
+        self.session = {}
 
     def clean(self):
-        self.cleaned = True
         self.controls.clear()
 
     def add(self, control):
@@ -22,7 +21,7 @@ class NavigationTests(unittest.TestCase):
 
         show_view(page, lambda current_page: {"page": current_page})
 
-        self.assertTrue(page.cleaned)
+        self.assertEqual(len(page.controls), 1)
         self.assertEqual(page.controls, [{"page": page}])
 
 
