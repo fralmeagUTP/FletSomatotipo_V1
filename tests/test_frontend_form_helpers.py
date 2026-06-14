@@ -88,6 +88,27 @@ class FormHelpersTests(unittest.TestCase):
         self.assertEqual(detail["PESO_kg"], 75)
         self.assertEqual(detail["CIRCUNFERENCIA_CARPO"], 17)
 
+    def test_build_measurement_detail_rejects_out_of_range_values(self):
+        fields = {
+            "estatura": control("251"),
+            "peso": control("75"),
+            "p_tricipital": control("10"),
+            "p_subescapular": control("11"),
+            "p_suprailiaco": control("12"),
+            "p_abdominal": control("13"),
+            "p_muslo": control("14"),
+            "p_pierna": control("15"),
+            "d_muneca": control("6"),
+            "d_femur": control("9"),
+            "d_codo": control("7"),
+            "perim_bicep": control("32"),
+            "perim_pierna": control("40"),
+            "c_carpo": control("17"),
+        }
+
+        with self.assertRaises(ValueError):
+            build_measurement_detail(fields)
+
     def test_build_somatotipo_payload_groups_header_and_details(self):
         payload = build_somatotipo_payload("123", "admin", "2026-06-06", "Obs", [{"PESO_kg": 75}])
 

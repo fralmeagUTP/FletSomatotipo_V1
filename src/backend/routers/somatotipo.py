@@ -9,8 +9,17 @@ from ..models import Usuario
 
 router = APIRouter(prefix="/somatotipo", tags=["Somatotipo"], dependencies=[Depends(get_current_user)])
 
+
+def audit_actor(current_user: Usuario):
+    return getattr(current_user, "ID_USER", None), getattr(current_user, "LOGIN_USER", None)
+
 @router.post("/")
-def registrar_somatotipo(s: SomatotipoCreate, db: Session = Depends(get_db), req: Request = None):
+def registrar_somatotipo(
+    s: SomatotipoCreate,
+    db: Session = Depends(get_db),
+    req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
+):
     """
     Registra un nuevo cálculo de somatotipo para un deportista.
 
@@ -27,14 +36,7 @@ def registrar_somatotipo(s: SomatotipoCreate, db: Session = Depends(get_db), req
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     try:
         result = somatotipo_service.create_somatotipo(db, s)
@@ -133,6 +135,7 @@ def crear_detalle_somatotipo(
     detalle: SomatotipoDetalleBase,
     db: Session = Depends(get_db),
     req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
 ):
     """
     Agrega una nueva toma/medición al detalle de una valoración existente.
@@ -140,14 +143,7 @@ def crear_detalle_somatotipo(
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     try:
         result = somatotipo_service.create_somatotipo_detalle(db, id_somatotipo, detalle)
@@ -194,6 +190,7 @@ def actualizar_detalle_somatotipo(
     detalle: SomatotipoDetalleBase,
     db: Session = Depends(get_db),
     req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
 ):
     """
     Actualiza una mediciÃ³n antropomÃ©trica almacenada.
@@ -201,14 +198,7 @@ def actualizar_detalle_somatotipo(
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     try:
         result = somatotipo_service.update_somatotipo_detalle(db, detalle_id, detalle)
@@ -250,21 +240,19 @@ def actualizar_detalle_somatotipo(
 
 
 @router.delete("/detalle/{detalle_id}")
-def eliminar_detalle_somatotipo(detalle_id: int, db: Session = Depends(get_db), req: Request = None):
+def eliminar_detalle_somatotipo(
+    detalle_id: int,
+    db: Session = Depends(get_db),
+    req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
+):
     """
     Elimina una toma/medición específica del detalle de una valoración.
     """
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     try:
         result = somatotipo_service.delete_somatotipo_detalle(db, detalle_id)
@@ -314,21 +302,19 @@ def contrato_vista_somatotipo(db: Session = Depends(get_db)):
 
 
 @router.get("/{id_somatotipo}/pdf")
-def descargar_valoracion_pdf(id_somatotipo: int, db: Session = Depends(get_db), req: Request = None):
+def descargar_valoracion_pdf(
+    id_somatotipo: int,
+    db: Session = Depends(get_db),
+    req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
+):
     """
     Descarga los resultados de una valoración en formato PDF.
     """
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     # Auditar descarga de PDF
     AuditService.log_action(
@@ -357,21 +343,19 @@ def descargar_valoracion_pdf(id_somatotipo: int, db: Session = Depends(get_db), 
 
 
 @router.get("/vista/deportista/{identi}/longitudinal/pdf")
-def descargar_analisis_longitudinal_pdf(identi: str, db: Session = Depends(get_db), req: Request = None):
+def descargar_analisis_longitudinal_pdf(
+    identi: str,
+    db: Session = Depends(get_db),
+    req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
+):
     """
     Descarga el análisis longitudinal del deportista en formato PDF.
     """
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     # Auditar descarga de PDF longitudinal
     AuditService.log_action(
@@ -400,21 +384,19 @@ def descargar_analisis_longitudinal_pdf(identi: str, db: Session = Depends(get_d
 
 
 @router.delete("/{id_somatotipo}")
-def delete_somatotipo(id_somatotipo: int, db: Session = Depends(get_db), req: Request = None):
+def delete_somatotipo(
+    id_somatotipo: int,
+    db: Session = Depends(get_db),
+    req: Request = None,
+    current_user: Usuario = Depends(get_current_user),
+):
     """
     Elimina un registro de somatotipo y todos sus detalles asociados.
     """
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    actor_user_id = None
-    actor_login = None
-    try:
-        user = get_current_user(req)
-        actor_user_id = user.ID_USER
-        actor_login = user.LOGIN_USER
-    except:
-        pass
+    actor_user_id, actor_login = audit_actor(current_user)
     
     try:
         result = somatotipo_service.delete_somatotipo(db, id_somatotipo)

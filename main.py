@@ -45,11 +45,11 @@ fix_flattened_files()
 import flet as ft
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.navigation import show_dashboard
-from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, asset_path
+from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, WINDOW_ICON, asset_path
 from src.frontend import theme
 # from views.dashboard import DashboardView (Deferred import)
 
-APP_VERSION = "v1.1.2"
+APP_VERSION = "v1.1.3"
 
 def main(page: ft.Page):
     """
@@ -61,6 +61,8 @@ def main(page: ft.Page):
         page (ft.Page): La página principal de Flet.
     """
     page.title = "Somatocarta"
+    if hasattr(page, "window"):
+        page.window.icon = asset_path(WINDOW_ICON)
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -119,9 +121,12 @@ def main(page: ft.Page):
     )
 
     error_text = ft.Text(color="red", visible=False, size=14)
+    login_in_progress = False
+    login_button_control = None
 
     def build_login_ui():
         """Construye y retorna la UI de login"""
+        nonlocal login_button_control
         login_button = ft.ElevatedButton(
             content=ft.Text("Iniciar sesión", size=16, weight="bold"),
             on_click=login_click,
@@ -132,6 +137,7 @@ def main(page: ft.Page):
                 shape=ft.RoundedRectangleBorder(radius=8),
             )
         )
+        login_button_control = login_button
 
         login_box = ft.Container(
             content=ft.Column(
@@ -175,6 +181,8 @@ def main(page: ft.Page):
 
     def show_login():
         """Muestra la pantalla de login"""
+        nonlocal login_in_progress
+        login_in_progress = False
         page.clean()
         page.vertical_alignment = ft.MainAxisAlignment.CENTER
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -192,9 +200,16 @@ def main(page: ft.Page):
         show_login()
 
     def login_click(e):
+        nonlocal login_in_progress
+        if login_in_progress:
+            return
+        login_in_progress = True
+        if login_button_control is not None:
+            login_button_control.disabled = True
         error_text.value = ""
         error_text.visible = False
         page.update()
+        login_success = False
         
         try:
             try:
@@ -235,12 +250,18 @@ def main(page: ft.Page):
                 
                 page.bgcolor = theme.BACKGROUND_COLOR
                 show_dashboard(page, handle_logout)
+                login_success = True
         except ApiError as error:
             error_text.value = str(error) or "Credenciales incorrectas"
             error_text.visible = True
         except Exception as ex:
             error_text.value = f"Error inesperado: {str(ex)}"
             error_text.visible = True
+        finally:
+            if not login_success:
+                login_in_progress = False
+                if login_button_control is not None:
+                    login_button_control.disabled = False
         
         page.update()
 
@@ -248,4 +269,4 @@ def main(page: ft.Page):
     page.add(build_login_ui())
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.app(target=main, assets_dir="assets")

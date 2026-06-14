@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, DECIMAL
+from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, DECIMAL, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -135,6 +135,9 @@ class Somatotipo(Base):
     Representa el encabezado de un registro de somatotipo.
     """
     __tablename__ = "CDRTablaSomatotipo"
+    __table_args__ = (
+        UniqueConstraint("IDENTI_DEPORTISTA", "FECHA_MEDIDA", name="uq_somatotipo_deportista_fecha"),
+    )
     id_Somatotipo = Column(Integer, primary_key=True, autoincrement=True)
     FECHA_MEDIDA = Column(Date)
     IDENTI_DEPORTISTA = Column(String(20), ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA"))

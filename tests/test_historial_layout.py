@@ -60,3 +60,12 @@ def test_historial_has_no_mojibake_text():
     assert "\ufffd" not in source
     assert "Composici?" not in source
     assert "An?lisis" not in source
+
+
+def test_historial_runs_search_and_pdf_downloads_off_ui_thread_when_available():
+    source = Path("views/historial.py").read_text(encoding="utf-8")
+
+    assert "def run_search_historial" in source
+    assert 'hasattr(page, "run_thread")' in source
+    assert "download_longitudinal_pdf_sync" in source
+    assert "download_pdf_sync" in source

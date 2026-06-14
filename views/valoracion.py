@@ -6,6 +6,7 @@ from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.form_helpers import build_measurement_detail, build_somatotipo_payload
 from src.frontend.navigation import show_dashboard
 from src.frontend import theme
+from src.anthropometry import MEASUREMENT_RULES, validate_measurement_value
 
 
 def ValoracionView(page: ft.Page):
@@ -50,15 +51,15 @@ def ValoracionView(page: ft.Page):
             field.border_color = None
             return
         try:
-            val = float(raw.replace(",", "."))
-            if val <= 0:
-                field.error_text = "Debe ser mayor a 0"
-                field.border_color = ERROR_COLOR
-            else:
-                field.error_text = None
-                field.border_color = None
+            field_name = getattr(field, "data", None)
+            if field_name in MEASUREMENT_RULES:
+                validate_measurement_value(field_name, raw)
+            elif float(raw.replace(",", ".")) <= 0:
+                raise ValueError("Debe ser mayor a 0")
+            field.error_text = None
+            field.border_color = None
         except ValueError:
-            field.error_text = "Valor inválido"
+            field.error_text = "Valor fuera de rango"
             field.border_color = ERROR_COLOR
 
     def is_field_valid(field):
@@ -66,6 +67,10 @@ def ValoracionView(page: ft.Page):
         if not raw:
             return False
         try:
+            field_name = getattr(field, "data", None)
+            if field_name in MEASUREMENT_RULES:
+                validate_measurement_value(field_name, raw)
+                return True
             return float(raw.replace(",", ".")) > 0
         except ValueError:
             return False
@@ -106,6 +111,8 @@ def ValoracionView(page: ft.Page):
         "DIAMETRO_CODO": "d_codo", "CIRCUNFERENCIA_CARPO": "c_carpo",
         "PERIMETRO_BICED_CONTRAIDO": "perim_bicep", "PERIMETRO_PIERNA": "perim_pierna",
     }
+    for detail_key, field_key in detail_to_field_keys.items():
+        measurement_fields[field_key].data = detail_key
 
     fecha_medida = ft.TextField(
         label="Fecha Medición *",
@@ -256,13 +263,13 @@ def ValoracionView(page: ft.Page):
         try:
             birth = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
             measure = datetime.strptime(measure_date_str, '%Y-%m-%d').date()
-            age = measure.year - birth.year - ((measure.month, measure.day) < (birth.month, measure.day))
+            age = measure.year - birth.year - ((measure.month, measure.day) < (birth.month, birth.day))
             return f"{age} años"
         except Exception:
             return "Error Calc."
 
     def search_athlete(query):
-        nonlocal selected_athlete_id, current_loaded_somatotipo_id, added_details_list, stored_valuations
+        nonlocal selected_athlete_id, current_loaded_somatotipo_id, added_details_list, stored_valuations, last_detail
         if not query:
             return
         set_busy(page, [athlete_search_button], True, athlete_info_text, "Buscando deportista...")
@@ -526,7 +533,7 @@ def ValoracionView(page: ft.Page):
             )
 
     def load_stored_somatotipo(somatotipo_id):
-        nonlocal current_loaded_somatotipo_id, added_details_list
+        nonlocal current_loaded_somatotipo_id, added_details_list, last_detail
         try:
             record = api.get_somatotipo_editable(somatotipo_id)
             current_loaded_somatotipo_id = record.get("id_Somatotipo")
@@ -543,7 +550,7 @@ def ValoracionView(page: ft.Page):
         page.update()
 
     def delete_stored_somatotipo(somatotipo_id):
-        nonlocal current_loaded_somatotipo_id, added_details_list
+        nonlocal current_loaded_somatotipo_id, added_details_list, last_detail
         try:
             api.delete_somatotipo(somatotipo_id)
             if current_loaded_somatotipo_id == somatotipo_id:
@@ -663,6 +670,21 @@ def ValoracionView(page: ft.Page):
             return
         if not added_details_list:
             show_snack(page, "Debe agregar al menos una medición a la lista")
+            page.update()
+            return
+        duplicate_valuation = next(
+            (
+                valuation
+                for valuation in stored_valuations
+                if valuation.get("FECHA_MEDIDA") == fecha_medida.value
+            ),
+            None,
+        )
+        if duplicate_valuation:
+            show_snack(
+                page,
+                "Ya existe una valoración en esa fecha. Cárgala y agrega la toma como detalle.",
+            )
             page.update()
             return
         set_busy(page, [add_btn, save_btn], True)

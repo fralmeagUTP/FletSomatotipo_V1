@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import flet as ft
 import requests
 from src.frontend import theme
+from src.frontend.assets import WINDOW_ICON, asset_path
 from src.frontend.navigation import set_logout_callback
 
 # Configuración
@@ -16,7 +17,7 @@ BASE_URL = "http://127.0.0.1:8085"
 USERNAME = "admin"
 PASSWORD = "CDR2026"
 
-def test_backend_connection():
+def check_backend_connection():
     """Verifica que el backend esté funcionando"""
     try:
         r = requests.get(f"{BASE_URL}/health", timeout=5)
@@ -30,7 +31,7 @@ def test_backend_connection():
         print(f" No se puede conectar al backend: {e}")
         return False
 
-def test_login():
+def check_login():
     """Prueba el login y retorna los datos"""
     try:
         r = requests.post(
@@ -52,12 +53,14 @@ def test_login():
 def main(page: ft.Page):
     """Función principal de Flet"""
     page.title = "SomatoCarta - Dashboard"
+    if hasattr(page, "window"):
+        page.window.icon = asset_path(WINDOW_ICON)
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 0
     
     # Paso 1: Verificar backend
     print("\n=== DIAGNÓSTICO ===")
-    if not test_backend_connection():
+    if not check_backend_connection():
         page.add(
             ft.Container(
                 content=ft.Column([
@@ -73,7 +76,7 @@ def main(page: ft.Page):
         return
     
     # Paso 2: Login
-    user_data = test_login()
+    user_data = check_login()
     if not user_data:
         page.add(
             ft.Container(
@@ -155,4 +158,4 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     print("Iniciando SomatoCarta con auto-login...")
-    ft.app(target=main)
+    ft.app(target=main, assets_dir="assets")

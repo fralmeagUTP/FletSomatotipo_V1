@@ -263,6 +263,23 @@ class ApiClientTests(unittest.TestCase):
         self.assertEqual(result["items"], [{"id_Somatotipo": 1}])
         self.assertEqual(result["total"], 1)
 
+    def test_get_historial_vista_all_fetches_all_pages(self):
+        responses = []
+        for payload in [
+            {"items": [{"id_Somatotipo": 1}], "total": 3, "page": 1, "page_size": 1},
+            {"items": [{"id_Somatotipo": 2}], "total": 3, "page": 2, "page_size": 1},
+            {"items": [{"id_Somatotipo": 3}], "total": 3, "page": 3, "page_size": 1},
+        ]:
+            response = Mock(status_code=200, content=b"{}")
+            response.json.return_value = payload
+            responses.append(response)
+
+        with patch("src.frontend.api_client.requests.request", side_effect=responses) as request:
+            result = ApiClient(FakePage()).get_historial_vista_all("123", page_size=1)
+
+        self.assertEqual([item["id_Somatotipo"] for item in result], [1, 2, 3])
+        self.assertEqual(request.call_count, 3)
+
     def test_find_deportista_for_historial_returns_first_match(self):
         response = Mock(status_code=200, content=b"[]")
         response.json.return_value = [

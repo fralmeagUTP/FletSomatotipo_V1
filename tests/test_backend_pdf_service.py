@@ -33,6 +33,15 @@ class PdfServiceTests(unittest.TestCase):
             IMC=22.5,
             EstadoIMC="Normal",
             TipoComplexion="Media",
+            Complexion=10.2,
+            DIAMETRO_BIEPI_MUNECA=55,
+            DIAMETRO_BIEPI_FEMUR=92,
+            DIAMETRO_CODO=68,
+            PorcGrasoJonson=22.0,
+            PesoGrasoJhonston=14.3,
+            PesoOseo=8.1,
+            PesoResidual=12.8,
+            Mma=29.8,
             Endomorfismo=3.1,
             EscalaEndomorfismo="Moderado",
             Mesomorfismo=4.2,
@@ -50,8 +59,18 @@ class PdfServiceTests(unittest.TestCase):
         self.assertIn(b"Unidad", pdf)
         self.assertIn(b"mm", pdf)
         self.assertIn(b"kg", pdf)
-        self.assertIn(b"/Count 5", pdf)
+        self.assertIn(b"/Count 3", pdf)
+        self.assertIn(b"Datos crudos antropom", pdf)
+        self.assertIn(b"5.50", pdf)
+        self.assertIn(b"M", pdf)
+        self.assertIn(b"todo principal: Johnston", pdf)
+        self.assertIn(b"Sem", pdf)
+        self.assertIn(b"Distribuci", pdf)
+        self.assertNotIn(b"Notas de lectura", pdf)
+        self.assertNotIn(b"Lectura de coordenadas", pdf)
         self.assertIn(b"/XObject", pdf)
+        self.assertIn(b"/ImLogo", pdf)
+        self.assertIn(b"/ImContextura", pdf)
         self.assertIn(b"/ImSomatocarta", pdf)
         self.assertIn(b"/ImIMC", pdf)
         self.assertTrue(pdf.endswith(b"%%EOF"))
@@ -95,6 +114,10 @@ class PdfServiceTests(unittest.TestCase):
         self.assertTrue(pdf.startswith(b"%PDF-1.4"))
         self.assertIn(b"Informe de an", pdf)
         self.assertIn(b"/Count 3", pdf)
+        self.assertIn(b"Dashboard de tendencias", pdf)
+        self.assertIn(b"Peso vs masa muscular", pdf)
+        self.assertIn(b"Historial de coordenadas", pdf)
+        self.assertIn(b"/ImLogo", pdf)
         self.assertIn(b"/ImSomatocarta", pdf)
         self.assertIn(b"2026-06-15", pdf)
         self.assertTrue(pdf.endswith(b"%%EOF"))

@@ -188,6 +188,20 @@ class ValoracionViewTests(unittest.TestCase):
         self.assertIn("1001", visible_texts)
         self.assertIn("Pereira", visible_texts)
 
+    def test_search_athlete_calculates_age_before_birthday(self):
+        FakeApiClient.athletes[0]["FECHA_NAC"] = "2007-12-31"
+        fecha_field = find_text_field(self.view, "Fecha Medición *")
+        fecha_field.value = "2026-12-01"
+
+        self._select_athlete()
+
+        visible_texts = [
+            control.value
+            for control in walk_controls(self.view)
+            if isinstance(control, ft.Text) and isinstance(control.value, str)
+        ]
+        self.assertTrue(any(text.startswith("18 ") for text in visible_texts))
+
     def test_search_athlete_shows_stored_valuations(self):
         FakeApiClient.editable_records = [self.stored_record()]
         self._select_athlete()

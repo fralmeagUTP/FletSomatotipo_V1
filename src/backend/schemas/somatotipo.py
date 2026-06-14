@@ -3,22 +3,29 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.anthropometry import MEASUREMENT_RULES
+
+
+def measurement_field(field_name: str):
+    rule = MEASUREMENT_RULES[field_name]
+    return Field(gt=rule.minimum_exclusive, le=rule.maximum_inclusive)
+
 
 class SomatotipoDetalleBase(BaseModel):
-    ESTA_USER_CM: float = Field(gt=50, le=250)
-    PESO_kg: float = Field(gt=10, le=300)
-    PLIEGUE_TRICIPITAL: float = Field(gt=0, le=100)
-    PLIEGUE_SUBESCAPULAR: float = Field(gt=0, le=100)
-    PLIEGUE_SUPRAILIACO: float = Field(gt=0, le=100)
-    PLIEGUE_ABDOMINAL: float = Field(gt=0, le=100)
-    PLIEGUE_MUSLO_ANT: float = Field(gt=0, le=100)
-    PLIEGUE_MEDIAL_PIERNA: float = Field(gt=0, le=100)
-    DIAMETRO_BIEPI_MUNECA: float = Field(gt=0, le=200)
-    DIAMETRO_BIEPI_FEMUR: float = Field(gt=0, le=200)
-    DIAMETRO_CODO: float = Field(gt=0, le=200)
-    PERIMETRO_BICED_CONTRAIDO: float = Field(gt=0, le=250)
-    PERIMETRO_PIERNA: float = Field(gt=0, le=250)
-    CIRCUNFERENCIA_CARPO: float = Field(gt=0, le=200)
+    ESTA_USER_CM: float = measurement_field("ESTA_USER_CM")
+    PESO_kg: float = measurement_field("PESO_kg")
+    PLIEGUE_TRICIPITAL: float = measurement_field("PLIEGUE_TRICIPITAL")
+    PLIEGUE_SUBESCAPULAR: float = measurement_field("PLIEGUE_SUBESCAPULAR")
+    PLIEGUE_SUPRAILIACO: float = measurement_field("PLIEGUE_SUPRAILIACO")
+    PLIEGUE_ABDOMINAL: float = measurement_field("PLIEGUE_ABDOMINAL")
+    PLIEGUE_MUSLO_ANT: float = measurement_field("PLIEGUE_MUSLO_ANT")
+    PLIEGUE_MEDIAL_PIERNA: float = measurement_field("PLIEGUE_MEDIAL_PIERNA")
+    DIAMETRO_BIEPI_MUNECA: float = measurement_field("DIAMETRO_BIEPI_MUNECA")
+    DIAMETRO_BIEPI_FEMUR: float = measurement_field("DIAMETRO_BIEPI_FEMUR")
+    DIAMETRO_CODO: float = measurement_field("DIAMETRO_CODO")
+    PERIMETRO_BICED_CONTRAIDO: float = measurement_field("PERIMETRO_BICED_CONTRAIDO")
+    PERIMETRO_PIERNA: float = measurement_field("PERIMETRO_PIERNA")
+    CIRCUNFERENCIA_CARPO: float = measurement_field("CIRCUNFERENCIA_CARPO")
 
 
 class SomatotipoCreate(BaseModel):

@@ -69,6 +69,16 @@ git status --short
 
 La política operativa de archivos subidos está documentada en `docs/uploads.md`.
 
+## Migraciones manuales de base de datos
+
+Antes de desplegar cambios que dependen de restricciones nuevas en MySQL, ejecutar las migraciones pendientes contra la base de datos seleccionada.
+
+```powershell
+mysql -h $env:DB_HOST -P $env:DB_PORT -u $env:DB_USER -p $env:DB_NAME < .\scripts\migrations\001_unique_somatotipo_deportista_fecha.sql
+```
+
+La migración `001_unique_somatotipo_deportista_fecha.sql` crea el índice único `uq_somatotipo_deportista_fecha` sobre `CDRTablaSomatotipo(IDENTI_DEPORTISTA, FECHA_MEDIDA)`. Si existen duplicados previos, falla intencionalmente para obligar a depurar datos antes de activar la restricción.
+
 ## Comando de commit sugerido
 
 ```powershell

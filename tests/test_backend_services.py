@@ -1,5 +1,10 @@
 import unittest
+from datetime import date
+from decimal import Decimal
 from types import SimpleNamespace
+
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from src.backend.services.deportistas_service import create_deportista, list_deportistas_page
 from src.backend.services.somatotipo_service import create_somatotipo, get_historial_vista_page
@@ -26,7 +31,7 @@ class FakeDetail:
 
 
 class FakeDb:
-    def __init__(self, fail_on_commit=False, fail_on_flush=False):
+    def __init__(self, fail_on_commit=False, fail_on_flush=False, fail_with_integrity=False, items=None, first_item=None):
         self.added = []
         self.commits = 0
         self.flushes = 0
@@ -34,6 +39,9 @@ class FakeDb:
         self.refreshed = []
         self.fail_on_commit = fail_on_commit
         self.fail_on_flush = fail_on_flush
+        self.fail_with_integrity = fail_with_integrity
+        self.items = ["item"] if items is None else items
+        self.first_item = first_item
 
     def add(self, item):
         self.added.append(item)
@@ -45,6 +53,8 @@ class FakeDb:
         self.added[0].id_Somatotipo = 99
 
     def commit(self):
+        if self.fail_with_integrity:
+            raise IntegrityError("insert", {}, Exception("duplicate"))
         if self.fail_on_commit:
             raise RuntimeError("commit failed")
         self.commits += 1
@@ -55,20 +65,22 @@ class FakeDb:
     def refresh(self, item):
         self.refreshed.append(item)
 
-    def query(self, model):
-        return FakeQuery()
+    def query(self, *models):
+        return FakeQuery(self.items, self.first_item)
 
 
 class FakeQuery:
-    def __init__(self):
+    def __init__(self, items, first_item=None):
         self.offset_value = None
         self.limit_value = None
+        self.items = items
+        self.first_item = first_item
 
     def filter(self, *args, **kwargs):
         return self
 
     def first(self):
-        return None
+        return self.first_item
 
     def count(self):
         return 36
@@ -85,7 +97,7 @@ class FakeQuery:
         return self
 
     def all(self):
-        return ["item"]
+        return self.items
 
 
 class BackendServicesTests(unittest.TestCase):
@@ -100,11 +112,29 @@ class BackendServicesTests(unittest.TestCase):
         self.assertEqual(result["page_size"], 10)
 
     def test_get_historial_vista_page_applies_offset_and_limit(self):
-        db = FakeDb()
+        db = FakeDb(items=[
+            SimpleNamespace(
+                id_Somatotipo=7,
+                FECHA_MEDIDA=date(2026, 6, 8),
+                IDENTI_DEPORTISTA="123",
+                PESO_kg=Decimal("75.50"),
+                X=Decimal("-0.25"),
+                Y=None,
+            )
+        ])
 
         result = get_historial_vista_page(db, "123", page=2, page_size=5)
 
-        self.assertEqual(result["items"], ["item"])
+        self.assertEqual(result["items"], [
+            {
+                "id_Somatotipo": 7,
+                "FECHA_MEDIDA": "2026-06-08",
+                "IDENTI_DEPORTISTA": "123",
+                "PESO_kg": 75.5,
+                "X": -0.25,
+                "Y": None,
+            }
+        ])
         self.assertEqual(result["total"], 36)
         self.assertEqual(result["page"], 2)
         self.assertEqual(result["page_size"], 5)
@@ -126,6 +156,38 @@ class BackendServicesTests(unittest.TestCase):
         self.assertEqual(db.commits, 1)
         self.assertEqual(len(db.added), 2)
         self.assertEqual(db.added[1].id_Somatotipo, 99)
+
+    def test_create_somatotipo_rejects_same_athlete_same_date(self):
+        db = FakeDb(first_item=SimpleNamespace(id_Somatotipo=12))
+        payload = SimpleNamespace(
+            IDENTI_DEPORTISTA="123",
+            LOGIN_USER="admin",
+            FECHA_MEDIDA=date(2026, 6, 6),
+            OBSERV="Obs",
+            DETALLES=[FakeDetail()],
+        )
+
+        with self.assertRaises(HTTPException) as context:
+            create_somatotipo(db, payload)
+
+        self.assertEqual(context.exception.status_code, 409)
+        self.assertEqual(db.commits, 0)
+
+    def test_create_somatotipo_maps_integrity_error_to_conflict(self):
+        db = FakeDb(fail_with_integrity=True)
+        payload = SimpleNamespace(
+            IDENTI_DEPORTISTA="123",
+            LOGIN_USER="admin",
+            FECHA_MEDIDA=date(2026, 6, 6),
+            OBSERV="Obs",
+            DETALLES=[FakeDetail()],
+        )
+
+        with self.assertRaises(HTTPException) as context:
+            create_somatotipo(db, payload)
+
+        self.assertEqual(context.exception.status_code, 409)
+        self.assertEqual(db.rollbacks, 1)
 
     def test_create_somatotipo_rolls_back_on_flush_failure(self):
         db = FakeDb(fail_on_flush=True)

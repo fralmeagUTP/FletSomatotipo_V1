@@ -4,6 +4,8 @@ from pathlib import Path
 ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets"
 
 LOGO_SOMATOCARTA = "LogoSomatoCarta.png"
+APP_ICON = "icon.png"
+WINDOW_ICON = "icon.ico"
 LOGO_CDR = "Logo_CDR_60px.jpg"
 LOGO_ISC = "Logo_ISC_60px.jpg"
 LOGO_UTP = "Logo_UTP_60px.jpg"

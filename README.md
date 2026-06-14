@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 Resultado actual esperado:
 
 ```text
-106 passed
+150 passed
 ```
 
 ## Documentación
@@ -56,6 +56,7 @@ Resultado actual esperado:
 - Fórmulas/cálculos: `docs/formulas_somatotipo.md`
 - Publicación: `docs/publicacion.md`
 - Uploads: `docs/uploads.md`
+- Migraciones SQL: `scripts/migrations/`
 - Ejecución detallada: `EJECUTAR_POWERSHELL.txt`
 - Comandos rápidos: `comandos.txt`
 
@@ -76,4 +77,5 @@ tests/
 - No guardar secretos en Git; usar `.env`.
 - No usar `requests` directamente en vistas; usar `src/frontend/api_client.py`.
 - Mantener routers backend delgados; mover lógica a `src/backend/services/`.
+- El icono de build usa `assets/icon.png` y la ventana Windows usa `assets/icon.ico`; si el host de desarrollo mantiene el icono de Flet, cerrar la app y reconstruir con `flet build ... --clear-cache`.
 - Antes de publicar, revisar archivos no relacionados como backups `.zip` e imágenes en `src/backend/static/uploads/`.

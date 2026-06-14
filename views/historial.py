@@ -90,6 +90,12 @@ def HistorialView(page: ft.Page):
         update_layout()
 
     def download_longitudinal_pdf(event):
+        if hasattr(page, "run_thread"):
+            page.run_thread(lambda: download_longitudinal_pdf_sync())
+        else:
+            download_longitudinal_pdf_sync()
+
+    def download_longitudinal_pdf_sync():
         if not current_longitudinal_rows:
             show_snack(page, "No hay valoraciones para generar el PDF.")
             return
@@ -249,6 +255,12 @@ def HistorialView(page: ft.Page):
             somatotipo_id = det.get("id_Somatotipo")
 
             def download_pdf(_):
+                if hasattr(page, "run_thread"):
+                    page.run_thread(download_pdf_sync)
+                else:
+                    download_pdf_sync()
+
+            def download_pdf_sync():
                 pdf_button.disabled = True
                 pdf_button.text = "Generando PDF..."
                 page.update()
@@ -448,7 +460,7 @@ def HistorialView(page: ft.Page):
         next_button.disabled = current_page >= total_pages
 
     def change_history_page(delta):
-        search_historial(current_historial_query or search_field.value, current_page + delta)
+        run_search_historial(current_historial_query or search_field.value, current_page + delta)
 
     prev_button = ft.IconButton(
         ft.Icons.CHEVRON_LEFT,
@@ -465,7 +477,7 @@ def HistorialView(page: ft.Page):
     search_button = ft.IconButton(
         ft.Icons.SEARCH,
         icon_color=PRIMARY_COLOR,
-        on_click=lambda e: search_historial(search_field.value, 1),
+        on_click=lambda e: run_search_historial(search_field.value, 1),
     )
     analysis_button = ft.Button(
         "Ver análisis",
@@ -504,8 +516,7 @@ def HistorialView(page: ft.Page):
             identi = athlete["IDENTI_DEPORTISTA"]
             search_status.value = f"Historial de {athlete['NOMBRE_DEPORTISTA']} ({identi})"
             page_data = api.get_historial_vista_page(identi, current_page, page_size)
-            analysis_data = api.get_historial_vista_page(identi, 1, 100)
-            current_longitudinal_rows = analysis_data["items"]
+            current_longitudinal_rows = api.get_historial_vista_all(identi)
             analysis_button.disabled = len(current_longitudinal_rows) < 2
             total_count = page_data["total"]
             update_pagination_controls()
@@ -535,6 +546,12 @@ def HistorialView(page: ft.Page):
                 control.disabled = False
             update_pagination_controls()
             page.update()
+
+    def run_search_historial(query, requested_page=1):
+        if hasattr(page, "run_thread"):
+            page.run_thread(lambda: search_historial(query, requested_page))
+        else:
+            search_historial(query, requested_page)
     history_list = ft.ListView(
         expand=True,
         spacing=10,
@@ -588,7 +605,7 @@ def HistorialView(page: ft.Page):
     search_field = ft.TextField(
         label="Buscar deportista por nombre o ID",
         suffix_icon=ft.Icons.SEARCH,
-        on_submit=lambda e: search_historial(e.control.value, 1),
+        on_submit=lambda e: run_search_historial(e.control.value, 1),
         expand=True,
         text_size=14,
     )

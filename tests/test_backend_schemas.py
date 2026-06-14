@@ -47,6 +47,33 @@ class BackendSchemasTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             SomatotipoCreate(**payload)
 
+    def test_somatotipo_schema_rejects_out_of_range_measurements(self):
+        detail = {
+            "ESTA_USER_CM": 251,
+            "PESO_kg": 75,
+            "PLIEGUE_TRICIPITAL": 10,
+            "PLIEGUE_SUBESCAPULAR": 11,
+            "PLIEGUE_SUPRAILIACO": 12,
+            "PLIEGUE_ABDOMINAL": 13,
+            "PLIEGUE_MUSLO_ANT": 14,
+            "PLIEGUE_MEDIAL_PIERNA": 15,
+            "DIAMETRO_BIEPI_MUNECA": 6,
+            "DIAMETRO_BIEPI_FEMUR": 9,
+            "DIAMETRO_CODO": 7,
+            "PERIMETRO_BICED_CONTRAIDO": 32,
+            "PERIMETRO_PIERNA": 40,
+            "CIRCUNFERENCIA_CARPO": 17,
+        }
+        payload = {
+            "IDENTI_DEPORTISTA": "123",
+            "LOGIN_USER": "admin",
+            "FECHA_MEDIDA": date.today(),
+            "DETALLES": [detail],
+        }
+
+        with self.assertRaises(ValidationError):
+            SomatotipoCreate(**payload)
+
 
 if __name__ == "__main__":
     unittest.main()

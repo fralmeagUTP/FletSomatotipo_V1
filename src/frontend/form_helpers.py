@@ -1,3 +1,6 @@
+from src.anthropometry import validate_measurement_value
+
+
 def control_value(control):
     return getattr(control, "value", None)
 
@@ -23,8 +26,8 @@ def parse_positive_float(value, label: str):
     return parsed_value
 
 
-def parse_positive_float_control(control, label: str):
-    return parse_positive_float(control_value(control), label)
+def parse_measurement_control(control, field_name: str):
+    return validate_measurement_value(field_name, control_value(control))
 
 
 def build_deportista_payload(fields: dict, photo_url: str | None):
@@ -52,20 +55,20 @@ def build_deportista_payload(fields: dict, photo_url: str | None):
 
 def build_measurement_detail(fields: dict):
     return {
-        "ESTA_USER_CM": parse_positive_float_control(fields["estatura"], "Estatura"),
-        "PESO_kg": parse_positive_float_control(fields["peso"], "Peso"),
-        "PLIEGUE_TRICIPITAL": parse_positive_float_control(fields["p_tricipital"], "Pliegue tricipital"),
-        "PLIEGUE_SUBESCAPULAR": parse_positive_float_control(fields["p_subescapular"], "Pliegue subescapular"),
-        "PLIEGUE_SUPRAILIACO": parse_positive_float_control(fields["p_suprailiaco"], "Pliegue suprailiaco"),
-        "PLIEGUE_ABDOMINAL": parse_positive_float_control(fields["p_abdominal"], "Pliegue abdominal"),
-        "PLIEGUE_MUSLO_ANT": parse_positive_float_control(fields["p_muslo"], "Pliegue muslo anterior"),
-        "PLIEGUE_MEDIAL_PIERNA": parse_positive_float_control(fields["p_pierna"], "Pliegue pierna medial"),
-        "DIAMETRO_BIEPI_MUNECA": parse_positive_float_control(fields["d_muneca"], "Diametro muneca"),
-        "DIAMETRO_BIEPI_FEMUR": parse_positive_float_control(fields["d_femur"], "Diametro femur"),
-        "DIAMETRO_CODO": parse_positive_float_control(fields["d_codo"], "Diametro codo"),
-        "PERIMETRO_BICED_CONTRAIDO": parse_positive_float_control(fields["perim_bicep"], "Perimetro biceps"),
-        "PERIMETRO_PIERNA": parse_positive_float_control(fields["perim_pierna"], "Perimetro pierna"),
-        "CIRCUNFERENCIA_CARPO": parse_positive_float_control(fields["c_carpo"], "Circunferencia carpo"),
+        "ESTA_USER_CM": parse_measurement_control(fields["estatura"], "ESTA_USER_CM"),
+        "PESO_kg": parse_measurement_control(fields["peso"], "PESO_kg"),
+        "PLIEGUE_TRICIPITAL": parse_measurement_control(fields["p_tricipital"], "PLIEGUE_TRICIPITAL"),
+        "PLIEGUE_SUBESCAPULAR": parse_measurement_control(fields["p_subescapular"], "PLIEGUE_SUBESCAPULAR"),
+        "PLIEGUE_SUPRAILIACO": parse_measurement_control(fields["p_suprailiaco"], "PLIEGUE_SUPRAILIACO"),
+        "PLIEGUE_ABDOMINAL": parse_measurement_control(fields["p_abdominal"], "PLIEGUE_ABDOMINAL"),
+        "PLIEGUE_MUSLO_ANT": parse_measurement_control(fields["p_muslo"], "PLIEGUE_MUSLO_ANT"),
+        "PLIEGUE_MEDIAL_PIERNA": parse_measurement_control(fields["p_pierna"], "PLIEGUE_MEDIAL_PIERNA"),
+        "DIAMETRO_BIEPI_MUNECA": parse_measurement_control(fields["d_muneca"], "DIAMETRO_BIEPI_MUNECA"),
+        "DIAMETRO_BIEPI_FEMUR": parse_measurement_control(fields["d_femur"], "DIAMETRO_BIEPI_FEMUR"),
+        "DIAMETRO_CODO": parse_measurement_control(fields["d_codo"], "DIAMETRO_CODO"),
+        "PERIMETRO_BICED_CONTRAIDO": parse_measurement_control(fields["perim_bicep"], "PERIMETRO_BICED_CONTRAIDO"),
+        "PERIMETRO_PIERNA": parse_measurement_control(fields["perim_pierna"], "PERIMETRO_PIERNA"),
+        "CIRCUNFERENCIA_CARPO": parse_measurement_control(fields["c_carpo"], "CIRCUNFERENCIA_CARPO"),
     }
 
 

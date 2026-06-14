@@ -1,4 +1,8 @@
+from threading import Lock
+
+
 _logout_callback = None
+_view_lock = Lock()
 
 
 def set_logout_callback(callback):
@@ -11,14 +15,17 @@ def get_logout_callback():
 
 
 def show_view(page, view_factory):
-    page.clean()
-    page.add(view_factory(page))
+    view = view_factory(page)
+    with _view_lock:
+        page.clean()
+        page.add(view)
 
 
 def show_dashboard(page, logout_callback=None):
     from views.dashboard import DashboardView
 
-    set_logout_callback(logout_callback)
+    if logout_callback is not None:
+        set_logout_callback(logout_callback)
     show_view(page, DashboardView)
 
 

@@ -199,6 +199,21 @@ class ApiClient:
     def get_historial_vista(self, identi: str, page: int = 1, page_size: int = 20):
         return self.get_historial_vista_page(identi, page, page_size)["items"]
 
+    def get_historial_vista_all(self, identi: str, page_size: int = 100):
+        page_size = max(1, min(page_size, 100))
+        first_page = self.get_historial_vista_page(identi, 1, page_size)
+        items = list(first_page["items"])
+        total = int(first_page.get("total") or len(items))
+        page = 2
+        while len(items) < total:
+            page_data = self.get_historial_vista_page(identi, page, page_size)
+            page_items = list(page_data.get("items") or [])
+            if not page_items:
+                break
+            items.extend(page_items)
+            page += 1
+        return items
+
     def find_deportista_for_historial(self, query: str):
         matches = self.list_deportistas(query)
         if not matches:

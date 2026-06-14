@@ -1,12 +1,35 @@
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 
 from ..models import Somatotipo, SomatotipoDetalle, VistaValoracionCorporal, Deportista, DeporteDeportista, Entidad, Deporte
 from .pdf_service import build_longitudinal_pdf, build_valoracion_pdf
+from .view_contract_service import EXPECTED_SOMATOTIPO_VIEW_COLUMNS
+
+
+DUPLICATE_SOMATOTIPO_MESSAGE = (
+    "Ya existe una valoración para este deportista en esa fecha. "
+    "Agrega la toma como detalle de la valoración existente."
+)
 
 
 def create_somatotipo(db: Session, data):
+    existing = (
+        db.query(Somatotipo)
+        .filter(
+            Somatotipo.IDENTI_DEPORTISTA == data.IDENTI_DEPORTISTA,
+            Somatotipo.FECHA_MEDIDA == data.FECHA_MEDIDA,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=DUPLICATE_SOMATOTIPO_MESSAGE,
+        )
+
     try:
         header = Somatotipo(
             IDENTI_DEPORTISTA=data.IDENTI_DEPORTISTA,
@@ -28,6 +51,9 @@ def create_somatotipo(db: Session, data):
         db.commit()
         db.refresh(header)
         return {"message": "Somatotipo registrado con éxito", "id": header.id_Somatotipo}
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=DUPLICATE_SOMATOTIPO_MESSAGE) from error
     except Exception:
         db.rollback()
         raise
@@ -147,11 +173,42 @@ def delete_somatotipo_detalle(db: Session, detail_id: int):
 
 
 def get_historial_vista(db: Session, identi: str):
-    return db.query(VistaValoracionCorporal).filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi).all()
+    records = (
+        db.query(*vista_query_columns())
+        .filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi)
+        .order_by(VistaValoracionCorporal.FECHA_MEDIDA.asc(), VistaValoracionCorporal.id_Somatotipo.asc())
+        .all()
+    )
+    return [serialize_vista_record(record) for record in records]
+
+
+def json_safe_value(value):
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    return value
+
+
+def vista_query_columns():
+    return [
+        getattr(VistaValoracionCorporal, column_name)
+        for column_name in EXPECTED_SOMATOTIPO_VIEW_COLUMNS
+        if hasattr(VistaValoracionCorporal, column_name)
+    ]
+
+
+def serialize_vista_record(record):
+    source = getattr(record, "_mapping", None)
+    return {
+        column_name: json_safe_value(source[column_name] if source else getattr(record, column_name, None))
+        for column_name in EXPECTED_SOMATOTIPO_VIEW_COLUMNS
+        if (source and column_name in source) or hasattr(record, column_name)
+    }
 
 
 def get_historial_vista_page(db: Session, identi: str, page: int = 1, page_size: int = 20):
-    query = db.query(VistaValoracionCorporal).filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi)
+    query = db.query(*vista_query_columns()).filter(VistaValoracionCorporal.IDENTI_DEPORTISTA == identi)
     total = query.count()
     offset = (page - 1) * page_size
     items = (
@@ -161,7 +218,7 @@ def get_historial_vista_page(db: Session, identi: str, page: int = 1, page_size:
         .all()
     )
     return {
-        "items": items,
+        "items": [serialize_vista_record(item) for item in items],
         "total": total,
         "page": page,
         "page_size": page_size,

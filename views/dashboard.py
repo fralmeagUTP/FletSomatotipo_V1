@@ -65,6 +65,10 @@ def DashboardView(page: ft.Page):
     def handle_logout(_):
         if logout_callback:
             logout_callback()
+            return
+        page.session.clear()
+        page.clean()
+        page.update()
 
     def card_item(icon, label, on_click=None, image_name=None):
         visual = (

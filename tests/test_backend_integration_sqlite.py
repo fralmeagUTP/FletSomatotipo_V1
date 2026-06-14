@@ -286,7 +286,7 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
 
         self.assertEqual(result["total"], 2)
         self.assertEqual(len(result["items"]), 1)
-        self.assertEqual(result["items"][0].id_Somatotipo, 2)
+        self.assertEqual(result["items"][0]["id_Somatotipo"], 2)
 
 
 if __name__ == "__main__":
