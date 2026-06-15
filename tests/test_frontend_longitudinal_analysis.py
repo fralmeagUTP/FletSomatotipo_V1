@@ -105,7 +105,7 @@ class LongitudinalAnalysisTests(unittest.TestCase):
         legend = card.content.controls[3].content
 
         self.assertIsInstance(stack, ft.Stack)
-        self.assertEqual(len(stack.controls), 3)
+        self.assertEqual(len(stack.controls), 4)
         self.assertIn("X=-0.28", legend.controls[0].content.controls[1].value)
 
 

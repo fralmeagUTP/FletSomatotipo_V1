@@ -10,6 +10,7 @@ class FakePage:
     def __init__(self):
         self.controls = [{"old": "content"}]
         self.session = {}
+        self.width = 1200
 
     def clean(self):
         self.controls.clear()
@@ -61,20 +62,39 @@ class NavigationTests(unittest.TestCase):
         callback = object()
         set_logout_callback(callback)
 
-        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}):
+        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}), patch(
+            "src.frontend.app_shell.build_app_shell",
+            return_value={"shell": True},
+        ):
             show_dashboard(page)
 
         self.assertIs(get_logout_callback(), callback)
-        self.assertEqual(page.controls, [{"dashboard": True}])
+        self.assertEqual(page.controls, [{"shell": True}])
 
     def test_show_dashboard_updates_logout_callback_when_provided(self):
         page = FakePage()
         callback = object()
 
-        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}):
+        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}), patch(
+            "src.frontend.app_shell.build_app_shell",
+            return_value={"shell": True},
+        ):
             show_dashboard(page, callback)
 
         self.assertIs(get_logout_callback(), callback)
+
+    def test_show_acerca_renders_in_global_shell(self):
+        from src.frontend.navigation import show_acerca
+
+        page = FakePage()
+
+        with patch("views.acerca.AcercaView", return_value={"acerca": True}), patch(
+            "src.frontend.app_shell.build_app_shell",
+            return_value={"shell": "acerca"},
+        ):
+            show_acerca(page)
+
+        self.assertEqual(page.controls, [{"shell": "acerca"}])
 
 
 if __name__ == "__main__":
