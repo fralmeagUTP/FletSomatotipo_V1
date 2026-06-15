@@ -45,8 +45,13 @@ class TableBuildersTests(unittest.TestCase):
         item = {
             "FECHA_MEDIDA": "2026-06-01",
             "NOMBRE_DEPORTISTA": "Ana",
-            "PESO_kg": 65,
-            "IMC": 22.5,
+            "PESO_kg": 65.333333,
+            "IMC": 22.5555,
+            "Complexion": 10.4444,
+            "TipoComplexion": "Mediana",
+            "Endomorfismo": 2.345,
+            "Mesomorfismo": 4.5,
+            "Ectomorfismo": 1.999,
             "PorcRasoYuasz": 15,
         }
 
@@ -54,7 +59,11 @@ class TableBuildersTests(unittest.TestCase):
         summary = card.content.controls[2].value
 
         self.assertIn("ID: 10", summary)
-        self.assertIn("Peso: 65 kg", summary)
+        self.assertIn("Peso: 65.33 kg", summary)
+        self.assertIn("IMC: 22.56", summary)
+        self.assertIn("Complexión física: 10.44 (Mediana)", summary)
+        self.assertIn("Somatotipo: 2.35 - 4.5 - 2", summary)
+        self.assertNotIn("Grasa Yuhasz", summary)
 
     def test_build_measurement_row_contains_summary_values(self):
         row = build_measurement_row(

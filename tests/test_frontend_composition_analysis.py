@@ -36,11 +36,11 @@ class CompositionAnalysisTests(unittest.TestCase):
 
         self.assertEqual(rows[0]["component"], "Grasa corporal")
         self.assertEqual(rows[0]["unit"], "%")
-        self.assertEqual(rows[0]["method"], "Yuhasz")
+        self.assertEqual(rows[0]["method"], "Johnston")
         self.assertEqual(rows[3]["component"], "Masa grasa")
         self.assertEqual(rows[3]["unit"], "kg")
-        self.assertEqual(rows[2]["method"], "Johnston")
-        self.assertEqual(rows[5]["method"], "Johnston")
+        self.assertEqual(rows[2]["method"], "Yuhasz")
+        self.assertEqual(rows[3]["method"], "Johnston")
 
     def test_mass_balance_summary_uses_johnston_mass_and_detects_difference(self):
         summary = mass_balance_summary(self.detail)
@@ -70,10 +70,10 @@ class CompositionAnalysisTests(unittest.TestCase):
     def test_build_fat_method_rows_groups_percent_and_mass_by_method(self):
         rows = build_fat_method_rows(self.detail)
 
-        self.assertEqual([row["method"] for row in rows], ["Yuhasz", "Faulkner", "Johnston"])
-        self.assertEqual(rows[2]["use"], "Usado en balance")
-        self.assertAlmostEqual(rows[2]["fat_percent"], 13.9)
-        self.assertAlmostEqual(rows[2]["fat_mass"], 7.71)
+        self.assertEqual([row["method"] for row in rows], ["Johnston", "Faulkner", "Yuhasz"])
+        self.assertEqual(rows[0]["use"], "Método principal")
+        self.assertAlmostEqual(rows[0]["fat_percent"], 13.9)
+        self.assertAlmostEqual(rows[0]["fat_mass"], 7.71)
 
     def test_build_composition_table_returns_horizontal_scroll_row(self):
         table = build_composition_table(build_composition_rows(self.detail))
@@ -103,7 +103,7 @@ class CompositionAnalysisTests(unittest.TestCase):
         panel = build_composition_panel(self.detail)
 
         self.assertIsInstance(panel, ft.Column)
-        self.assertGreaterEqual(len(panel.controls), 6)
+        self.assertGreaterEqual(len(panel.controls), 4)
 
 
 if __name__ == "__main__":

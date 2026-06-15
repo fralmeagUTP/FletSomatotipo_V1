@@ -1,0 +1,8 @@
+flet
+requests
+python-dotenv
+certifi
+urllib3
+idna
+charset-normalizer
+six

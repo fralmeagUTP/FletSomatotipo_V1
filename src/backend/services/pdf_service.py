@@ -50,6 +50,8 @@ SPANISH_MONTHS = {
 LONGITUDINAL_REPORT_METRICS = [
     ("Peso", "PESO_kg", "kg"),
     ("IMC", "IMC", ""),
+    ("Grasa Johnston", "PorcGrasoJonson", "%"),
+    ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
     ("Grasa Yuhasz", "PorcRasoYuasz", "%"),
     ("Masa muscular", "Mma", "kg"),
     ("Endomorfismo", "Endomorfismo", ""),
@@ -227,7 +229,7 @@ def longitudinal_delta_value(series):
 def delta_direction(field, delta):
     if delta is None:
         return "neutral", MUTED_COLOR
-    if field in {"PorcRasoYuasz", "IMC", "PESO_kg", "Endomorfismo"}:
+    if field in {"PorcGrasoJonson", "PorcGrasoFaulker", "PorcRasoYuasz", "IMC", "PESO_kg", "Endomorfismo"}:
         return ("down", SUCCESS_COLOR) if delta < 0 else ("up", WARNING_COLOR if delta > 0 else MUTED_COLOR)
     if field in {"Mma", "Mesomorfismo"}:
         return ("up", SUCCESS_COLOR) if delta > 0 else ("down", ERROR_COLOR if delta < 0 else MUTED_COLOR)
@@ -962,19 +964,19 @@ def append_somatocarta_panel(commands, record, image_x, image_y, display_width):
 
 def append_longitudinal_summary_cards(commands, records, x, y):
     latest = sort_records_by_date(records)[-1] if records else None
-    card_width = 120
+    card_width = 80
     card_height = 64
-    for index, (label, field, unit) in enumerate(LONGITUDINAL_REPORT_METRICS[:4]):
-        card_x = x + ((index % 4) * (card_width + 8))
+    for index, (label, field, unit) in enumerate(LONGITUDINAL_REPORT_METRICS[:6]):
+        card_x = x + (index * (card_width + 6))
         value = record_value(latest, field) if latest else None
         series = build_pdf_metric_series(records, field)
         text = "---" if value is None else f"{display_value(value)} {unit}".strip()
         delta = longitudinal_delta_value(series)
         direction, delta_color = delta_direction(field, delta)
         commands.append(rect_command(card_x, y - card_height, card_width, card_height, fill="#ffffff", stroke=TABLE_LINE))
-        commands.append(text_command(card_x + 10, y - 17, label, 8, color=MUTED_COLOR))
-        commands.append(text_command(card_x + 10, y - 36, short_text(text, 17), 13, color=PRIMARY_COLOR, font="F2"))
-        append_delta_badge(commands, card_x + 10, y - 49, longitudinal_delta_text(series, unit), direction, delta_color, width=82)
+        commands.append(text_command(card_x + 8, y - 17, short_text(label, 14), 6, color=MUTED_COLOR))
+        commands.append(text_command(card_x + 8, y - 35, short_text(text, 11), 10, color=PRIMARY_COLOR, font="F2"))
+        append_delta_badge(commands, card_x + 8, y - 49, short_text(longitudinal_delta_text(series, unit), 9), direction, delta_color, width=60)
 
 
 def append_longitudinal_table(commands, records, x, y):
@@ -982,19 +984,21 @@ def append_longitudinal_table(commands, records, x, y):
         ("Fecha", "FECHA_MEDIDA", ""),
         ("Peso", "PESO_kg", "kg"),
         ("IMC", "IMC", ""),
+        ("Grasa Johnston", "PorcGrasoJonson", "%"),
+        ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
         ("Grasa Yuhasz", "PorcRasoYuasz", "%"),
         ("Masa muscular", "Mma", "kg"),
         ("X", "X", ""),
         ("Y", "Y", ""),
     ]
-    widths = [76, 60, 52, 84, 88, 46, 46]
-    row_height = 18
+    widths = [66, 50, 40, 76, 76, 68, 76, 30, 30]
+    row_height = 16
     append_section_title(commands, x, y, "Evolución registrada")
     row_y = y - 32
     commands.append(rect_command(x, row_y - row_height + 5, sum(widths), row_height, fill=LIGHT_BLUE, stroke=TABLE_LINE, stroke_width=0.25))
     column_x = x
     for (label, _, _), width in zip(fields, widths):
-        commands.append(text_command(column_x + 5, row_y - 8, label, 7, color=PRIMARY_COLOR, font="F2"))
+        commands.append(text_command(column_x + 4, row_y - 8, short_text(label, 17), 6, color=PRIMARY_COLOR, font="F2"))
         column_x += width
     row_y -= row_height
 
@@ -1006,7 +1010,7 @@ def append_longitudinal_table(commands, records, x, y):
             value = display_value(record_value(record, field))
             if unit and value != "---":
                 value = f"{value} {unit}"
-            commands.append(text_command(column_x + 5, row_y - 8, short_text(value, 15), 7, color=LINE_COLOR))
+            commands.append(text_command(column_x + 4, row_y - 8, short_text(value, 13), 6, color=LINE_COLOR))
             column_x += width
         row_y -= row_height
     if len(records) > 18:
@@ -1101,12 +1105,6 @@ def append_multi_line_chart(commands, title, series_specs, x, y, width=242, heig
 
 def append_longitudinal_somatocarta(commands, records):
     append_header(commands, "Somatocarta longitudinal", f"{len(records)} valoración(es) graficadas")
-    display_width = 500
-    display_height = display_width * (SOMATOCARTA_SOURCE_HEIGHT / SOMATOCARTA_SOURCE_WIDTH)
-    image_x = (PAGE_WIDTH - display_width) / 2
-    image_y = 116
-    commands.append(image_command("ImSomatocarta", image_x, image_y, display_width, display_height))
-
     palette = ["#ff3b30", "#2e5cb8", "#00a86b", "#f59e0b", "#8b5cf6", "#0891b2", "#db2777", "#64748b"]
     points = []
     for record in sort_records_by_date(records):
@@ -1122,6 +1120,28 @@ def append_longitudinal_somatocarta(commands, records):
             }
         )
 
+    content_top = 724
+    panel_height = 630
+    gap = 14
+    graph_x = LEFT_MARGIN
+    graph_width = 330
+    history_x = graph_x + graph_width + gap
+    history_width = PAGE_WIDTH - LEFT_MARGIN - history_x
+
+    commands.append(rect_command(graph_x, content_top - panel_height, graph_width, panel_height, fill="#ffffff", stroke=TABLE_LINE))
+    commands.append(rect_command(history_x, content_top - panel_height, history_width, panel_height, fill="#ffffff", stroke=TABLE_LINE))
+    commands.append(text_command(graph_x + 14, content_top - 24, "Trayectoria en somatocarta", 12, color=PRIMARY_COLOR, font="F2"))
+    commands.append(text_command(graph_x + 14, content_top - 42, "Puntos unidos en orden cronológico.", 7, color=MUTED_COLOR))
+    commands.append(text_command(history_x + 12, content_top - 24, "Historial de coordenadas", 12, color=PRIMARY_COLOR, font="F2"))
+    commands.append(text_command(history_x + 12, content_top - 42, "Fecha, X e Y por valoración.", 7, color=MUTED_COLOR))
+
+    display_width = graph_width - 28
+    display_height = display_width * (SOMATOCARTA_SOURCE_HEIGHT / SOMATOCARTA_SOURCE_WIDTH)
+    image_x = graph_x + 14
+    image_y = content_top - 62 - display_height
+    commands.append(rect_command(image_x - 6, image_y - 6, display_width + 12, display_height + 12, fill=LIGHT_GRAY, stroke=LIGHT_GRAY))
+    commands.append(image_command("ImSomatocarta", image_x, image_y, display_width, display_height))
+
     plotted_points = []
     for index, point in enumerate(points):
         point_x, point_y = somatocarta_coordinate_to_pixel(point["x"], point["y"])
@@ -1132,20 +1152,35 @@ def append_longitudinal_somatocarta(commands, records):
 
     for start, end in zip(plotted_points, plotted_points[1:]):
         commands.append(line_command(start[0], start[1], end[0], end[1], stroke=1.2, color=PRIMARY_COLOR))
-    for pdf_x, pdf_y, color, point in plotted_points:
-        commands.append(circle_command(pdf_x, pdf_y, 4.8, fill=color, stroke="#ffffff"))
+    for point_index, (pdf_x, pdf_y, color, point) in enumerate(plotted_points):
+        is_latest = point_index == len(plotted_points) - 1
+        commands.append(circle_command(pdf_x, pdf_y, 5.8 if is_latest else 4.8, fill=color, stroke="#ffffff"))
 
-    legend_x = LEFT_MARGIN
-    legend_y = 100
-    commands.append(text_command(legend_x, legend_y, "Historial de coordenadas", 10, color=PRIMARY_COLOR, font="F2"))
-    for index, point in enumerate(points[:10]):
-        column = index % 2
-        row = index // 2
-        row_x = legend_x + (column * 248)
-        row_y = legend_y - 18 - (row * 16)
-        color = palette[index % len(palette)]
-        commands.append(circle_command(row_x + 5, row_y + 3, 3.2, fill=color, stroke="#ffffff"))
-        commands.append(text_command(row_x + 14, row_y, f"{point['date']} | X: {point['x']:.2f} | Y: {point['y']:.2f}", 6, color=LINE_COLOR))
+    row_y = content_top - 68
+    row_height = 39
+    max_rows = 14
+    visible_points = list(enumerate(points))
+    if len(visible_points) > max_rows:
+        visible_points = visible_points[: max_rows - 1] + [visible_points[-1]]
+    if not points:
+        commands.append(text_command(history_x + 12, row_y, "No hay coordenadas X/Y disponibles.", 8, color=MUTED_COLOR))
+    for index, (source_index, point) in enumerate(visible_points):
+        color = palette[source_index % len(palette)]
+        is_latest = point == points[-1]
+        fill = LIGHT_BLUE if is_latest else ("#ffffff" if index % 2 == 0 else LIGHT_GRAY)
+        commands.append(rect_command(history_x + 10, row_y - 25, history_width - 20, 30, fill=fill, stroke=TABLE_LINE, stroke_width=0.25))
+        commands.append(circle_command(history_x + 20, row_y - 8, 3.4, fill=color, stroke="#ffffff"))
+        commands.append(text_command(history_x + 30, row_y - 2, short_text(point["date"], 18), 7, color=LINE_COLOR, font="F2" if is_latest else "F1"))
+        commands.append(text_command(history_x + 30, row_y - 14, f"X: {point['x']:.2f}  |  Y: {point['y']:.2f}", 7, color=MUTED_COLOR))
+        if is_latest:
+            commands.append(text_command(history_x + history_width - 56, row_y - 2, "Última", 6, color=PRIMARY_COLOR, font="F2"))
+        row_y -= row_height
+    if len(points) > max_rows:
+        commands.append(text_command(history_x + 12, 112, f"Se muestran {max_rows} de {len(points)} valoraciones.", 7, color=MUTED_COLOR))
+
+    commands.append(rect_command(graph_x + 14, 104, graph_width - 28, 34, fill=LIGHT_BLUE, stroke=TABLE_LINE))
+    commands.append(text_command(graph_x + 24, 124, "Lectura", 8, color=PRIMARY_COLOR, font="F2"))
+    commands.append(text_command(graph_x + 24, 112, "La línea muestra la evolución temporal del somatotipo.", 7, color=MUTED_COLOR))
 
 
 def append_athlete_info_card(commands, athlete_info, x, y, width, height):
@@ -1246,7 +1281,19 @@ def build_longitudinal_pdf(records, athlete_info=None):
         width=248,
         height=240,
     )
-    append_line_chart(page_two, "Porcentaje graso", build_pdf_metric_series(ordered, "PorcRasoYuasz"), "%", 318, 708, width=234, height=140)
+    append_multi_line_chart(
+        page_two,
+        "Grasa: Johnston, Faulkner y Yuhasz",
+        [
+            {"label": "Johnston", "series": build_pdf_metric_series(ordered, "PorcGrasoJonson"), "color": PRIMARY_COLOR},
+            {"label": "Faulkner", "series": build_pdf_metric_series(ordered, "PorcGrasoFaulker"), "color": WARNING_COLOR},
+            {"label": "Yuhasz", "series": build_pdf_metric_series(ordered, "PorcRasoYuasz"), "color": SUCCESS_COLOR},
+        ],
+        318,
+        708,
+        width=234,
+        height=140,
+    )
     append_line_chart(page_two, "IMC", build_pdf_metric_series(ordered, "IMC"), "", 318, 492, width=234, height=130)
     append_multi_line_chart(
         page_two,

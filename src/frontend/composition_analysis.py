@@ -33,9 +33,9 @@ def build_composition_rows(detail):
     return [
         {
             "component": "Grasa corporal",
-            "value": detail.get("PorcRasoYuasz"),
+            "value": detail.get("PorcGrasoJonson"),
             "unit": "%",
-            "method": "Yuhasz",
+            "method": "Johnston",
             "kind": "percent",
         },
         {
@@ -47,16 +47,16 @@ def build_composition_rows(detail):
         },
         {
             "component": "Grasa corporal",
-            "value": detail.get("PorcGrasoJonson"),
+            "value": detail.get("PorcRasoYuasz"),
             "unit": "%",
-            "method": "Johnston",
+            "method": "Yuhasz",
             "kind": "percent",
         },
         {
             "component": "Masa grasa",
-            "value": detail.get("PesoRasoYuazs"),
+            "value": detail.get("PesoGrasoJhonston"),
             "unit": "kg",
-            "method": "Yuhasz",
+            "method": "Johnston",
             "kind": "mass",
         },
         {
@@ -68,9 +68,9 @@ def build_composition_rows(detail):
         },
         {
             "component": "Masa grasa",
-            "value": detail.get("PesoGrasoJhonston"),
+            "value": detail.get("PesoRasoYuazs"),
             "unit": "kg",
-            "method": "Johnston",
+            "method": "Yuhasz",
             "kind": "mass",
         },
     ]
@@ -80,11 +80,11 @@ def build_fat_method_rows(detail):
     body_weight = detail.get("PESO_kg")
     return [
         {
-            "method": "Yuhasz",
-            "fat_percent": parse_float(detail.get("PorcRasoYuasz")),
-            "fat_mass": parse_float(detail.get("PesoRasoYuazs")),
-            "percent_of_weight": percent_of_weight(detail.get("PesoRasoYuazs"), body_weight),
-            "use": "Referencia comparativa",
+            "method": "Johnston",
+            "fat_percent": parse_float(detail.get("PorcGrasoJonson")),
+            "fat_mass": parse_float(detail.get("PesoGrasoJhonston")),
+            "percent_of_weight": percent_of_weight(detail.get("PesoGrasoJhonston"), body_weight),
+            "use": "Método principal",
         },
         {
             "method": "Faulkner",
@@ -94,11 +94,11 @@ def build_fat_method_rows(detail):
             "use": "Referencia comparativa",
         },
         {
-            "method": "Johnston",
-            "fat_percent": parse_float(detail.get("PorcGrasoJonson")),
-            "fat_mass": parse_float(detail.get("PesoGrasoJhonston")),
-            "percent_of_weight": percent_of_weight(detail.get("PesoGrasoJhonston"), body_weight),
-            "use": "Usado en balance",
+            "method": "Yuhasz",
+            "fat_percent": parse_float(detail.get("PorcRasoYuasz")),
+            "fat_mass": parse_float(detail.get("PesoRasoYuazs")),
+            "percent_of_weight": percent_of_weight(detail.get("PesoRasoYuazs"), body_weight),
+            "use": "Referencia comparativa",
         },
     ]
 
@@ -119,9 +119,27 @@ def build_mass_distribution_rows(detail):
         row["is_total"] = False
 
     total_rows = [
-        {"component": "Peso corporal", "value": body_weight, "percent": 100.0 if body_weight else None, "role": "Medición directa", "is_total": True},
-        {"component": "Suma calculada", "value": component_total, "percent": percent_of_weight(component_total, body_weight), "role": "Suma de masas", "is_total": True},
-        {"component": "Diferencia", "value": difference, "percent": percent_of_weight(difference, body_weight), "role": "Peso - suma", "is_total": True},
+        {
+            "component": "Peso corporal",
+            "value": body_weight,
+            "percent": 100.0 if body_weight else None,
+            "role": "Medición directa",
+            "is_total": True,
+        },
+        {
+            "component": "Suma calculada",
+            "value": component_total,
+            "percent": percent_of_weight(component_total, body_weight),
+            "role": "Suma de masas",
+            "is_total": True,
+        },
+        {
+            "component": "Diferencia",
+            "value": difference,
+            "percent": percent_of_weight(difference, body_weight),
+            "role": "Peso - suma",
+            "is_total": True,
+        },
     ]
     return total_rows[:1] + rows + total_rows[1:]
 
@@ -166,6 +184,42 @@ def mass_balance_message(summary):
     )
 
 
+def build_metric_card(label, value, unit="", helper=None, color=theme.PRIMARY_COLOR):
+    value_text = f"{format_number(value)} {unit}".strip() if value is not None else "---"
+    controls = [
+        ft.Text(label, size=11, color=theme.SUBTITLE_COLOR),
+        ft.Text(value_text, size=18, weight=ft.FontWeight.BOLD, color=color),
+    ]
+    if helper:
+        controls.append(ft.Text(helper, size=10, color=theme.SUBTITLE_COLOR))
+    return ft.Container(
+        content=ft.Column(controls, spacing=4, tight=True),
+        col={"xs": 12, "sm": 12, "md": 12, "lg": 12},
+        padding=12,
+        bgcolor=theme.SURFACE_MUTED,
+        border_radius=theme.RADIUS_SMALL,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+    )
+
+
+def build_section(title, subtitle, content, col=None):
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Text(title, color=theme.PRIMARY_COLOR, weight=ft.FontWeight.BOLD),
+                ft.Text(subtitle, size=11, color=theme.SUBTITLE_COLOR) if subtitle else ft.Container(visible=False),
+                content,
+            ],
+            spacing=8,
+        ),
+        col=col,
+        padding=12,
+        bgcolor=ft.Colors.WHITE,
+        border_radius=theme.RADIUS_SMALL,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+    )
+
+
 def build_fat_methods_table(rows):
     table = ft.DataTable(
         columns=[
@@ -195,7 +249,7 @@ def build_fat_methods_table(rows):
 
 
 def build_composition_table(rows):
-    fat_rows = [row for row in rows if row["component"] == "Grasa corporal" or row["component"] == "Masa grasa"]
+    fat_rows = [row for row in rows if row["component"] in ("Grasa corporal", "Masa grasa")]
     table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text("Componente")),
@@ -209,7 +263,7 @@ def build_composition_table(rows):
                     ft.DataCell(ft.Text(row["component"])),
                     ft.DataCell(ft.Text(format_number(row["value"]))),
                     ft.DataCell(ft.Text(row["unit"])),
-                    ft.DataCell(ft.Text(row["method"])),
+                    ft.DataCell(ft.Text(row["method"], weight="bold" if row["method"] == "Johnston" else None)),
                 ]
             )
             for row in fat_rows
@@ -248,21 +302,22 @@ def build_mass_distribution_table(rows):
 
 
 def build_status_banner(text, is_warning=False):
+    color = ft.Colors.ORANGE_700 if is_warning else ft.Colors.GREEN_700
+    background = ft.Colors.ORANGE_50 if is_warning else ft.Colors.GREEN_50
+    icon = ft.Icons.WARNING_AMBER_ROUNDED if is_warning else ft.Icons.CHECK_CIRCLE_OUTLINE
     return ft.Container(
         content=ft.Row(
             [
-                ft.Icon(
-                    ft.Icons.WARNING_AMBER_ROUNDED if is_warning else ft.Icons.CHECK_CIRCLE_OUTLINE,
-                    color=ft.Colors.ORANGE_700 if is_warning else ft.Colors.GREEN_700,
-                    size=18,
-                ),
+                ft.Icon(icon, color=color, size=18),
                 ft.Text(text, size=12, color=theme.SUBTITLE_COLOR, expand=True),
             ],
+            spacing=8,
             vertical_alignment=ft.CrossAxisAlignment.START,
         ),
-        bgcolor=ft.Colors.ORANGE_50 if is_warning else ft.Colors.GREEN_50,
+        bgcolor=background,
         padding=10,
-        border_radius=8,
+        border_radius=theme.RADIUS_SMALL,
+        border=ft.border.all(1, ft.Colors.ORANGE_100 if is_warning else ft.Colors.GREEN_100),
     )
 
 
@@ -308,9 +363,10 @@ def build_mass_pie_chart(distribution_rows):
                     height=240,
                     width=240,
                 ),
-                col={"xs": 12, "sm": 5},
+                col={"xs": 12, "sm": 12, "md": 12, "lg": 12},
+                alignment=ft.alignment.center,
             ),
-            ft.Container(content=legend, col={"xs": 12, "sm": 7}),
+            ft.Container(content=legend, col={"xs": 12, "sm": 12, "md": 12, "lg": 12}),
         ],
         spacing=12,
         run_spacing=12,
@@ -325,7 +381,7 @@ def build_method_comparison(rows):
     values = [parse_float(row["value"]) for row in percent_rows]
     return ft.Text(
         f"Comparación entre métodos: mínimo {min(values):.2f} %, máximo {max(values):.2f} %, "
-        f"diferencia {max(values) - min(values):.2f} %.",
+        f"diferencia {max(values) - min(values):.2f} %. Johnston se mantiene como referencia principal.",
         size=12,
         color=theme.SUBTITLE_COLOR,
     )
@@ -339,22 +395,52 @@ def build_composition_panel(detail):
     balance_text = mass_balance_message(balance)
     equation_warning = fat_equation_warning(detail)
 
-    controls = [
-        ft.Text("Comparación de métodos de grasa", color=theme.PRIMARY_COLOR, weight="bold"),
-        build_fat_methods_table(fat_method_rows),
-        ft.Text("Distribución del peso corporal", color=theme.PRIMARY_COLOR, weight="bold"),
-        build_mass_distribution_table(distribution_rows),
-    ]
+    summary_cards = ft.ResponsiveRow(
+        [
+            build_metric_card("Masa grasa Johnston", detail.get("PesoGrasoJhonston"), "kg", "Método principal"),
+            build_metric_card("Masa muscular", detail.get("Mma"), "kg", "Componente magro"),
+            build_metric_card("Masa ósea", detail.get("PesoOseo"), "kg", "Componente estructural"),
+            build_metric_card("Masa residual", detail.get("PesoResidual"), "kg", "Componente residual"),
+        ],
+        spacing=10,
+        run_spacing=10,
+    )
+
+    alerts = []
     if balance_text:
-        controls.append(build_status_banner(balance_text, balance["is_warning"]))
+        alerts.append(build_status_banner(balance_text, balance["is_warning"]))
     if equation_warning:
-        controls.append(build_status_banner(equation_warning, True))
+        alerts.append(build_status_banner(equation_warning, True))
+
+    distribution_flow = ft.Column(
+        [
+            build_section(
+                "Distribución del peso",
+                "Peso corporal contra grasa, músculo, hueso y masa residual.",
+                build_mass_distribution_table(distribution_rows),
+            ),
+            build_section(
+                "Gráfico de masas",
+                "Participación porcentual de cada componente corporal.",
+                build_mass_pie_chart(distribution_rows),
+            ),
+        ],
+        spacing=12,
+    )
+
+    controls = [
+        summary_cards,
+        build_section(
+            "Métodos de grasa",
+            "Johnston es el método principal; Faulkner y Yuhasz son referencias comparativas.",
+            build_fat_methods_table(fat_method_rows),
+        ),
+    ]
+    controls.extend(alerts)
     controls.extend(
         [
-            ft.Divider(),
-            ft.Text("Gráfico de pastel de masas corporales", color=theme.PRIMARY_COLOR, weight="bold"),
-            build_mass_pie_chart(distribution_rows),
+            distribution_flow,
             build_method_comparison(rows),
         ]
     )
-    return ft.Column(controls, spacing=10)
+    return ft.Column(controls, spacing=12)

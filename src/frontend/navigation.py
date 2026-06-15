@@ -47,6 +47,12 @@ def show_historial(page):
     show_view(page, HistorialView)
 
 
+def show_analisis_longitudinal(page):
+    from views.analisis_longitudinal import AnalisisLongitudinalView
+
+    show_view(page, AnalisisLongitudinalView)
+
+
 def show_entidades(page):
     from views.entidades import EntidadesView
 

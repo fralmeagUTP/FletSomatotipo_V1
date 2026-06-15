@@ -1,7 +1,18 @@
 import flet as ft
 
 from src.frontend import theme
+from src.frontend.components import danger_icon_button, edit_icon_button
 from src.frontend.formatters import age_from_birth_date, display_value
+
+
+def format_number(value, fallback="-"):
+    if value in (None, ""):
+        return fallback
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return display_value(value, fallback)
+    return f"{number:.2f}".rstrip("0").rstrip(".")
 
 
 def build_deportista_row(deportista: dict, on_edit, on_delete):
@@ -18,16 +29,8 @@ def build_deportista_row(deportista: dict, on_edit, on_delete):
             ft.DataCell(
                 ft.Row(
                     [
-                        ft.IconButton(
-                            ft.Icons.EDIT,
-                            icon_color=theme.PRIMARY_COLOR,
-                            on_click=lambda event, item=deportista: on_edit(item),
-                        ),
-                        ft.IconButton(
-                            ft.Icons.DELETE,
-                            icon_color="red",
-                            on_click=lambda event, item_id=identi: on_delete(item_id),
-                        ),
+                        edit_icon_button(on_click=lambda event, item=deportista: on_edit(item)),
+                        danger_icon_button(on_click=lambda event, item_id=identi: on_delete(item_id)),
                     ]
                 )
             ),
@@ -39,17 +42,13 @@ def build_measurement_row(detail: dict, on_delete, on_edit=None, index=None):
     actions = []
     if on_edit is not None:
         actions.append(
-            ft.IconButton(
-                ft.Icons.EDIT,
-                icon_color=theme.PRIMARY_COLOR,
+            edit_icon_button(
                 tooltip="Editar medición",
                 on_click=lambda event, item=detail: on_edit(item),
             )
         )
     actions.append(
-        ft.IconButton(
-            ft.Icons.DELETE,
-            icon_color="red",
+        danger_icon_button(
             tooltip="Eliminar medición",
             on_click=lambda event, item=detail: on_delete(item),
         )
@@ -77,7 +76,11 @@ def group_historial_rows(rows: list[dict]):
                 "SEXO_DEPORTISTA": row.get("SEXO_DEPORTISTA"),
                 "PESO_kg": row.get("PESO_kg"),
                 "IMC": row.get("IMC"),
-                "PorcRasoYuasz": row.get("PorcRasoYuasz"),
+                "Complexion": row.get("Complexion"),
+                "TipoComplexion": row.get("TipoComplexion"),
+                "Endomorfismo": row.get("Endomorfismo"),
+                "Mesomorfismo": row.get("Mesomorfismo"),
+                "Ectomorfismo": row.get("Ectomorfismo"),
                 "detalles": [],
             }
         grouped[sid]["detalles"].append(row)
@@ -87,11 +90,21 @@ def group_historial_rows(rows: list[dict]):
 def build_historial_item(somatotipo_id, item: dict, on_select, on_delete):
     summary_parts = [f"ID: {somatotipo_id}"]
     if item.get("PESO_kg") is not None:
-        summary_parts.append(f"Peso: {item['PESO_kg']} kg")
+        summary_parts.append(f"Peso: {format_number(item['PESO_kg'])} kg")
     if item.get("IMC") is not None:
-        summary_parts.append(f"IMC: {item['IMC']}")
-    if item.get("PorcRasoYuasz") is not None:
-        summary_parts.append(f"Grasa Yuhasz: {item['PorcRasoYuasz']} %")
+        summary_parts.append(f"IMC: {format_number(item['IMC'])}")
+    complexion = display_value(item.get("TipoComplexion"), "")
+    complexion_value = format_number(item.get("Complexion"), "")
+    if complexion or complexion_value:
+        detail = f"{complexion_value} ({complexion})" if complexion and complexion_value else complexion or complexion_value
+        summary_parts.append(f"Complexión física: {detail}")
+    somatotype_values = [
+        format_number(item.get("Endomorfismo"), ""),
+        format_number(item.get("Mesomorfismo"), ""),
+        format_number(item.get("Ectomorfismo"), ""),
+    ]
+    if any(somatotype_values):
+        summary_parts.append(f"Somatotipo: {' - '.join(value or '-' for value in somatotype_values)}")
     return ft.Container(
         content=ft.Column(
             [

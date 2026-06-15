@@ -84,6 +84,8 @@ class PdfServiceTests(unittest.TestCase):
                 FECHA_MEDIDA=date(2026, 6, 1),
                 PESO_kg=65,
                 IMC=22.5,
+                PorcGrasoJonson=14.9,
+                PorcGrasoFaulker=15.4,
                 PorcRasoYuasz=15.1,
                 Mma=28.3,
                 Endomorfismo=3.1,
@@ -99,6 +101,8 @@ class PdfServiceTests(unittest.TestCase):
                 FECHA_MEDIDA=date(2026, 6, 15),
                 PESO_kg=66,
                 IMC=22.8,
+                PorcGrasoJonson=14.4,
+                PorcGrasoFaulker=15.0,
                 PorcRasoYuasz=14.8,
                 Mma=29.0,
                 Endomorfismo=2.9,
@@ -116,6 +120,9 @@ class PdfServiceTests(unittest.TestCase):
         self.assertIn(b"/Count 3", pdf)
         self.assertIn(b"Dashboard de tendencias", pdf)
         self.assertIn(b"Peso vs masa muscular", pdf)
+        self.assertIn(b"Grasa: Johnston", pdf)
+        self.assertIn(b"Faulkner", pdf)
+        self.assertIn(b"Yuhasz", pdf)
         self.assertIn(b"Historial de coordenadas", pdf)
         self.assertIn(b"/ImLogo", pdf)
         self.assertIn(b"/ImSomatocarta", pdf)

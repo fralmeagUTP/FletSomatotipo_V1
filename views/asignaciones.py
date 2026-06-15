@@ -4,7 +4,17 @@ from datetime import datetime
 from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.components import page_header, responsive_padding, section_title, set_busy
+from src.frontend.components import (
+    confirm_delete_dialog,
+    danger_icon_button,
+    edit_icon_button,
+    page_header,
+    primary_button,
+    responsive_padding,
+    secondary_button,
+    section_title,
+    set_busy,
+)
 from src.frontend.navigation import show_dashboard
 
 
@@ -25,8 +35,8 @@ def AsignacionesView(page: ft.Page):
     status_text = ft.Text("", color=theme.SUBTITLE_COLOR, size=13)
     rows_container = ft.Column(spacing=8)
     pagination_text = ft.Text("", color=theme.SUBTITLE_COLOR, size=12)
-    save_button = ft.ElevatedButton("Guardar asignación", icon=ft.Icons.SAVE, bgcolor=theme.PRIMARY_COLOR, color="white")
-    cancel_button = ft.OutlinedButton("Cancelar edición", icon=ft.Icons.CANCEL, visible=False)
+    save_button = primary_button("Guardar asignacion", icon=ft.Icons.SAVE)
+    cancel_button = secondary_button("Cancelar edicion", icon=ft.Icons.CANCEL, visible=False)
 
     # Athlete info card components
     athlete_photo = ft.Image(
@@ -71,8 +81,8 @@ def AsignacionesView(page: ft.Page):
             ],
             vertical_alignment=ft.CrossAxisAlignment.START,
         ),
-        bgcolor=ft.Colors.BLUE_50,
-        border_radius=10,
+        bgcolor=theme.INFO_BACKGROUND,
+        border_radius=theme.RADIUS_MEDIUM,
         padding=12,
         visible=False,
     )
@@ -210,6 +220,16 @@ def AsignacionesView(page: ft.Page):
         except ApiError as error:
             show_snack(page, str(error))
 
+    def confirm_delete(item_id):
+        page.open(
+            confirm_delete_dialog(
+                "Eliminar asignacion",
+                f"¿Seguro que deseas eliminar la asignacion {item_id}?",
+                lambda _: delete_item(item_id),
+                page=page,
+            )
+        )
+
     def render_rows(items):
         rows_container.controls.clear()
         for item in items:
@@ -237,8 +257,8 @@ def AsignacionesView(page: ft.Page):
                             ft.Container(
                                 ft.Row(
                                     [
-                                        ft.IconButton(ft.Icons.EDIT, icon_color=theme.PRIMARY_COLOR, tooltip="Editar", on_click=lambda e, data=item: edit_item(data)),
-                                        ft.IconButton(ft.Icons.DELETE_OUTLINE, icon_color=theme.ERROR_COLOR, tooltip="Eliminar", on_click=lambda e, item_id=item["id"]: delete_item(item_id)),
+                                        edit_icon_button(on_click=lambda e, data=item: edit_item(data)),
+                                        danger_icon_button(on_click=lambda e, item_id=item["id"]: confirm_delete(item_id)),
                                     ],
                                     spacing=4,
                                 ),
@@ -248,9 +268,9 @@ def AsignacionesView(page: ft.Page):
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
-                    bgcolor=ft.Colors.WHITE,
-                    border=ft.border.all(1, "#e3e8f0"),
-                    border_radius=10,
+                    bgcolor=theme.CARD_BACKGROUND,
+                    border=ft.border.all(1, theme.SURFACE_BORDER),
+                    border_radius=theme.RADIUS_MEDIUM,
                     padding=12,
                 )
             )
@@ -327,7 +347,7 @@ def AsignacionesView(page: ft.Page):
                         spacing=14,
                     ),
                     bgcolor=theme.CARD_BACKGROUND,
-                    border_radius=12,
+                    border_radius=theme.RADIUS_LARGE,
                     padding=responsive_padding(page, desktop=24, tablet=18, mobile=12),
                     shadow=theme.card_shadow(),
                 ),

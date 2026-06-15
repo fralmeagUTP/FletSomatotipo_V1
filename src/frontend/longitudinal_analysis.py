@@ -1,24 +1,30 @@
+import math
 from decimal import Decimal, InvalidOperation
 
 import flet as ft
 
 from src.frontend import theme
-from src.frontend.components import horizontal_scroll
 from src.frontend.assets import REFERENCE_IMAGES, asset_path
+from src.frontend.components import horizontal_scroll
 from src.frontend.interpretation import longitudinal_reliability_message
 from src.frontend.somatocarta import CHART_HEIGHT, CHART_WIDTH, coordinate_to_pixel
 
 
 LONGITUDINAL_METRICS = [
-    {"label": "Peso", "field": "PESO_kg", "unit": "kg"},
-    {"label": "IMC", "field": "IMC", "unit": ""},
-    {"label": "Porcentaje graso Yuhasz", "field": "PorcRasoYuasz", "unit": "%"},
-    {"label": "Porcentaje graso Faulkner", "field": "PorcGrasoFaulker", "unit": "%"},
-    {"label": "Masa muscular", "field": "Mma", "unit": "kg"},
-    {"label": "Endomorfismo", "field": "Endomorfismo", "unit": ""},
-    {"label": "Mesomorfismo", "field": "Mesomorfismo", "unit": ""},
-    {"label": "Ectomorfismo", "field": "Ectomorfismo", "unit": ""},
+    {"label": "Peso", "field": "PESO_kg", "unit": "kg", "semantic": "neutral"},
+    {"label": "IMC", "field": "IMC", "unit": "", "semantic": "lower_better"},
+    {"label": "Grasa Johnston", "field": "PorcGrasoJonson", "unit": "%", "semantic": "lower_better", "principal": True},
+    {"label": "Grasa Faulkner", "field": "PorcGrasoFaulker", "unit": "%", "semantic": "lower_better"},
+    {"label": "Grasa Yuhasz", "field": "PorcRasoYuasz", "unit": "%", "semantic": "lower_better"},
+    {"label": "Masa grasa Johnston", "field": "PesoGrasoJhonston", "unit": "kg", "semantic": "lower_better", "principal": True},
+    {"label": "Masa grasa Faulkner", "field": "PesoRasoFaulker", "unit": "kg", "semantic": "lower_better"},
+    {"label": "Masa muscular", "field": "Mma", "unit": "kg", "semantic": "higher_better"},
+    {"label": "Endomorfismo", "field": "Endomorfismo", "unit": "", "semantic": "neutral"},
+    {"label": "Mesomorfismo", "field": "Mesomorfismo", "unit": "", "semantic": "neutral"},
+    {"label": "Ectomorfismo", "field": "Ectomorfismo", "unit": "", "semantic": "neutral"},
 ]
+
+KPI_FIELDS = ["PESO_kg", "IMC", "PorcGrasoJonson", "PorcGrasoFaulker", "PorcRasoYuasz", "Mma"]
 
 
 def parse_number(value):
@@ -32,6 +38,14 @@ def parse_number(value):
 
 def sort_rows_by_date(rows):
     return sorted(rows, key=lambda row: (str(row.get("FECHA_MEDIDA", "")), row.get("id_Somatotipo") or 0))
+
+
+def format_value(value, unit=""):
+    number = parse_number(value)
+    if number is None:
+        return "---"
+    suffix = f" {unit}" if unit else ""
+    return f"{number:.2f}{suffix}"
 
 
 def build_metric_series(rows, field):
@@ -48,6 +62,29 @@ def build_metric_series(rows, field):
                 }
             )
     return series
+
+
+def metric_delta(series):
+    if len(series) < 2:
+        return None
+    return series[-1]["value"] - series[0]["value"]
+
+
+def trend_color(metric, delta):
+    if delta is None or delta == 0:
+        return theme.SUBTITLE_COLOR
+    semantic = metric.get("semantic", "neutral")
+    if semantic == "lower_better":
+        return theme.SUCCESS_COLOR if delta < 0 else theme.ERROR_COLOR
+    if semantic == "higher_better":
+        return theme.SUCCESS_COLOR if delta > 0 else theme.ERROR_COLOR
+    return theme.PRIMARY_COLOR if delta > 0 else theme.WARNING_COLOR
+
+
+def trend_icon(delta):
+    if delta is None or delta == 0:
+        return ft.Icons.REMOVE
+    return ft.Icons.ARROW_UPWARD if delta > 0 else ft.Icons.ARROW_DOWNWARD
 
 
 def trend_summary(series, unit=""):
@@ -75,9 +112,9 @@ def period_summary(rows):
 
 
 def delta_text(series, unit=""):
-    if len(series) < 2:
+    delta = metric_delta(series)
+    if delta is None:
         return "Sin tendencia"
-    delta = series[-1]["value"] - series[0]["value"]
     sign = "+" if delta > 0 else ""
     suffix = f" {unit}" if unit else ""
     return f"{sign}{delta:.2f}{suffix}"
@@ -101,6 +138,10 @@ def compact_date_label(value):
     return text
 
 
+def metric_by_field(field):
+    return next(metric for metric in LONGITUDINAL_METRICS if metric["field"] == field)
+
+
 def build_somatocarta_points(rows):
     points = []
     for index, row in enumerate(sort_rows_by_date(rows), start=1):
@@ -118,6 +159,26 @@ def build_somatocarta_points(rows):
             }
         )
     return points
+
+
+def build_trajectory_segment(start, end, color):
+    start_x, start_y = coordinate_to_pixel(start["x"], start["y"])
+    end_x, end_y = coordinate_to_pixel(end["x"], end["y"])
+    delta_x = end_x - start_x
+    delta_y = end_y - start_y
+    length = math.hypot(delta_x, delta_y)
+    if length < 1:
+        return None
+    angle = math.atan2(delta_y, delta_x)
+    return ft.Container(
+        left=start_x,
+        top=start_y - 1,
+        width=length,
+        height=2,
+        bgcolor=color,
+        opacity=0.55,
+        rotate=ft.Rotate(angle=angle, alignment=ft.alignment.center_left),
+    )
 
 
 def build_longitudinal_somatocarta(rows):
@@ -151,21 +212,28 @@ def build_longitudinal_somatocarta(rows):
             fit=ft.ImageFit.CONTAIN,
         )
     ]
+    for start, end in zip(points, points[1:]):
+        segment = build_trajectory_segment(start, end, theme.PRIMARY_COLOR)
+        if segment:
+            controls.append(segment)
+
     legend_rows = []
     for point_index, point in enumerate(points):
         point_x, point_y = coordinate_to_pixel(point["x"], point["y"])
         color = palette[point_index % len(palette)]
         date_label = point["date"] or f"Valoración {point['index']}"
+        is_latest = point_index == len(points) - 1
         controls.append(
             ft.Container(
-                left=point_x - 7,
-                top=point_y - 7,
-                width=14,
-                height=14,
+                left=point_x - (9 if is_latest else 7),
+                top=point_y - (9 if is_latest else 7),
+                width=18 if is_latest else 14,
+                height=18 if is_latest else 14,
                 bgcolor=color,
-                border=ft.border.all(2, ft.Colors.WHITE),
-                border_radius=14,
-                shadow=ft.BoxShadow(blur_radius=6, color="#55000000"),
+                border=ft.border.all(3 if is_latest else 2, ft.Colors.WHITE),
+                border_radius=18,
+                shadow=ft.BoxShadow(blur_radius=8, color="#55000000"),
+                tooltip=f"{date_label}: X={point['x']:.2f} · Y={point['y']:.2f}",
             )
         )
         legend_rows.append(
@@ -176,7 +244,8 @@ def build_longitudinal_somatocarta(rows):
                         ft.Text(
                             f"{date_label}: X={point['x']:.2f} · Y={point['y']:.2f}",
                             size=11,
-                            color=theme.SUBTITLE_COLOR,
+                            color=theme.TEXT_COLOR if is_latest else theme.SUBTITLE_COLOR,
+                            weight=ft.FontWeight.BOLD if is_latest else None,
                         ),
                     ],
                     spacing=6,
@@ -192,13 +261,14 @@ def build_longitudinal_somatocarta(rows):
             [
                 ft.Text("Somatocarta longitudinal", size=16, weight="bold", color=theme.PRIMARY_COLOR),
                 ft.Text(
-                    "Cada punto representa una valoración y muestra la fecha de medición.",
+                    "La línea muestra el recorrido cronológico; el último punto queda resaltado.",
                     size=12,
                     color=theme.SUBTITLE_COLOR,
                 ),
                 horizontal_scroll(chart),
                 ft.Container(
-                    content=ft.Column(legend_rows, spacing=0),
+                    content=ft.Column(legend_rows, spacing=0, scroll=ft.ScrollMode.AUTO),
+                    height=110,
                     padding=10,
                     bgcolor=theme.SURFACE_MUTED,
                     border_radius=8,
@@ -208,9 +278,19 @@ def build_longitudinal_somatocarta(rows):
         ),
         padding=12,
         bgcolor=ft.Colors.WHITE,
-        border=ft.border.all(1, "#eeeeee"),
+        border=ft.border.all(1, theme.SURFACE_BORDER),
         border_radius=10,
     )
+
+
+def chart_axis_labels(series):
+    return [
+        ft.ChartAxisLabel(
+            value=point["index"],
+            label=ft.Text(compact_date_label(point["date"]), size=10, color=theme.SUBTITLE_COLOR),
+        )
+        for point in series
+    ]
 
 
 def build_longitudinal_chart(rows, metric):
@@ -240,13 +320,6 @@ def build_longitudinal_chart(rows, metric):
         )
         for point in series
     ]
-    axis_labels = [
-        ft.ChartAxisLabel(
-            value=point["index"],
-            label=ft.Text(compact_date_label(point["date"]), size=10, color=theme.SUBTITLE_COLOR),
-        )
-        for point in series
-    ]
 
     chart = ft.LineChart(
         data_series=[
@@ -268,51 +341,273 @@ def build_longitudinal_chart(rows, metric):
         max_y=max_value + padding,
         horizontal_grid_lines=ft.ChartGridLines(interval=padding, color="#e1e7f0", width=1),
         vertical_grid_lines=ft.ChartGridLines(interval=1, color="#edf1f7", width=1),
-        bottom_axis=ft.ChartAxis(show_labels=True, labels=axis_labels, labels_size=34),
-        left_axis=ft.ChartAxis(show_labels=True, labels_size=36),
+        bottom_axis=ft.ChartAxis(show_labels=True, labels=chart_axis_labels(series), labels_size=34),
+        left_axis=ft.ChartAxis(show_labels=True, labels_size=42),
         tooltip_bgcolor=theme.TEXT_COLOR,
         tooltip_rounded_radius=6,
         interactive=True,
-        width=560,
+        width=620,
         height=260,
     )
     return ft.Container(content=horizontal_scroll(chart), height=280, padding=8, bgcolor=ft.Colors.WHITE, border_radius=8)
 
 
+def build_combined_chart(rows):
+    weight_metric = metric_by_field("PESO_kg")
+    muscle_metric = metric_by_field("Mma")
+    weight_series = build_metric_series(rows, weight_metric["field"])
+    muscle_series = build_metric_series(rows, muscle_metric["field"])
+    if len(weight_series) < 2 or len(muscle_series) < 2:
+        return ft.Container(
+            content=ft.Text(
+                "No hay datos suficientes para comparar peso y masa muscular.",
+                color=theme.SUBTITLE_COLOR,
+            ),
+            padding=18,
+            bgcolor=theme.SURFACE_MUTED,
+            border_radius=8,
+        )
+
+    all_values = [point["value"] for point in weight_series + muscle_series]
+    min_value = min(all_values)
+    max_value = max(all_values)
+    padding = max((max_value - min_value) * 0.15, 1)
+
+    chart = ft.LineChart(
+        data_series=[
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(point["index"], point["value"], tooltip=f"Peso {point['date']}: {point['value']:.2f} kg")
+                    for point in weight_series
+                ],
+                color=theme.PRIMARY_COLOR,
+                stroke_width=3,
+                point=ft.ChartCirclePoint(color=theme.PRIMARY_COLOR, radius=4),
+            ),
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(point["index"], point["value"], tooltip=f"Masa {point['date']}: {point['value']:.2f} kg")
+                    for point in muscle_series
+                ],
+                color=theme.SUCCESS_COLOR,
+                stroke_width=3,
+                point=ft.ChartCirclePoint(color=theme.SUCCESS_COLOR, radius=4),
+            ),
+        ],
+        min_x=1,
+        max_x=max(point["index"] for point in weight_series),
+        min_y=min_value - padding,
+        max_y=max_value + padding,
+        horizontal_grid_lines=ft.ChartGridLines(interval=padding, color="#e1e7f0", width=1),
+        vertical_grid_lines=ft.ChartGridLines(interval=1, color="#edf1f7", width=1),
+        bottom_axis=ft.ChartAxis(show_labels=True, labels=chart_axis_labels(weight_series), labels_size=34),
+        left_axis=ft.ChartAxis(show_labels=True, labels_size=42),
+        tooltip_bgcolor=theme.TEXT_COLOR,
+        tooltip_rounded_radius=6,
+        interactive=True,
+        width=620,
+        height=250,
+    )
+    legend = ft.Row(
+        [
+            ft.Row([ft.Container(width=10, height=10, bgcolor=theme.PRIMARY_COLOR, border_radius=10), ft.Text("Peso", size=11)]),
+            ft.Row([ft.Container(width=10, height=10, bgcolor=theme.SUCCESS_COLOR, border_radius=10), ft.Text("Masa muscular", size=11)]),
+        ],
+        spacing=18,
+    )
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Text("Comparación peso vs masa muscular", size=14, weight="bold", color=theme.TEXT_COLOR),
+                legend,
+                horizontal_scroll(chart),
+            ],
+            spacing=8,
+        ),
+        padding=8,
+        bgcolor=ft.Colors.WHITE,
+        border_radius=8,
+    )
+
+
+def build_fat_method_chart(rows):
+    johnston_metric = metric_by_field("PorcGrasoJonson")
+    faulkner_metric = metric_by_field("PorcGrasoFaulker")
+    yuhasz_metric = metric_by_field("PorcRasoYuasz")
+    johnston_series = build_metric_series(rows, johnston_metric["field"])
+    faulkner_series = build_metric_series(rows, faulkner_metric["field"])
+    yuhasz_series = build_metric_series(rows, yuhasz_metric["field"])
+    if len(johnston_series) < 2 or len(faulkner_series) < 2 or len(yuhasz_series) < 2:
+        return ft.Container(
+            content=ft.Text(
+                "No hay datos suficientes para comparar Johnston, Faulkner y Yuhasz.",
+                color=theme.SUBTITLE_COLOR,
+            ),
+            padding=18,
+            bgcolor=theme.SURFACE_MUTED,
+            border_radius=8,
+        )
+
+    all_values = [point["value"] for point in johnston_series + faulkner_series + yuhasz_series]
+    min_value = min(all_values)
+    max_value = max(all_values)
+    padding = max((max_value - min_value) * 0.15, 1)
+
+    chart = ft.LineChart(
+        data_series=[
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(
+                        point["index"],
+                        point["value"],
+                        tooltip=f"Johnston {point['date']}: {point['value']:.2f} %",
+                        show_tooltip=point == johnston_series[-1],
+                    )
+                    for point in johnston_series
+                ],
+                color=theme.PRIMARY_COLOR,
+                stroke_width=4,
+                point=ft.ChartCirclePoint(
+                    color=theme.PRIMARY_COLOR,
+                    radius=5,
+                    stroke_color=ft.Colors.WHITE,
+                    stroke_width=2,
+                ),
+            ),
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(
+                        point["index"],
+                        point["value"],
+                        tooltip=f"Faulkner {point['date']}: {point['value']:.2f} %",
+                    )
+                    for point in faulkner_series
+                ],
+                color=theme.WARNING_COLOR,
+                stroke_width=3,
+                point=ft.ChartCirclePoint(
+                    color=theme.WARNING_COLOR,
+                    radius=4,
+                    stroke_color=ft.Colors.WHITE,
+                    stroke_width=2,
+                ),
+            ),
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(
+                        point["index"],
+                        point["value"],
+                        tooltip=f"Yuhasz {point['date']}: {point['value']:.2f} %",
+                    )
+                    for point in yuhasz_series
+                ],
+                color=theme.SUCCESS_COLOR,
+                stroke_width=3,
+                point=ft.ChartCirclePoint(
+                    color=theme.SUCCESS_COLOR,
+                    radius=4,
+                    stroke_color=ft.Colors.WHITE,
+                    stroke_width=2,
+                ),
+            ),
+        ],
+        min_x=1,
+        max_x=max(point["index"] for point in johnston_series),
+        min_y=min_value - padding,
+        max_y=max_value + padding,
+        horizontal_grid_lines=ft.ChartGridLines(interval=padding, color="#e1e7f0", width=1),
+        vertical_grid_lines=ft.ChartGridLines(interval=1, color="#edf1f7", width=1),
+        bottom_axis=ft.ChartAxis(show_labels=True, labels=chart_axis_labels(johnston_series), labels_size=34),
+        left_axis=ft.ChartAxis(show_labels=True, labels_size=42),
+        tooltip_bgcolor=theme.TEXT_COLOR,
+        tooltip_rounded_radius=6,
+        interactive=True,
+        width=620,
+        height=250,
+    )
+    legend = ft.Row(
+        [
+            ft.Row(
+                [
+                    ft.Container(width=10, height=10, bgcolor=theme.PRIMARY_COLOR, border_radius=10),
+                    ft.Text("Johnston principal", size=11, weight=ft.FontWeight.BOLD),
+                ]
+            ),
+            ft.Row(
+                [
+                    ft.Container(width=10, height=10, bgcolor=theme.WARNING_COLOR, border_radius=10),
+                    ft.Text("Faulkner", size=11),
+                ]
+            ),
+            ft.Row(
+                [
+                    ft.Container(width=10, height=10, bgcolor=theme.SUCCESS_COLOR, border_radius=10),
+                    ft.Text("Yuhasz", size=11),
+                ]
+            ),
+        ],
+        spacing=18,
+    )
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Text("Análisis de grasa: Johnston vs Faulkner vs Yuhasz", size=14, weight="bold", color=theme.TEXT_COLOR),
+                ft.Text("Johnston se muestra como método principal; Faulkner y Yuhasz quedan como referencias comparativas.", size=12, color=theme.SUBTITLE_COLOR),
+                legend,
+                horizontal_scroll(chart),
+            ],
+            spacing=8,
+        ),
+        padding=8,
+        bgcolor=ft.Colors.WHITE,
+        border_radius=8,
+    )
+
+
 def build_metric_cards(rows):
     latest = sort_rows_by_date(rows)[-1] if rows else {}
     cards = []
-    for metric in LONGITUDINAL_METRICS[:4]:
+    for field in KPI_FIELDS:
+        metric = metric_by_field(field)
         value = latest.get(metric["field"])
-        text = "---" if value is None else f"{value} {metric['unit']}".strip()
         series = build_metric_series(rows, metric["field"])
+        delta = metric_delta(series)
+        color = trend_color(metric, delta)
         cards.append(
             ft.Container(
                 content=ft.Column(
                     [
                         ft.Text(metric["label"], size=12, color=theme.SUBTITLE_COLOR),
-                        ft.Text(str(text), size=18, weight=ft.FontWeight.BOLD, color=theme.TEXT_COLOR),
-                        ft.Text(f"Cambio: {delta_text(series, metric['unit'])}", size=11, color=theme.SUBTITLE_COLOR),
+                        ft.Text(format_value(value, metric["unit"]), size=18, weight=ft.FontWeight.BOLD, color=theme.TEXT_COLOR),
+                        ft.Row(
+                            [
+                                ft.Icon(trend_icon(delta), size=14, color=color),
+                                ft.Text(delta_text(series, metric["unit"]), size=11, color=color, weight=ft.FontWeight.BOLD),
+                            ],
+                            spacing=4,
+                        ),
                     ],
-                    spacing=3,
+                    spacing=4,
                 ),
                 bgcolor=theme.SURFACE_MUTED,
                 padding=12,
                 border_radius=8,
-                col={"xs": 12, "sm": 6, "md": 3},
+                col={"xs": 6, "sm": 4, "md": 3},
             )
         )
     return ft.ResponsiveRow(cards, spacing=10, run_spacing=10)
 
 
 def build_selected_metric_cards(series, metric):
+    delta = metric_delta(series)
+    color = trend_color(metric, delta)
     first = "---" if not series else f"{series[0]['value']:.2f} {metric['unit']}".strip()
     last = "---" if not series else f"{series[-1]['value']:.2f} {metric['unit']}".strip()
     cards = [
-        ("Valor inicial", first),
-        ("Valor final", last),
-        ("Cambio absoluto", delta_text(series, metric["unit"])),
-        ("Cambio porcentual", percent_change_text(series)),
+        ("Valor inicial", first, theme.TEXT_COLOR),
+        ("Valor final", last, theme.TEXT_COLOR),
+        ("Cambio absoluto", delta_text(series, metric["unit"]), color),
+        ("Cambio porcentual", percent_change_text(series), color),
     ]
     return ft.ResponsiveRow(
         [
@@ -320,25 +615,83 @@ def build_selected_metric_cards(series, metric):
                 content=ft.Column(
                     [
                         ft.Text(label, size=12, color=theme.SUBTITLE_COLOR),
-                        ft.Text(value, size=17, weight=ft.FontWeight.BOLD, color=theme.TEXT_COLOR),
+                        ft.Text(value, size=17, weight=ft.FontWeight.BOLD, color=value_color),
                     ],
                     spacing=3,
                 ),
                 bgcolor=ft.Colors.WHITE,
-                border=ft.border.all(1, "#eeeeee"),
+                border=ft.border.all(1, theme.SURFACE_BORDER),
                 padding=12,
                 border_radius=8,
-                col={"xs": 12, "sm": 6, "md": 3},
+                col={"xs": 6, "sm": 6, "md": 3},
             )
-            for label, value in cards
+            for label, value, value_color in cards
         ],
         spacing=10,
         run_spacing=10,
     )
 
 
+def build_historical_table(rows):
+    ordered = sort_rows_by_date(rows)
+    columns = [
+        "Fecha",
+        "Peso",
+        "IMC",
+        "Grasa Johnston",
+        "Grasa Faulkner",
+        "Grasa Yuhasz",
+        "Masa grasa Johnston",
+        "Masa muscular",
+        "X",
+        "Y",
+    ]
+    table_rows = []
+    for index, row in enumerate(ordered):
+        bgcolor = "#f8fafc" if index % 2 else ft.Colors.WHITE
+        table_rows.append(
+            ft.DataRow(
+                color=bgcolor,
+                cells=[
+                    ft.DataCell(ft.Text(str(row.get("FECHA_MEDIDA", "")), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("PESO_kg"), "kg"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("IMC")), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("PorcGrasoJonson"), "%"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("PorcGrasoFaulker"), "%"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("PorcRasoYuasz"), "%"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("PesoGrasoJhonston"), "kg"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("Mma"), "kg"), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("X")), size=12)),
+                    ft.DataCell(ft.Text(format_value(row.get("Y")), size=12)),
+                ],
+            )
+        )
+
+    table = ft.DataTable(
+        columns=[ft.DataColumn(ft.Text(column, weight=ft.FontWeight.BOLD, color=theme.TEXT_COLOR)) for column in columns],
+        rows=table_rows,
+        heading_row_color=theme.SURFACE_MUTED,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+        horizontal_lines=ft.BorderSide(1, theme.SURFACE_BORDER),
+    )
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Text("Histórico de valoraciones", size=16, weight="bold", color=theme.PRIMARY_COLOR),
+                ft.Text("Tabla separada para revisar datos base y comparar registros.", size=12, color=theme.SUBTITLE_COLOR),
+                horizontal_scroll(table),
+            ],
+            spacing=8,
+        ),
+        padding=12,
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+        border_radius=10,
+    )
+
+
 def build_longitudinal_panel(rows):
-    selected_metric = LONGITUDINAL_METRICS[0]
+    selected_metric = metric_by_field("PorcGrasoJonson")
     chart_container = ft.Container()
     selected_metric_container = ft.Container()
     summary_text = ft.Text("", color=theme.SUBTITLE_COLOR, size=13)
@@ -362,26 +715,16 @@ def build_longitudinal_panel(rows):
     )
 
     def change_metric(event):
-        metric = next(
-            item for item in LONGITUDINAL_METRICS if item["field"] == event.control.value
-        )
+        metric = next(item for item in LONGITUDINAL_METRICS if item["field"] == event.control.value)
         render_metric(metric)
         event.page.update()
 
     metric_dropdown.on_change = change_metric
     render_metric(selected_metric)
 
-    return ft.Container(
+    trend_panel = ft.Container(
         content=ft.Column(
             [
-                ft.Text("Análisis longitudinal", size=20, weight="bold", color=theme.PRIMARY_COLOR),
-                ft.Text(
-                    period_summary(rows),
-                    color=theme.SUBTITLE_COLOR,
-                    size=13,
-                ),
-                build_metric_cards(rows),
-                selected_metric_container,
                 ft.ResponsiveRow(
                     [
                         ft.Container(
@@ -401,9 +744,29 @@ def build_longitudinal_panel(rows):
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
+                selected_metric_container,
                 chart_container,
+                build_fat_method_chart(rows),
                 build_longitudinal_somatocarta(rows),
+                build_combined_chart(rows),
                 summary_text,
+            ],
+            spacing=12,
+        ),
+        padding=12,
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+        border_radius=10,
+    )
+
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Text("Resumen longitudinal", size=20, weight="bold", color=theme.PRIMARY_COLOR),
+                ft.Text(period_summary(rows), color=theme.SUBTITLE_COLOR, size=13),
+                build_metric_cards(rows),
+                trend_panel,
+                build_historical_table(rows),
                 reliability_text,
             ],
             spacing=12,
@@ -411,5 +774,5 @@ def build_longitudinal_panel(rows):
         bgcolor=ft.Colors.WHITE,
         border_radius=10,
         padding=16,
-        border=ft.border.all(1, "#eeeeee"),
+        border=ft.border.all(1, theme.SURFACE_BORDER),
     )

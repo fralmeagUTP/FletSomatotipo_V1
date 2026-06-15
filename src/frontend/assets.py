@@ -15,6 +15,7 @@ MODULE_IMAGES = {
     "deportistas": "Deportistas.png",
     "valoracion": "ValoracionCorporal.png",
     "historial": "Historial.png",
+    "analisis_longitudinal": "AnalisisLongitudinal.png",
     "deportes": "Deportes.png",
     "asignaciones": "Asignaciones.png",
     "entidades": "Entidades.png",
@@ -29,4 +30,8 @@ REFERENCE_IMAGES = {
 
 
 def asset_path(filename: str) -> str:
-    return str(ASSETS_DIR / filename)
+    candidate = ASSETS_DIR / filename
+    # In packaged mobile builds the assets are resolved by logical name.
+    if candidate.exists():
+        return str(candidate)
+    return filename

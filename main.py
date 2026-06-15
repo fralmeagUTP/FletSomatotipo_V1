@@ -1,57 +1,30 @@
 import sys
 import os
-import shutil
+
+def android_log(message: str):
+    try:
+        import ctypes
+
+        liblog = ctypes.CDLL("liblog.so")
+        liblog.__android_log_write(4, b"SomatocartaPy", str(message).encode("utf-8"))
+    except Exception:
+        pass
+
+
+android_log("module import start")
 
 # Ensure the current directory is in the path for module resolution
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-def fix_flattened_files():
-    """
-    Workaround for Flet build flattening directories into filenames on Android.
-    e.g., 'views\dashboard.py' becomes a file named 'views\dashboard.py' instead of 'views/dashboard.py'.
-    This function detects such files and moves them to their correct directories.
-    """
-    try:
-        current_dir = os.getcwd()
-        files = os.listdir(current_dir)
-        fixed_count = 0
-        
-        for filename in files:
-            if "\\" in filename:
-                # This is a flattened file (e.g., "views\dashboard.py")
-                # On Linux/Android, backslash is just a character
-                parts = filename.split("\\")
-                if len(parts) > 1:
-                    # Create the directory structure
-                    directory = os.path.join(current_dir, *parts[:-1])
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
-                    
-                    # Move/Rename the file
-                    new_path = os.path.join(directory, parts[-1])
-                    old_path = os.path.join(current_dir, filename)
-                    
-                    # Rename atomic
-                    shutil.move(old_path, new_path)
-                    fixed_count += 1
-        return fixed_count
-    except Exception as e:
-        print(f"Error fixing files: {e}")
-        return 0
+APP_VERSION = "v1.1.7"
 
-# Run the fix immediately
-fix_flattened_files()
+def main(page):
+    android_log("main(page) entered")
+    global ft
+    if "ft" not in globals():
+        import flet as ft
+        android_log("flet imported inside main")
 
-import flet as ft
-from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.navigation import show_dashboard
-from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, WINDOW_ICON, asset_path
-from src.frontend import theme
-# from views.dashboard import DashboardView (Deferred import)
-
-APP_VERSION = "v1.1.3"
-
-def main(page: ft.Page):
     """
     Función principal de la aplicación Flet (Frontend).
 
@@ -61,8 +34,60 @@ def main(page: ft.Page):
         page (ft.Page): La página principal de Flet.
     """
     page.title = "Somatocarta"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.bgcolor = ft.Colors.WHITE
+    page.add(ft.Text("Iniciando Somatocarta...", size=18, color=ft.Colors.BLUE_700))
+    page.update()
+    android_log("startup text rendered")
+
+    try:
+        from app_config import API_URL
+        from src.frontend import theme
+        from src.frontend.api_client import ApiClient, ApiError
+        from src.frontend.assets import (
+            LOGO_CDR,
+            LOGO_ISC,
+            LOGO_NYQUIST,
+            LOGO_SOMATOCARTA,
+            LOGO_UTP,
+            WINDOW_ICON,
+            asset_path,
+        )
+        from src.frontend.navigation import show_dashboard
+        android_log("app imports loaded")
+    except Exception as ex:
+        android_log(f"app import failed: {ex}")
+        page.clean()
+        page.add(
+            ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Text(
+                            "No se pudo cargar la app",
+                            size=22,
+                            weight=ft.FontWeight.BOLD,
+                            color=ft.Colors.RED_700,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Text(str(ex), size=13, color=ft.Colors.BLACK, text_align=ft.TextAlign.CENTER),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=10,
+                ),
+                padding=20,
+            )
+        )
+        page.update()
+        return
+
     if hasattr(page, "window"):
-        page.window.icon = asset_path(WINDOW_ICON)
+        try:
+            page.window.icon = asset_path(WINDOW_ICON)
+        except Exception:
+            pass
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -123,6 +148,30 @@ def main(page: ft.Page):
     error_text = ft.Text(color="red", visible=False, size=14)
     login_in_progress = False
     login_button_control = None
+
+    def show_startup_error(ex: Exception):
+        page.clean()
+        page.bgcolor = ft.Colors.WHITE
+        page.vertical_alignment = ft.MainAxisAlignment.CENTER
+        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        page.add(
+            ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Text("No se pudo iniciar Somatocarta", size=22, weight=ft.FontWeight.BOLD, color=theme.ERROR_COLOR, text_align=ft.TextAlign.CENTER),
+                        ft.Text(str(ex), size=14, color=theme.TEXT_COLOR, text_align=ft.TextAlign.CENTER),
+                        ft.Text(f"API_URL: {API_URL}", size=12, color=theme.SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
+                        ft.Text("Cierra y vuelve a abrir la app.", size=12, color=theme.SUBTITLE_COLOR, text_align=ft.TextAlign.CENTER),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=10,
+                ),
+                width=520,
+                padding=20,
+            )
+        )
+        page.update()
 
     def build_login_ui():
         """Construye y retorna la UI de login"""
@@ -266,7 +315,16 @@ def main(page: ft.Page):
         page.update()
 
     # Initial login screen
-    page.add(build_login_ui())
+    try:
+        page.add(build_login_ui())
+        android_log("login rendered")
+    except Exception as ex:
+        android_log(f"login render failed: {ex}")
+        show_startup_error(ex)
 
 if __name__ == "__main__":
+    import flet as ft
+    android_log("flet imported before app")
+    android_log("ft.app starting")
     ft.app(target=main, assets_dir="assets")
+

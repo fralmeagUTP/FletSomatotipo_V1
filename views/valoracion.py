@@ -1,7 +1,13 @@
 import flet as ft
 from datetime import datetime
 from app_config import show_snack
-from src.frontend.components import page_header, responsive_padding, set_busy
+from src.frontend.components import (
+    danger_icon_button,
+    edit_icon_button,
+    page_header,
+    responsive_padding,
+    set_busy,
+)
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.form_helpers import build_measurement_detail, build_somatotipo_payload
 from src.frontend.navigation import show_dashboard
@@ -29,8 +35,6 @@ def ValoracionView(page: ft.Page):
 
     STEPS = [
         {"title": "Datos Básicos", "icon": ft.Icons.INFO_OUTLINE},
-        {"title": "Pliegues Cutáneos", "icon": ft.Icons.FIBER_MANUAL_RECORD},
-        {"title": "Diámetros y Perímetros", "icon": ft.Icons.FITNESS_CENTER},
         {"title": "Revisar y Guardar", "icon": ft.Icons.CHECK_CIRCLE},
     ]
 
@@ -256,6 +260,7 @@ def ValoracionView(page: ft.Page):
     )
     prev_step_btn = ft.OutlinedButton("Anterior", icon=ft.Icons.ARROW_BACK, visible=False)
     next_step_btn = ft.ElevatedButton("Siguiente", icon=ft.Icons.ARROW_FORWARD, bgcolor=PRIMARY_COLOR, color="white")
+    save_action_slot = ft.Container()
 
     def calculate_age(birth_date_str, measure_date_str):
         if not birth_date_str:
@@ -365,7 +370,7 @@ def ValoracionView(page: ft.Page):
         page.update()
 
     def reset_edit_mode():
-        nonlocal editing_detail
+        nonlocal current_step, editing_detail
         editing_detail = None
         add_btn.text = "Agregar Medición"
         add_btn.icon = ft.Icons.ADD_CHART
@@ -439,11 +444,8 @@ def ValoracionView(page: ft.Page):
                 ft.Text("Diámetros: " + " | ".join(diameters), size=11, color=MUTED_COLOR),
                 ft.Text("Perímetros: " + " | ".join(perimeters), size=11, color=MUTED_COLOR),
                 ft.Row([
-                    ft.TextButton("Editar", icon=ft.Icons.EDIT,
-                                  on_click=lambda e, d=detail: edit_medicion(d)),
-                    ft.TextButton("Eliminar", icon=ft.Icons.DELETE_OUTLINE,
-                                  style=ft.ButtonStyle(color=ERROR_COLOR),
-                                  on_click=lambda e, d=detail: confirm_remove(d)),
+                    edit_icon_button(on_click=lambda e, d=detail: edit_medicion(d)),
+                    danger_icon_button(on_click=lambda e, d=detail: confirm_remove(d)),
                 ], alignment=ft.MainAxisAlignment.END),
             ], spacing=4),
             padding=12,
@@ -473,12 +475,65 @@ def ValoracionView(page: ft.Page):
 
     def load_stored_valuations(athlete_id):
         nonlocal stored_valuations
+        stored_valuations = []
         try:
-            stored_valuations = api.list_somatotipos_editables(str(athlete_id))
+            editable_result = api.list_somatotipos_editables(str(athlete_id))
+            if isinstance(editable_result, dict):
+                stored_valuations = editable_result.get("items") or editable_result.get("data") or []
+            else:
+                stored_valuations = editable_result or []
         except ApiError as error:
-            stored_valuations = []
-            show_snack(page, str(error))
+            try:
+                stored_valuations = stored_valuations_from_history(api.get_historial_vista_all(str(athlete_id)))
+            except ApiError:
+                show_snack(page, str(error))
+        if not stored_valuations:
+            try:
+                stored_valuations = stored_valuations_from_history(api.get_historial_vista_all(str(athlete_id)))
+            except ApiError:
+                pass
         render_stored_valuations()
+
+    def stored_valuations_from_history(rows):
+        grouped = {}
+        measurement_fields = [
+            "ESTA_USER_CM",
+            "PESO_kg",
+            "PLIEGUE_TRICIPITAL",
+            "PLIEGUE_SUBESCAPULAR",
+            "PLIEGUE_SUPRAILIACO",
+            "PLIEGUE_ABDOMINAL",
+            "PLIEGUE_MUSLO_ANT",
+            "PLIEGUE_MEDIAL_PIERNA",
+            "DIAMETRO_BIEPI_MUNECA",
+            "DIAMETRO_BIEPI_FEMUR",
+            "DIAMETRO_CODO",
+            "PERIMETRO_BICED_CONTRAIDO",
+            "PERIMETRO_PIERNA",
+            "CIRCUNFERENCIA_CARPO",
+        ]
+        for row in rows or []:
+            somatotipo_id = row.get("id_Somatotipo")
+            if somatotipo_id is None:
+                continue
+            record = grouped.setdefault(
+                somatotipo_id,
+                {
+                    "id_Somatotipo": somatotipo_id,
+                    "FECHA_MEDIDA": row.get("FECHA_MEDIDA"),
+                    "IDENTI_DEPORTISTA": row.get("IDENTI_DEPORTISTA"),
+                    "OBSERV": row.get("OBSERV") or "",
+                    "DETALLES": [],
+                    "_source": "historial",
+                },
+            )
+            detail = {
+                "id_Somatotipo": somatotipo_id,
+                **{field: row.get(field) for field in measurement_fields},
+            }
+            if any(detail.get(field) is not None for field in measurement_fields):
+                record["DETALLES"].append(detail)
+        return list(grouped.values())
 
     def render_stored_valuations():
         stored_valuations_list.controls.clear()
@@ -516,9 +571,7 @@ def ValoracionView(page: ft.Page):
                             ft.Row([
                                 ft.OutlinedButton("Cargar", icon=ft.Icons.DOWNLOAD, disabled=detail_count == 0,
                                                   on_click=lambda e, sid=valuation_id: load_stored_somatotipo(sid)),
-                                ft.OutlinedButton("Eliminar", icon=ft.Icons.DELETE_OUTLINE,
-                                                  style=ft.ButtonStyle(color=ERROR_COLOR),
-                                                  on_click=lambda e, sid=valuation_id: delete_stored_somatotipo(sid)),
+                                danger_icon_button(on_click=lambda e, sid=valuation_id: delete_stored_somatotipo(sid)),
                             ], spacing=8),
                             col={"xs": 12, "sm": 5, "md": 4},
                             alignment=ft.alignment.center_right,
@@ -533,15 +586,35 @@ def ValoracionView(page: ft.Page):
             )
 
     def load_stored_somatotipo(somatotipo_id):
-        nonlocal current_loaded_somatotipo_id, added_details_list, last_detail
+        nonlocal current_loaded_somatotipo_id, added_details_list, last_detail, editing_detail
         try:
-            record = api.get_somatotipo_editable(somatotipo_id)
+            try:
+                record = api.get_somatotipo_editable(somatotipo_id)
+            except ApiError:
+                record = next(
+                    (
+                        item
+                        for item in stored_valuations
+                        if str(item.get("id_Somatotipo")) == str(somatotipo_id)
+                    ),
+                    None,
+                )
+                if record is None:
+                    raise
             current_loaded_somatotipo_id = record.get("id_Somatotipo")
             fecha_medida.value = record.get("FECHA_MEDIDA") or fecha_medida.value
             observaciones.value = record.get("OBSERV") or record.get("OBSERVACIONES") or ""
             added_details_list = list(record.get("DETALLES") or [])
             last_detail = added_details_list[-1] if added_details_list else None
             reset_edit_mode()
+            if added_details_list:
+                first_detail = added_details_list[0]
+                load_measurement_into_form(first_detail)
+                if first_detail.get("ID"):
+                    editing_detail = first_detail
+                    add_btn.text = "Actualizar Medición"
+                    add_btn.icon = ft.Icons.SAVE
+                    cancel_edit_btn.visible = True
             render_measurements()
             update_step_content()
             show_snack(page, "Valoración cargada. Edita una medición y actualízala.")
@@ -633,13 +706,15 @@ def ValoracionView(page: ft.Page):
             page.update()
 
     def edit_medicion(det):
-        nonlocal editing_detail
+        nonlocal current_step, editing_detail
         editing_detail = det
         load_measurement_into_form(det)
         add_btn.text = "Actualizar Medición"
         add_btn.icon = ft.Icons.SAVE
         cancel_edit_btn.visible = True
         duplicate_btn.visible = False
+        current_step = 0
+        update_step_content()
         show_snack(page, "Medición cargada para edición. Ajusta los datos y presiona Actualizar.")
         page.update()
 
@@ -756,21 +831,8 @@ def ValoracionView(page: ft.Page):
                 fecha_medida.border_color = ERROR_COLOR
                 show_snack(page, "La fecha es obligatoria")
                 return False
-        elif current_step == 1:
-            for f in [p_tricipital, p_subescapular, p_suprailiaco, p_abdominal, p_muslo, p_pierna]:
-                if not is_field_valid(f):
-                    f.error_text = f.error_text or "Obligatorio"
-                    f.border_color = ERROR_COLOR
-            if not all(is_field_valid(f) for f in [p_tricipital, p_subescapular, p_suprailiaco, p_abdominal, p_muslo, p_pierna]):
-                show_snack(page, "Completa todos los pliegues")
-                return False
-        elif current_step == 2:
-            for f in [d_muneca, d_femur, d_codo, c_carpo, perim_bicep, perim_pierna]:
-                if not is_field_valid(f):
-                    f.error_text = f.error_text or "Obligatorio"
-                    f.border_color = ERROR_COLOR
-            if not all(is_field_valid(f) for f in [d_muneca, d_femur, d_codo, c_carpo, perim_bicep, perim_pierna]):
-                show_snack(page, "Completa todos los diámetros y perímetros")
+            if not added_details_list and not all_fields_valid():
+                show_snack(page, "Completa las medidas obligatorias")
                 return False
         return True
 
@@ -796,6 +858,7 @@ def ValoracionView(page: ft.Page):
         update_step_indicators()
         prev_step_btn.visible = current_step > 0
         next_step_btn.visible = current_step < len(STEPS) - 1
+        save_action_slot.content = save_btn if current_step == len(STEPS) - 1 else None
         if current_step == 0:
             step_content.content = ft.Column([
                 ft.Text("Datos del Deportista", color=PRIMARY_COLOR, weight="bold", size=18),
@@ -819,12 +882,8 @@ def ValoracionView(page: ft.Page):
                 ft.ResponsiveRow([
                     ft.Container(content=observaciones, col={"xs": 12}),
                 ]),
-            ], spacing=10)
-        elif current_step == 1:
-            step_content.content = ft.Column([
-                ft.Text("Pliegues Cutáneos (mm)", color=PRIMARY_COLOR, weight="bold", size=18),
-                ft.Text("Mide cada pliegue con el calibrador. Valores en milímetros.", color=MUTED_COLOR, size=12),
-                ft.Container(height=10),
+                ft.Divider(),
+                ft.Text("Pliegues cutaneos (mm)", color=PRIMARY_COLOR, weight="bold", size=16),
                 ft.ResponsiveRow([
                     ft.Container(content=p_tricipital, col={"xs": 6, "md": 4}),
                     ft.Container(content=p_subescapular, col={"xs": 6, "md": 4}),
@@ -832,28 +891,27 @@ def ValoracionView(page: ft.Page):
                     ft.Container(content=p_abdominal, col={"xs": 6, "md": 4}),
                     ft.Container(content=p_muslo, col={"xs": 6, "md": 4}),
                     ft.Container(content=p_pierna, col={"xs": 6, "md": 4}),
-                ]),
-            ], spacing=10)
-        elif current_step == 2:
-            step_content.content = ft.Column([
-                ft.Text("Diámetros y Perímetros", color=PRIMARY_COLOR, weight="bold", size=18),
-                ft.Text("Diámetros en mm, perímetros en cm.", color=MUTED_COLOR, size=12),
-                ft.Container(height=10),
-                ft.Text("Diámetros óseos (mm)", color=TEXT_COLOR, weight="bold", size=14),
+                ], spacing=10, run_spacing=10),
+                ft.Text("Diametros y perimetros", color=PRIMARY_COLOR, weight="bold", size=16),
                 ft.ResponsiveRow([
                     ft.Container(content=d_muneca, col={"xs": 6, "sm": 4, "md": 3}),
                     ft.Container(content=d_femur, col={"xs": 6, "sm": 4, "md": 3}),
                     ft.Container(content=d_codo, col={"xs": 6, "sm": 4, "md": 3}),
                     ft.Container(content=c_carpo, col={"xs": 6, "sm": 4, "md": 3}),
-                ]),
-                ft.Container(height=10),
-                ft.Text("Perímetros (cm)", color=TEXT_COLOR, weight="bold", size=14),
-                ft.ResponsiveRow([
                     ft.Container(content=perim_bicep, col={"xs": 6, "sm": 6, "md": 6}),
                     ft.Container(content=perim_pierna, col={"xs": 6, "sm": 6, "md": 6}),
-                ]),
+                ], spacing=10, run_spacing=10),
+                ft.Row([
+                    cancel_edit_btn,
+                    duplicate_btn,
+                    add_btn,
+                ], alignment=ft.MainAxisAlignment.END, spacing=8),
+                ft.Divider(),
+                ft.Text("Tomas de la valoracion", color=PRIMARY_COLOR, weight="bold", size=16),
+                measurements_count_text,
+                measurements_list,
             ], spacing=10)
-        elif current_step == 3:
+        elif current_step == 1:
             step_content.content = ft.Column([
                 ft.Text("Revisar y Guardar", color=PRIMARY_COLOR, weight="bold", size=18),
                 ft.Container(height=10),
@@ -898,15 +956,15 @@ def ValoracionView(page: ft.Page):
                 content=step_content,
                 bgcolor=CARD_BG,
                 padding=responsive_padding(page, desktop=30, tablet=20, mobile=12),
-                border_radius=10,
-                shadow=ft.BoxShadow(blur_radius=5, color=ft.Colors.BLUE_GREY_50),
+                border_radius=theme.RADIUS_MEDIUM,
+                shadow=theme.card_shadow(),
             ),
             ft.Container(height=16),
             ft.Row([
                 prev_step_btn,
                 ft.Container(expand=True),
                 next_step_btn,
-                save_btn if current_step == 3 else ft.Container(),
+                save_action_slot,
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
         ], scroll=ft.ScrollMode.AUTO),
         padding=responsive_padding(page, desktop=20, tablet=16, mobile=10),

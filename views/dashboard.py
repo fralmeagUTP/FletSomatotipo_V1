@@ -8,6 +8,7 @@ from src.frontend.components import info_banner, responsive_padding
 from src.frontend.navigation import (
     get_logout_callback,
     show_asignaciones,
+    show_analisis_longitudinal,
     show_deportes,
     show_deportistas,
     show_entidades,
@@ -52,6 +53,9 @@ def DashboardView(page: ft.Page):
 
     def go_historial(_):
         show_historial(page)
+
+    def go_analisis_longitudinal(_):
+        show_analisis_longitudinal(page)
 
     def go_entidades(_):
         show_entidades(page)
@@ -214,6 +218,7 @@ def DashboardView(page: ft.Page):
             card_item(ft.Icons.PERSON_OUTLINE, "Deportistas", on_click=go_deportistas, image_name=MODULE_IMAGES["deportistas"]),
             card_item(ft.Icons.MONITOR_WEIGHT_OUTLINED, "Valoración Corporal", on_click=go_valoracion, image_name=MODULE_IMAGES["valoracion"]),
             card_item(ft.Icons.TIMELINE, "Historial", on_click=go_historial, image_name=MODULE_IMAGES["historial"]),
+            card_item(ft.Icons.SHOW_CHART, "Analisis Longitudinal", on_click=go_analisis_longitudinal, image_name=MODULE_IMAGES["analisis_longitudinal"]),
             card_item(ft.Icons.SPORTS_SOCCER, "Deportes", on_click=go_deportes, image_name=MODULE_IMAGES["deportes"]),
             card_item(ft.Icons.LINK, "Asignaciones", on_click=go_asignaciones, image_name=MODULE_IMAGES["asignaciones"]),
             card_item(ft.Icons.BUSINESS_OUTLINED, "Entidades", on_click=go_entidades, image_name=MODULE_IMAGES["entidades"]),

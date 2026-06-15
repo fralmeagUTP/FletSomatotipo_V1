@@ -42,6 +42,8 @@ class FakeApiClient:
     deleted_ids = []
     created_details = []
     deleted_detail_ids = []
+    historial_records = []
+    fail_get_editable = False
 
     def __init__(self, page):
         self.page = page
@@ -58,8 +60,14 @@ class FakeApiClient:
         self.__class__.calls.append(("list_somatotipos_editables", identi))
         return self.__class__.editable_records
 
+    def get_historial_vista_all(self, identi):
+        self.__class__.calls.append(("get_historial_vista_all", identi))
+        return self.__class__.historial_records
+
     def get_somatotipo_editable(self, somatotipo_id):
         self.__class__.calls.append(("get_somatotipo_editable", somatotipo_id))
+        if self.__class__.fail_get_editable:
+            raise valoracion_module.ApiError("No disponible")
         return self.__class__.loaded_records.get(somatotipo_id, self.__class__.editable_records[0])
 
     def update_somatotipo_detalle(self, detail_id, data):
@@ -108,6 +116,8 @@ def find_button(root, text):
     for control in walk_controls(root):
         if isinstance(control, (ft.ElevatedButton, ft.OutlinedButton, ft.Button)) and control.text == text:
             return control
+        if isinstance(control, ft.IconButton) and control.tooltip == text:
+            return control
     raise AssertionError(f"No se encontró botón {text!r}")
 
 
@@ -125,6 +135,8 @@ class ValoracionViewTests(unittest.TestCase):
         FakeApiClient.deleted_detail_ids = []
         FakeApiClient.editable_records = []
         FakeApiClient.loaded_records = {}
+        FakeApiClient.historial_records = []
+        FakeApiClient.fail_get_editable = False
         FakeApiClient.athletes = [
             {
                 "IDENTI_DEPORTISTA": "1001",
@@ -214,6 +226,45 @@ class ValoracionViewTests(unittest.TestCase):
         self.assertIn("ID 10 | Fecha: 2026-06-08", texts)
         self.assertIn("1 medicion(es) editable(s)", texts)
 
+    def test_search_athlete_falls_back_to_history_when_editable_list_is_empty(self):
+        FakeApiClient.editable_records = []
+        FakeApiClient.historial_records = [
+            {
+                "id_Somatotipo": 10,
+                "FECHA_MEDIDA": "2026-06-08",
+                "IDENTI_DEPORTISTA": "1001",
+                "PESO_kg": 70,
+                "ESTA_USER_CM": 170,
+            }
+        ]
+        self._select_athlete()
+        self.assertIn(("list_somatotipos_editables", "1001"), FakeApiClient.calls)
+        self.assertIn(("get_historial_vista_all", "1001"), FakeApiClient.calls)
+        texts = [
+            control.value
+            for control in walk_controls(self.view)
+            if isinstance(control, ft.Text) and isinstance(control.value, str)
+        ]
+        self.assertIn("ID 10 | Fecha: 2026-06-08", texts)
+        self.assertIn("1 medicion(es) editable(s)", texts)
+
+    def test_load_stored_valuation_uses_history_record_when_editable_endpoint_fails(self):
+        FakeApiClient.editable_records = []
+        FakeApiClient.fail_get_editable = True
+        FakeApiClient.historial_records = [
+            {
+                "id_Somatotipo": 10,
+                "FECHA_MEDIDA": "2026-06-08",
+                "IDENTI_DEPORTISTA": "1001",
+                "PESO_kg": 70,
+                "ESTA_USER_CM": 170,
+            }
+        ]
+        self._select_athlete()
+        find_button(self.view, "Cargar").on_click(None)
+        self.assertEqual(find_text_field(self.view, "Estatura *").value, "170")
+        self.assertEqual(find_text_field(self.view, "Peso *").value, "70")
+
     def test_delete_stored_valuation_uses_delete_endpoint(self):
         FakeApiClient.editable_records = [self.stored_record()]
         self._select_athlete()
@@ -227,6 +278,29 @@ class ValoracionViewTests(unittest.TestCase):
         self._select_athlete()
         find_button(self.view, "Cargar").on_click(None)
         self.assertIn(("get_somatotipo_editable", 10), FakeApiClient.calls)
+        self.assertEqual(find_text_field(self.view, "Estatura *").value, "170.0")
+        self.assertEqual(find_text_field(self.view, "Peso *").value, "65.0")
+
+    def test_edit_loaded_measurement_returns_to_editable_step(self):
+        record = self.stored_record()
+        FakeApiClient.editable_records = [record]
+        FakeApiClient.loaded_records = {10: record}
+        self._select_athlete()
+        find_button(self.view, "Cargar").on_click(None)
+        find_button(self.view, "Siguiente").on_click(None)
+        find_button(self.view, "Siguiente").on_click(None)
+        find_button(self.view, "Siguiente").on_click(None)
+
+        find_button(self.view, "Editar").on_click(None)
+
+        texts = [
+            control.value
+            for control in walk_controls(self.view)
+            if isinstance(control, ft.Text) and isinstance(control.value, str)
+        ]
+        self.assertIn("Datos del Deportista", texts)
+        self.assertEqual(find_text_field(self.view, "Estatura *").value, "170.0")
+        self.assertEqual(find_text_field(self.view, "Peso *").value, "65.0")
 
     def test_view_initializes_with_date(self):
         fecha_field = find_text_field(self.view, "Fecha Medición *")
@@ -239,6 +313,9 @@ class ValoracionViewTests(unittest.TestCase):
             if isinstance(control, ft.Text) and isinstance(control.value, str)
         ]
         self.assertIn("Datos Básicos", texts)
+        self.assertIn("Revisar y Guardar", texts)
+        self.assertNotIn("Pliegues Cutáneos", texts)
+        self.assertNotIn("Diámetros y Perímetros", texts)
 
 
 if __name__ == "__main__":
