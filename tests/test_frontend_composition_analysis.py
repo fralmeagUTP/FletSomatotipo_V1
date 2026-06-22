@@ -1,6 +1,7 @@
 import unittest
 
 import flet as ft
+import flet_charts as ftc
 
 from src.frontend.composition_analysis import (
     build_composition_panel,
@@ -36,22 +37,22 @@ class CompositionAnalysisTests(unittest.TestCase):
 
         self.assertEqual(rows[0]["component"], "Grasa corporal")
         self.assertEqual(rows[0]["unit"], "%")
-        self.assertEqual(rows[0]["method"], "Johnston")
+        self.assertEqual(rows[0]["method"], "Yuhasz")
         self.assertEqual(rows[3]["component"], "Masa grasa")
         self.assertEqual(rows[3]["unit"], "kg")
         self.assertEqual(rows[2]["method"], "Yuhasz")
-        self.assertEqual(rows[3]["method"], "Johnston")
+        self.assertEqual(rows[3]["method"], "Faulkner")
 
-    def test_mass_balance_summary_uses_johnston_mass_and_detects_difference(self):
+    def test_mass_balance_summary_uses_yuhasz_mass_and_detects_difference(self):
         summary = mass_balance_summary(self.detail)
 
         self.assertTrue(summary["is_warning"])
-        self.assertAlmostEqual(summary["component_total"], 58.71)
-        self.assertIn("Masa grasa Johnston", mass_balance_message(summary))
+        self.assertAlmostEqual(summary["component_total"], 59.77)
+        self.assertIn("Masa grasa Yuhasz", mass_balance_message(summary))
         self.assertIn("diferencia significativa", mass_balance_message(summary))
 
     def test_mass_balance_summary_accepts_coherent_components(self):
-        detail = dict(self.detail, PesoResidual=10.17)
+        detail = dict(self.detail, PesoResidual=9.11)
         summary = mass_balance_summary(detail)
 
         self.assertFalse(summary["is_warning"])
@@ -61,19 +62,19 @@ class CompositionAnalysisTests(unittest.TestCase):
         rows = build_mass_distribution_rows(self.detail)
 
         self.assertEqual(rows[0]["component"], "Peso corporal")
-        self.assertEqual(rows[1]["component"], "Masa grasa Johnston")
-        self.assertAlmostEqual(rows[1]["value"], 7.71)
-        self.assertAlmostEqual(rows[1]["percent"], 13.891891891891891)
+        self.assertEqual(rows[1]["component"], "Masa grasa Yuhasz")
+        self.assertAlmostEqual(rows[1]["value"], 8.77)
+        self.assertAlmostEqual(rows[1]["percent"], 15.801801801801801)
         self.assertEqual(rows[-2]["component"], "Suma calculada")
-        self.assertAlmostEqual(rows[-2]["value"], 58.71)
+        self.assertAlmostEqual(rows[-2]["value"], 59.77)
 
     def test_build_fat_method_rows_groups_percent_and_mass_by_method(self):
         rows = build_fat_method_rows(self.detail)
 
-        self.assertEqual([row["method"] for row in rows], ["Johnston", "Faulkner", "Yuhasz"])
-        self.assertEqual(rows[0]["use"], "Método principal")
-        self.assertAlmostEqual(rows[0]["fat_percent"], 13.9)
-        self.assertAlmostEqual(rows[0]["fat_mass"], 7.71)
+        self.assertEqual([row["method"] for row in rows], ["Yuhasz", "Faulkner"])
+        self.assertEqual(rows[0]["use"], "Método principal para deportistas")
+        self.assertAlmostEqual(rows[0]["fat_percent"], 15.81)
+        self.assertAlmostEqual(rows[0]["fat_mass"], 8.77)
 
     def test_build_composition_table_returns_horizontal_scroll_row(self):
         table = build_composition_table(build_composition_rows(self.detail))
@@ -81,11 +82,11 @@ class CompositionAnalysisTests(unittest.TestCase):
         self.assertIsInstance(table, ft.Row)
         self.assertEqual(table.scroll, ft.ScrollMode.AUTO)
 
-    def test_build_fat_methods_table_returns_horizontal_scroll_row(self):
+    def test_build_fat_methods_table_returns_responsive_cards(self):
         table = build_fat_methods_table(build_fat_method_rows(self.detail))
 
-        self.assertIsInstance(table, ft.Row)
-        self.assertEqual(table.scroll, ft.ScrollMode.AUTO)
+        self.assertIsInstance(table, ft.ResponsiveRow)
+        self.assertEqual(len(table.controls), 2)
 
     def test_build_mass_distribution_table_returns_horizontal_scroll_row(self):
         table = build_mass_distribution_table(build_mass_distribution_rows(self.detail))
@@ -97,7 +98,7 @@ class CompositionAnalysisTests(unittest.TestCase):
         chart = build_mass_pie_chart(build_mass_distribution_rows(self.detail))
 
         self.assertIsInstance(chart, ft.ResponsiveRow)
-        self.assertIsInstance(chart.controls[0].content, ft.PieChart)
+        self.assertIsInstance(chart.controls[0].content, ftc.PieChart)
 
     def test_build_composition_panel_contains_integrated_sections(self):
         panel = build_composition_panel(self.detail)

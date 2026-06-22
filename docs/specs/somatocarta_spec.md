@@ -1,7 +1,7 @@
 # Somatocarta — Software Specification (Spec Kit)
 
 **Versión:** 1.0
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 **Estado:** Vigente
 
 ---
@@ -40,7 +40,7 @@ Instituciones vinculadas:
 
 ### 1.5 Alcance actual
 
-Versión **v1.1.7**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
+Versión **v1.2.1**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
 
 ---
 
@@ -273,7 +273,7 @@ El sistema debe mostrar el historial paginado de valoraciones de un deportista c
 
 ### FR-011: Análisis de composición corporal
 
-El sistema debe mostrar y comparar tres métodos de estimación de grasa (Johnston, Faulkner, Yuhasz), calcular masas corporales (grasa, muscular, ósea, residual), validar balance de masas, y generar gráfico de distribución.
+El sistema debe mostrar Yuhasz como método principal para población deportiva y Faulkner como referencia comparativa, calcular masas corporales (grasa, muscular, ósea, residual), validar balance de masas, y generar gráfico de distribución.
 
 ### FR-012: Análisis de somatotipo
 
@@ -356,6 +356,8 @@ NFR-015: El sistema debe registrar intentos de login fallidos.
 NFR-016: Los listados deben usar paginación para evitar consultas masivas.
 NFR-017: Las imágenes deben optimizarse para no exceder 5 MB.
 NFR-018: El PDF individual debe generarse en menos de 10 segundos.
+
+NFR-019: La expiración JWT debe configurarse mediante `ACCESS_TOKEN_EXPIRE_MINUTES`, con 30 minutos por defecto y un mínimo técnico de 1 minuto.
 ```
 
 ### Mantenibilidad
@@ -608,7 +610,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 - Fecha de medición.
 - Usuario que registró.
 - Tabla de mediciones antropométricas (14 campos).
-- Composición corporal (3 métodos de grasa, masas corporales).
+- Composición corporal con Yuhasz como método principal, Faulkner como comparación y masas corporales.
 - IMC y estado.
 - Complexión física.
 - Componentes de somatotipo con escalas descriptivas.
@@ -649,7 +651,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 162 tests pasando.
+**Resultado actual:** 183 tests y 3 subpruebas pasando.
 
 ---
 
@@ -682,8 +684,8 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 
 ### PDFs
 
-- [ ] PDF individual se descarga y es válido.
-- [ ] PDF longitudinal se descarga y es válido.
+- [x] PDF individual se descarga, contiene datos variables y es válido.
+- [x] PDF longitudinal se descarga, contiene la serie histórica y es válido.
 
 ### Responsive
 
@@ -696,8 +698,8 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | ID | Pregunta | Estado |
 |----|----------|--------|
 | OQ-001 | ¿Están clínicamente validadas las fórmulas de la vista SQL? | Pendiente de validar con profesional. |
-| OQ-002 | ¿Por qué el mesomorfismo resulta negativo para atletas musculares? | Error detectado en QA. Pendiente de corregir fórmula SQL. |
-| OQ-003 | ¿El peso óseo calculado (0.35-0.50 kg) es correcto? | Sospecha de error de unidades (mm vs cm). Pendiente. |
+| OQ-002 | ¿Por qué el mesomorfismo resultaba negativo para atletas musculares? | Resuelto en migración 004: diámetros históricos en cm y perímetros sin corrección por pliegues. |
+| OQ-003 | ¿Por qué el peso óseo resultaba 0.35-0.50 kg? | Resuelto en migración 004: diámetros históricos almacenados en cm pero interpretados como mm. |
 | OQ-004 | ¿Se requiere módulo de categorías de peso para deportes como boxeo? | Pendiente de definir con usuarios. |
 | OQ-005 | ¿Se implementará control de roles y permisos granulares? | Pendiente de definir. |
 | OQ-006 | ¿Se migrarán las contraseñas a hash seguro? | Pendiente de planificar. |
@@ -709,10 +711,10 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 
 ### Corto plazo
 
-- Corregir fórmulas de mesomorfismo y peso óseo en la vista SQL.
-- Agregar constraint UNIQUE para deportes y asignaciones duplicadas.
-- Validar integridad referencial en eliminaciones.
-- Corregir textos de escala corruptos.
+- Ejecutar campaña visual responsive en móvil, tablet y escritorio.
+- Ejecutar validación visual responsive en dispositivos reales.
+- Definir política CORS por ambiente.
+- Aprobar metodológicamente el protocolo antropométrico con ciencias del deporte.
 
 ### Mediano plazo
 
@@ -721,6 +723,14 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 - Agregar control de roles y permisos.
 - Exportación CSV/Excel de historial.
 - Filtros por rango de fechas en análisis longitudinal.
+
+### Trabajo resuelto el 21 de junio de 2026
+
+- Fórmulas de somatotipo, grasa, masa ósea, residual y muscular corregidas mediante migración `004`.
+- Unidades históricas normalizadas; 76 valoraciones MySQL verificadas sin diferencias.
+- Restricciones únicas e integridad referencial aplicadas mediante migraciones `002` y `003`.
+- Confirmaciones de eliminación incorporadas en las pantallas correspondientes.
+- Texto de ectomorfismo corregido.
 
 ### Largo plazo
 
@@ -1089,7 +1099,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (162 tests).
+- Suite de pruebas amplia para el tamaño actual de la app (183 tests y 3 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.
@@ -1116,8 +1126,8 @@ Devuelve métricas operativas y contrato de vista SQL.
 - Mantener cálculos en la vista SQL.
 - Mantener nombres técnicos de columnas para compatibilidad.
 - Corregir etiquetas visibles al usuario sin renombrar columnas reales.
-- Usar `Johnston` como etiqueta visible para el método de grasa.
-- Usar masa grasa Johnston en el balance de masas.
+- Mantener campos Johnston únicamente por compatibilidad y no mostrarlos como referencia clínica.
+- Usar masa grasa Yuhasz en el balance de masas.
 - Usar Flet como capa visual multiplataforma.
 - Usar FastAPI como API local/remota.
 - Usar MySQL como base productiva.

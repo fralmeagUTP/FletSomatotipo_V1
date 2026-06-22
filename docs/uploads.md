@@ -1,5 +1,8 @@
 # Política de uploads
 
+**Fecha de actualización:** 21 de junio de 2026
+**Estado:** validado por flujo E2E autenticado.
+
 ## Alcance
 
 Los archivos subidos por usuarios se guardan en `src/backend/static/uploads/` y se sirven desde `/static/uploads/`.
@@ -11,6 +14,7 @@ Los archivos subidos por usuarios se guardan en `src/backend/static/uploads/` y 
 - Los nombres se generan con UUID para evitar colisiones y exposición del nombre local del archivo.
 - Los uploads nuevos no deben versionarse en Git.
 - El archivo `.gitkeep` conserva la carpeta vacía dentro del repositorio.
+- El flujo E2E verifica carga PNG, almacenamiento temporal y asociación de la URL al deportista.
 
 ## Operación local
 

@@ -8,6 +8,7 @@ from src.frontend.api_client import ApiClient
 from src.frontend.navigation import show_dashboard, set_logout_callback
 from src.frontend import theme
 from views.dashboard import DashboardView
+from app_config import session_clear, session_set
 
 BASE = "http://127.0.0.1:8085"
 USERNAME = "admin"
@@ -31,14 +32,14 @@ def main(page: ft.Page):
     print(f"Login exitoso: {data.get('username')}")
     
     # Guardar en sesión
-    page.session.set("username", data["username"])
-    page.session.set("login_user", data["login_user"])
-    page.session.set("access_token", data["access_token"])
-    page.session.set("user_id", str(data["user_id"]))
+    session_set(page, "username", data["username"])
+    session_set(page, "login_user", data["login_user"])
+    session_set(page, "access_token", data["access_token"])
+    session_set(page, "user_id", str(data["user_id"]))
     
     # Configurar logout
     def handle_logout():
-        page.session.clear()
+        session_clear(page)
         page.controls.clear()
         page.add(ft.Text("Sesión cerrada. Recarga la página."))
         page.update()

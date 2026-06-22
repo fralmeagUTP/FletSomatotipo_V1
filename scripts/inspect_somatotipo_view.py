@@ -20,7 +20,7 @@ def main():
     with engine.connect() as connection:
         try:
             result = connection.execute(text(f"SHOW CREATE VIEW {VIEW_NAME}"))
-            row = result.fetchone()
+            row = result.mappings().one_or_none()
         except Exception as error:
             print(f"No se pudo obtener SHOW CREATE VIEW: {error}")
             return
@@ -28,7 +28,7 @@ def main():
     if row:
         print("")
         print("Definicion SQL de la vista:")
-        print(row[-1])
+        print(row["Create View"])
 
 
 if __name__ == "__main__":

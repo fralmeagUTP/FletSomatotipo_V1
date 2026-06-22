@@ -37,9 +37,10 @@ class TableBuildersTests(unittest.TestCase):
             on_delete=lambda item_id: None,
         )
 
-        self.assertEqual(row.cells[0].content.value, "123")
-        self.assertEqual(row.cells[1].content.value, "Ana")
-        self.assertEqual(row.cells[5].content.value, "300")
+        self.assertEqual(len(row.cells[0].content.controls), 2)
+        self.assertEqual(row.cells[1].content.value, "123")
+        self.assertEqual(row.cells[2].content.value, "Ana")
+        self.assertEqual(row.cells[6].content.value, "300")
 
     def test_build_historial_item_shows_measurement_summary(self):
         item = {

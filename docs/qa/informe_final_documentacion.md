@@ -1,4 +1,6 @@
-# Informe final de actualización documental — Somatocarta v1.1.7
+# Informe final de actualización documental — Somatocarta v1.2.1
+
+> **Documento histórico (15 de junio de 2026).** Describe la consolidación inicial. La actualización integral vigente del 21 de junio de 2026 está registrada en `docs/changelog_documentation.md` y prevalece ante cualquier cifra o pendiente de este informe.
 
 **Fecha:** 15 de junio de 2026
 **Enfoque:** SDD — Spec-Driven Development con plantilla Spec Kit
@@ -7,7 +9,7 @@
 
 ## 1. Resumen del análisis realizado
 
-Se realizó un análisis exhaustivo del proyecto Somatocarta v1.1.7, incluyendo:
+Se realizó un análisis exhaustivo del proyecto Somatocarta v1.2.1, incluyendo:
 
 - Exploración completa de la estructura de directorios (38+ entradas en raíz, 11 vistas, 13 módulos frontend, 7 routers backend, 6 servicios, 11 modelos SQLAlchemy, 24 archivos de prueba).
 - Lectura de toda la documentación existente (10 archivos .md, 4 archivos .txt).
@@ -30,7 +32,7 @@ Ver detalle completo en: `docs/documentation_inventory.md`
 
 | Documento | Cambios realizados |
 |-----------|--------------------|
-| `README.md` | Reescrito completamente. Ahora incluye: versión actual (v1.1.7), todas las funcionalidades, tabla de tecnologías, estructura completa del proyecto, tabla de módulos, documentación disponible, contexto institucional, advertencias importantes basadas en hallazgos QA. |
+| `README.md` | Reescrito completamente. Ahora incluye: versión actual (v1.2.1), todas las funcionalidades, tabla de tecnologías, estructura completa del proyecto, tabla de módulos, documentación disponible, contexto institucional y advertencias basadas en hallazgos QA. |
 | `docs/architecture.md` | Creado como versión nueva de `docs/arquitectura.md`. Ahora incluye: los 7 routers, los 6 servicios, el sistema de auditoría, todos los endpoints documentados, generación de PDFs, y decisiones de diseño vigentes. |
 | `docs/arquitectura.md` | Agregada nota de redirección al nuevo `docs/architecture.md`. |
 
@@ -126,7 +128,7 @@ Ver detalle completo en: `docs/documentation_inventory.md`
 | `docs/arquitectura.md` y `docs/architecture.md` son documentos similares | Bajo | `arquitectura.md` tiene nota de redirección |
 | `AUDITORIA_SISTEMA.md` mezcla plan con código ya implementado | Medio | Se recomienda reestructurar (documentado en deprecated_docs_report.md) |
 | Informes QA en raíz del proyecto | Bajo | Se recomienda mover a `docs/qa/` |
-| Contraseña documentada incorrectamente (`CDR206` vs `CDR2026`) | Medio | Corregido en este análisis. Actualizar guía operativa. |
+| Credencial histórica documentada incorrectamente | Medio | Cerrado: las credenciales fueron retiradas de la documentación. |
 | Especificación SDD existente no menciona módulos de entidades/deportes/asignaciones como vistas | Medio | Corregido en `docs/modules.md` y Spec Kit |
 | Sin modelo de dominio documentado formalmente | Alto | Corregido en Spec Kit (sección 9) |
 

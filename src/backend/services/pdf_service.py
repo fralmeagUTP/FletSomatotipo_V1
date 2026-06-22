@@ -1,9 +1,15 @@
 from datetime import date, datetime
 from decimal import Decimal
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 import struct
 import zlib
+
+try:
+    from PIL import Image as PillowImage
+except ImportError:
+    PillowImage = None
 
 from src.frontend.assets import ASSETS_DIR, LOGO_SOMATOCARTA, REFERENCE_IMAGES
 from src.frontend.somatocarta import (
@@ -50,9 +56,8 @@ SPANISH_MONTHS = {
 LONGITUDINAL_REPORT_METRICS = [
     ("Peso", "PESO_kg", "kg"),
     ("IMC", "IMC", ""),
-    ("Grasa Johnston", "PorcGrasoJonson", "%"),
-    ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
     ("Grasa Yuhasz", "PorcRasoYuasz", "%"),
+    ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
     ("Masa muscular", "Mma", "kg"),
     ("Endomorfismo", "Endomorfismo", ""),
     ("Mesomorfismo", "Mesomorfismo", ""),
@@ -82,22 +87,20 @@ SOMATOTYPE_FIELDS = [
 ]
 
 PRIMARY_COMPOSITION_FIELDS = [
-    ("Porc. graso Johnston", "PorcGrasoJonson", "%"),
-    ("Peso graso Johnston", "PesoGrasoJhonston", "kg"),
+    ("Porc. graso Yuhasz", "PorcRasoYuasz", "%"),
+    ("Peso graso Yuhasz", "PesoRasoYuazs", "kg"),
     ("Masa muscular", "Mma", "kg"),
     ("Peso óseo", "PesoOseo", "kg"),
     ("Peso residual", "PesoResidual", "kg"),
 ]
 
 SECONDARY_FAT_FIELDS = [
-    ("Porc. graso Yuhasz", "PorcRasoYuasz", "%"),
-    ("Peso graso Yuhasz", "PesoRasoYuazs", "kg"),
     ("Porc. graso Faulkner", "PorcGrasoFaulker", "%"),
     ("Peso graso Faulkner", "PesoRasoFaulker", "kg"),
 ]
 
 MASS_COMPONENTS = [
-    ("Grasa Johnston", "PesoGrasoJhonston", "#f59e0b"),
+    ("Grasa Yuhasz", "PesoRasoYuazs", "#f59e0b"),
     ("Masa muscular", "Mma", "#2563eb"),
     ("Masa ósea", "PesoOseo", "#16a34a"),
     ("Masa residual", "PesoResidual", "#64748b"),
@@ -511,14 +514,14 @@ def append_status_bar(commands, label, value, unit, status, color, x, y, width=2
 def append_composition_status(commands, record, x, y):
     append_section_title(commands, x, y, "Semáforo de composición corporal")
     sex = normalize_sex(record_value(record, "SEXO_DEPORTISTA"))
-    fat_percent = record_number(record, "PorcGrasoJonson")
+    fat_percent = record_number(record, "PorcRasoYuasz")
     muscle_percent = percent_of_weight(record, "Mma")
     bone_percent = percent_of_weight(record, "PesoOseo")
     residual_percent = percent_of_weight(record, "PesoResidual")
 
     fat_label, fat_color = body_fat_status(fat_percent, sex)
     muscle_label, muscle_color = muscle_status(muscle_percent, sex)
-    append_status_bar(commands, "Grasa Johnston", fat_percent, "%", fat_label, fat_color, x, y - 32)
+    append_status_bar(commands, "Grasa Yuhasz", fat_percent, "%", fat_label, fat_color, x, y - 32)
     append_status_bar(commands, "Masa muscular", muscle_percent, "% peso", muscle_label, muscle_color, x, y - 78)
     append_status_bar(commands, "Masa ósea", bone_percent, "% peso", "Referencia", PRIMARY_COLOR, x, y - 124)
     append_status_bar(commands, "Masa residual", residual_percent, "% peso", "Referencia", PRIMARY_COLOR, x, y - 170)
@@ -565,7 +568,7 @@ def append_mass_distribution(commands, record, x, y, width=244):
 
 
 def append_composition_takeaway(commands, record, x, y, width=510):
-    fat_percent = record_number(record, "PorcGrasoJonson")
+    fat_percent = record_number(record, "PorcRasoYuasz")
     muscle_percent = percent_of_weight(record, "Mma")
     sex = normalize_sex(record_value(record, "SEXO_DEPORTISTA"))
     fat_status, fat_color = body_fat_status(fat_percent, sex)
@@ -739,13 +742,27 @@ def downsample_rgb(width, height, rgb, max_width=900, max_height=900):
     return target_width, target_height, bytes(output)
 
 
+@lru_cache(maxsize=16)
+def cached_png_image_data(filename, max_width=900, max_height=900):
+    path = ASSETS_DIR / filename
+    if PillowImage is not None:
+        with PillowImage.open(path) as image:
+            image = image.convert("RGB")
+            image.thumbnail((max_width, max_height), PillowImage.Resampling.LANCZOS)
+            width, height = image.size
+            rgb = image.tobytes()
+    else:
+        width, height, rgb = decode_png_rgb(path)
+        width, height, rgb = downsample_rgb(width, height, rgb, max_width=max_width, max_height=max_height)
+    return width, height, zlib.compress(rgb, level=6)
+
+
 def load_png_image_xobject(filename, max_width=900, max_height=900):
-    width, height, rgb = decode_png_rgb(ASSETS_DIR / filename)
-    width, height, rgb = downsample_rgb(width, height, rgb, max_width=max_width, max_height=max_height)
+    width, height, compressed_rgb = cached_png_image_data(filename, max_width, max_height)
     return {
         "width": width,
         "height": height,
-        "data": zlib.compress(rgb, level=6),
+        "data": compressed_rgb,
     }
 
 
@@ -984,9 +1001,8 @@ def append_longitudinal_table(commands, records, x, y):
         ("Fecha", "FECHA_MEDIDA", ""),
         ("Peso", "PESO_kg", "kg"),
         ("IMC", "IMC", ""),
-        ("Grasa Johnston", "PorcGrasoJonson", "%"),
-        ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
         ("Grasa Yuhasz", "PorcRasoYuasz", "%"),
+        ("Grasa Faulkner", "PorcGrasoFaulker", "%"),
         ("Masa muscular", "Mma", "kg"),
         ("X", "X", ""),
         ("Y", "Y", ""),
@@ -1283,11 +1299,10 @@ def build_longitudinal_pdf(records, athlete_info=None):
     )
     append_multi_line_chart(
         page_two,
-        "Grasa: Johnston, Faulkner y Yuhasz",
+        "Grasa: Yuhasz y Faulkner",
         [
-            {"label": "Johnston", "series": build_pdf_metric_series(ordered, "PorcGrasoJonson"), "color": PRIMARY_COLOR},
             {"label": "Faulkner", "series": build_pdf_metric_series(ordered, "PorcGrasoFaulker"), "color": WARNING_COLOR},
-            {"label": "Yuhasz", "series": build_pdf_metric_series(ordered, "PorcRasoYuasz"), "color": SUCCESS_COLOR},
+            {"label": "Yuhasz", "series": build_pdf_metric_series(ordered, "PorcRasoYuasz"), "color": PRIMARY_COLOR},
         ],
         318,
         708,
@@ -1334,8 +1349,8 @@ def build_valoracion_pdf(record):
 
     page_two = []
     append_header(page_two, "Composición corporal", f"Deportista: {short_text(getattr(record, 'NOMBRE_DEPORTISTA', ''), 45)}")
-    page_two.append(text_command(LEFT_MARGIN, 724, "Método principal: Johnston", 13, color=PRIMARY_COLOR, font="F2"))
-    page_two.append(text_command(LEFT_MARGIN, 704, "Se usa como referencia operativa para el balance de masas del informe.", 8, color=MUTED_COLOR))
+    page_two.append(text_command(LEFT_MARGIN, 724, "Método principal: Yuhasz", 13, color=PRIMARY_COLOR, font="F2"))
+    page_two.append(text_command(LEFT_MARGIN, 704, "Ecuación diferenciada por sexo para población deportiva.", 8, color=MUTED_COLOR))
     append_table(page_two, "Resultado principal y masas corporales", PRIMARY_COMPOSITION_FIELDS, record, LEFT_MARGIN, 670, width=238, row_height=21)
     append_mass_distribution(page_two, record, 318, 670, width=228)
     append_composition_takeaway(page_two, record, LEFT_MARGIN, 486)

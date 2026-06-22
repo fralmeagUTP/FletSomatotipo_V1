@@ -10,7 +10,8 @@ def test_historial_detail_does_not_create_nested_vertical_scrolls():
 
     assert "ft.Container(content=tabs, height=400)" not in text
     assert "ft.Container(content=tabs)" not in text
-    assert "current_details_view = ft.Column(scroll=ft.ScrollMode.AUTO" in text
+    assert "current_details_view = ft.ListView(spacing=14, expand=True)" in text
+    assert "horizontal_alignment=ft.CrossAxisAlignment.STRETCH" in text
 
 
 def test_historial_restores_useful_reference_sections():

@@ -1,13 +1,13 @@
 import tempfile
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from src.backend.auth_utils import create_access_token, decode_token, get_current_user
+from src.backend.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_token, get_current_user
 from src.backend.database import get_db
 from src.backend.main import app
 from src.backend.schemas.deportistas import DeportistaCreate
@@ -39,6 +39,14 @@ class ApiSecurityTests(unittest.TestCase):
 
         self.assertEqual(payload["sub"], "tester")
         self.assertEqual(payload["id"], 1)
+
+    def test_access_token_uses_configured_expiration(self):
+        token = create_access_token({"sub": "tester", "id": 1})
+        payload = decode_token(token)
+        remaining_seconds = payload["exp"] - int(datetime.now(timezone.utc).timestamp())
+
+        self.assertGreaterEqual(remaining_seconds, ACCESS_TOKEN_EXPIRE_MINUTES * 60 - 5)
+        self.assertLessEqual(remaining_seconds, ACCESS_TOKEN_EXPIRE_MINUTES * 60 + 5)
 
 
 class ValidationTests(unittest.TestCase):

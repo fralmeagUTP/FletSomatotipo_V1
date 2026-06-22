@@ -21,15 +21,17 @@ class FakePage:
         self.snack_bar = None
         self.updated = 0
         self.overlay = []
+        self.opened = []
+        self.closed = []
 
     def update(self):
         self.updated += 1
 
     def open(self, control):
-        pass
+        self.opened.append(control)
 
     def close(self, control):
-        pass
+        self.closed.append(control)
 
 
 class FakeApiClient:
@@ -114,8 +116,13 @@ def find_text_field(root, label):
 
 def find_button(root, text):
     for control in walk_controls(root):
-        if isinstance(control, (ft.ElevatedButton, ft.OutlinedButton, ft.Button)) and control.text == text:
-            return control
+        if isinstance(control, (ft.ElevatedButton, ft.OutlinedButton, ft.Button)):
+            button_text = getattr(control, "text", None)
+            if button_text is None:
+                content = getattr(control, "content", None)
+                button_text = getattr(content, "value", content if isinstance(content, str) else None)
+            if button_text == text:
+                return control
         if isinstance(control, ft.IconButton) and control.tooltip == text:
             return control
     raise AssertionError(f"No se encontró botón {text!r}")
@@ -265,11 +272,23 @@ class ValoracionViewTests(unittest.TestCase):
         self.assertEqual(find_text_field(self.view, "Estatura *").value, "170")
         self.assertEqual(find_text_field(self.view, "Peso *").value, "70")
 
-    def test_delete_stored_valuation_uses_delete_endpoint(self):
+    def test_delete_stored_valuation_requires_confirmation(self):
         FakeApiClient.editable_records = [self.stored_record()]
         self._select_athlete()
         find_button(self.view, "Eliminar").on_click(None)
+
+        self.assertEqual(FakeApiClient.deleted_ids, [])
+        dialog = self.page.opened[-1]
+        self.assertIsInstance(dialog, ft.AlertDialog)
+        self.assertEqual(dialog.title.value, "Eliminar valoración completa")
+        self.assertIn("ID 10", dialog.content.value)
+        self.assertIn("1 medición", dialog.content.value)
+        self.assertIn("no se puede deshacer", dialog.content.value)
+
+        dialog.actions[1].on_click(None)
+
         self.assertEqual(FakeApiClient.deleted_ids, [10])
+        self.assertIn(dialog, self.page.closed)
 
     def test_load_stored_valuation_calls_api(self):
         record = self.stored_record()

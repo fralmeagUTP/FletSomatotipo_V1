@@ -1,6 +1,6 @@
-# Guía de usuario — Somatocarta v1.1.7
+# Guía de usuario — Somatocarta v1.2.1
 
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 
 ---
 
@@ -35,6 +35,9 @@ Somatocarta es una aplicación para registrar deportistas, realizar valoraciones
 4. Si las credenciales son correctas, accederá al Dashboard.
 5. Si son incorrectas, verá un mensaje de error en rojo.
 
+La sesión dura 30 minutos por defecto. El administrador puede modificar este valor mediante la configuración del backend.
+Al expirar o cerrar sesión manualmente, la aplicación elimina token, usuario e identificadores almacenados en la sesión local.
+
 > **Nota:** Si olvida sus credenciales, contacte al administrador del sistema.
 
 ---
@@ -45,9 +48,11 @@ El Dashboard es la pantalla principal. Muestra:
 
 - **Saludo personalizado** con su nombre de usuario.
 - **Tarjetas de métricas:** total de deportistas, valoraciones, asignaciones y estado del sistema.
-- **Actividad reciente:** últimas valoraciones registradas.
+- **Accesos operativos:** métricas, valoración, análisis y módulos de gestión.
 - **Módulos del sistema:** accesos rápidos a cada funcionalidad.
 - **Botón de cerrar sesión** en la esquina superior derecha.
+
+En móviles, use **Menú** para desplegar la navegación. El panel puede desplazarse e incluye **Cerrar sesión**.
 
 ### Navegación
 
@@ -89,7 +94,7 @@ El Dashboard es la pantalla principal. Muestra:
 1. En la lista, pulse el ícono de eliminar (🗑️).
 2. Confirme la eliminación en el diálogo.
 
-> **Advertencia:** Si el deportista tiene valoraciones asociadas, estas también se eliminarán.
+> **Advertencia:** Si el deportista tiene asignaciones o valoraciones asociadas, la eliminación se bloqueará. Elimine primero las dependencias correspondientes.
 
 ---
 
@@ -110,6 +115,8 @@ El Dashboard es la pantalla principal. Muestra:
 
 Use los íconos de editar o eliminar junto a cada entidad.
 
+> Una entidad con asignaciones activas no puede eliminarse hasta retirar esas asignaciones.
+
 ---
 
 ## 6. Gestión de Deportes
@@ -123,6 +130,8 @@ Use los íconos de editar o eliminar junto a cada entidad.
 1. Pulse **Nuevo deporte**.
 2. Escriba el nombre del deporte.
 3. Pulse **Guardar**.
+
+Los nombres de deporte no pueden duplicarse. Un deporte con asignaciones activas no puede eliminarse.
 
 ---
 
@@ -140,6 +149,8 @@ Las asignaciones relacionan un deportista con una entidad y un deporte.
 ### 7.2 Editar / Eliminar
 
 Use los íconos correspondientes en la lista de asignaciones.
+
+Toda eliminación solicita confirmación antes de modificar los datos.
 
 ---
 
@@ -172,7 +183,7 @@ El formulario tiene 14 campos organizados en grupos:
 - Fémur
 - Codo
 
-**Perímetros (mm):**
+**Perímetros y circunferencias (cm):**
 - Bíceps contraído
 - Pierna
 - Circunferencia de carpo
@@ -217,7 +228,7 @@ Seleccione una valoración para ver:
 
 - **Medidas:** Los 14 campos antropométricos.
 - **Composición corporal:**
-  - Comparación de 3 métodos de grasa (Johnston, Faulkner, Yuhasz).
+  - Comparación de Yuhasz (principal para deportistas) y Faulkner.
   - Distribución de masas (grasa, muscular, ósea, residual).
   - Gráfico de pastel.
 - **IMC:** Valor y clasificación con imagen de referencia.
@@ -229,6 +240,8 @@ Seleccione una valoración para ver:
 
 1. En el detalle de la valoración, pulse **Descargar PDF**.
 2. El archivo se guardará en su carpeta de descargas.
+
+El informe incluye identidad, mediciones, composición corporal, somatotipo, somatocarta y referencias metodológicas. Su generación normal debe tardar menos de 10 segundos.
 
 ### 9.4 Eliminar una valoración
 
@@ -249,7 +262,7 @@ Seleccione una valoración para ver:
 
 - **Tarjetas KPI:** Valor inicial, valor final, cambio absoluto y porcentaje de cambio.
 - **Gráficos de línea:** Evolución temporal de 11 variables.
-- **Comparación de métodos de grasa:** Johnston vs Faulkner vs Yuhasz.
+- **Comparación de métodos de grasa:** Yuhasz vs Faulkner.
 - **Somatocarta longitudinal:** Todos los puntos X, Y con trayectoria cronológica.
 - **Peso vs masa muscular:** Gráfico comparativo.
 - **Tabla histórica:** Todas las valoraciones con sus valores.

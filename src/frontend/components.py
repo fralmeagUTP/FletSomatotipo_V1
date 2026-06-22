@@ -31,14 +31,14 @@ def responsive_dialog_size(page, max_width=650, max_height=600):
 
 
 def horizontal_scroll(content):
-    return ft.Row([content], scroll=ft.ScrollMode.AUTO)
+    return ft.Row([content], scroll=ft.ScrollMode.AUTO, width=float("inf"))
 
 
 def page_header(title: str, on_back=None, color: str = theme.TEXT_COLOR):
     controls = []
     if on_back:
         controls.append(ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back, icon_color=color))
-    controls.append(ft.Text(title, size=theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=color))
+    controls.append(ft.Text(title, size=theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=color, expand=True))
     return ft.Row(controls, vertical_alignment=ft.CrossAxisAlignment.CENTER)
 
 
@@ -48,7 +48,7 @@ def info_banner(text: str, icon=ft.Icons.INFO_OUTLINE):
             [
                 ft.Icon(icon, color=theme.PRIMARY_COLOR, size=30),
                 ft.Container(width=15),
-                ft.Text(text, size=16, color=theme.TEXT_COLOR),
+                ft.Text(text, size=16, color=theme.TEXT_COLOR, expand=True),
             ],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),

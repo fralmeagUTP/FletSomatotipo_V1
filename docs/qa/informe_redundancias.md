@@ -1,5 +1,7 @@
 # Informe de redundancias documentales — Somatocarta
 
+> **Documento histórico (15 de junio de 2026).** El inventario y los tamaños corresponden a esa fecha. La estructura vigente se mantiene en `docs/documentation_governance.md`.
+
 **Fecha:** 15 de junio de 2026
 **Archivos analizados:** 22 documentos en `docs/`
 

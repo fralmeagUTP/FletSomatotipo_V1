@@ -10,14 +10,31 @@ def _clean_base_url(value: str) -> str:
     return value.rstrip("/")
 
 
-API_URL = _clean_base_url(os.getenv("API_URL", "http://127.0.0.1:8085"))
-#API_URL = _clean_base_url(os.getenv("API_URL", "https://nyquist.app/somatocarta"))
+#API_URL = _clean_base_url(os.getenv("API_URL", "http://127.0.0.1:8085"))
+API_URL = _clean_base_url(os.getenv("API_URL", "https://nyquist.app/somatocarta"))
 BACKEND_HOST = os.getenv("BACKEND_HOST", "0.0.0.0")
 BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8085"))
 
 
+def session_store(page):
+    session = page.session
+    return getattr(session, "store", session)
+
+
+def session_set(page, key, value):
+    session_store(page).set(key, value)
+
+
+def session_get(page, key):
+    return session_store(page).get(key)
+
+
+def session_clear(page):
+    session_store(page).clear()
+
+
 def auth_headers(page):
-    token = page.session.get("access_token")
+    token = session_get(page, "access_token")
     if not token:
         return {}
     return {"Authorization": f"Bearer {token}"}
@@ -54,8 +71,7 @@ def api_error_message(response) -> str:
 
 def handle_api_error(page, response, fallback: str = "No se pudo completar la operacion") -> bool:
     if response.status_code == 401:
-        page.session.set("access_token", "")
-        page.session.set("login_user", "")
+        session_clear(page)
         show_snack(page, "Sesion expirada. Inicia sesion nuevamente.")
         return True
 

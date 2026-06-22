@@ -18,12 +18,12 @@ MEASUREMENT_RULES = {
     "PLIEGUE_ABDOMINAL": MeasurementRule("Pliegue abdominal", 0, 100, "mm"),
     "PLIEGUE_MUSLO_ANT": MeasurementRule("Pliegue muslo anterior", 0, 100, "mm"),
     "PLIEGUE_MEDIAL_PIERNA": MeasurementRule("Pliegue pierna medial", 0, 100, "mm"),
-    "DIAMETRO_BIEPI_MUNECA": MeasurementRule("Diametro muneca", 0, 200, "mm"),
-    "DIAMETRO_BIEPI_FEMUR": MeasurementRule("Diametro femur", 0, 200, "mm"),
-    "DIAMETRO_CODO": MeasurementRule("Diametro codo", 0, 200, "mm"),
+    "DIAMETRO_BIEPI_MUNECA": MeasurementRule("Diametro muneca", 30, 100, "mm"),
+    "DIAMETRO_BIEPI_FEMUR": MeasurementRule("Diametro femur", 50, 150, "mm"),
+    "DIAMETRO_CODO": MeasurementRule("Diametro codo", 30, 100, "mm"),
     "PERIMETRO_BICED_CONTRAIDO": MeasurementRule("Perimetro biceps", 0, 250, "cm"),
     "PERIMETRO_PIERNA": MeasurementRule("Perimetro pierna", 0, 250, "cm"),
-    "CIRCUNFERENCIA_CARPO": MeasurementRule("Circunferencia carpo", 0, 200, "mm"),
+    "CIRCUNFERENCIA_CARPO": MeasurementRule("Circunferencia carpo", 10, 30, "cm"),
 }
 
 
