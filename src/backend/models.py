@@ -107,9 +107,10 @@ class Deporte(Base):
     Catálogo de deportes.
     """
     __tablename__ = "CDRTablaDeportes"
+    __table_args__ = (UniqueConstraint("DEPORTE", name="uq_deporte_nombre"),)
 
     ID_DEPORTE = Column(Integer, primary_key=True, autoincrement=True)
-    DEPORTE = Column(String(50))
+    DEPORTE = Column(String(50), nullable=False)
 
 
 class DeporteDeportista(Base):
@@ -118,11 +119,27 @@ class DeporteDeportista(Base):
     Relaciona deportistas con deportes y entidades.
     """
     __tablename__ = "CDRTablaDeportesDeportistas"
+    __table_args__ = (
+        UniqueConstraint(
+            "ID_DEPORTE",
+            "IDENTI_DEPORTISTA",
+            "NIT_ENTIDAD",
+            name="uq_asignacion_deporte_deportista_entidad",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ID_DEPORTE = Column(Integer, ForeignKey("CDRTablaDeportes.ID_DEPORTE"))
-    IDENTI_DEPORTISTA = Column(String(20), ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA"))
-    NIT_ENTIDAD = Column(String(20), ForeignKey("CDRTablaEntidades.NIT_ENTIDAD"))
+    ID_DEPORTE = Column(Integer, ForeignKey("CDRTablaDeportes.ID_DEPORTE", ondelete="RESTRICT"), nullable=False)
+    IDENTI_DEPORTISTA = Column(
+        String(20),
+        ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    NIT_ENTIDAD = Column(
+        String(20),
+        ForeignKey("CDRTablaEntidades.NIT_ENTIDAD", ondelete="RESTRICT"),
+        nullable=False,
+    )
 
     deporte = relationship("Deporte")
     deportista = relationship("Deportista")
@@ -140,7 +157,11 @@ class Somatotipo(Base):
     )
     id_Somatotipo = Column(Integer, primary_key=True, autoincrement=True)
     FECHA_MEDIDA = Column(Date)
-    IDENTI_DEPORTISTA = Column(String(20), ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA"))
+    IDENTI_DEPORTISTA = Column(
+        String(20),
+        ForeignKey("CDRTablaDeportistas.IDENTI_DEPORTISTA", ondelete="RESTRICT"),
+        nullable=False,
+    )
     LOGIN_USER = Column(String(60))
     OBSERV = Column(Text)
 
@@ -154,7 +175,11 @@ class SomatotipoDetalle(Base):
     """
     __tablename__ = os.getenv("SOMATOTIPO_DETALLE_TABLE", "CDRTablaSomatotipoDetalle")
     ID = Column(Integer, primary_key=True, autoincrement=True)
-    id_Somatotipo = Column(Integer, ForeignKey("CDRTablaSomatotipo.id_Somatotipo"))
+    id_Somatotipo = Column(
+        Integer,
+        ForeignKey("CDRTablaSomatotipo.id_Somatotipo", ondelete="RESTRICT"),
+        nullable=False,
+    )
     ESTA_USER_CM = Column(DECIMAL(8, 2))
     PESO_kg = Column(DECIMAL(8, 2))
     PLIEGUE_TRICIPITAL = Column(DECIMAL(8, 2))

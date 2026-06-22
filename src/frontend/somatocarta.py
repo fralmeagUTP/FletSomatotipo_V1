@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 import flet as ft
 
 from src.frontend import theme
-from src.frontend.assets import REFERENCE_IMAGES, asset_path
+from src.frontend.assets import REFERENCE_IMAGES
 from src.frontend.components import horizontal_scroll
 
 
@@ -147,10 +147,11 @@ def build_somatocarta_chart(x_value, y_value, label: str = ""):
     point_x, point_y = coordinate_to_pixel(x_coord, y_coord)
     controls = [
         ft.Image(
-            src=asset_path(REFERENCE_IMAGES["somatocarta"]),
+            src=REFERENCE_IMAGES["somatocarta"],
             width=CHART_WIDTH,
             height=CHART_HEIGHT,
             fit=ft.ImageFit.CONTAIN,
+            error_content=ft.Text("No se pudo cargar la somatocarta.", color=theme.ERROR_COLOR),
         ),
         build_coordinate_badge(x_coord, y_coord),
     ]

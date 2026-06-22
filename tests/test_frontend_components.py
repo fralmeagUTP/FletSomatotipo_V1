@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import flet as ft
 
+from src.frontend.app_shell import build_app_shell
 from src.frontend.components import (
     content_card,
     horizontal_scroll,
@@ -77,6 +78,29 @@ class ComponentsTests(unittest.TestCase):
 
         self.assertEqual(row.controls[0], content)
         self.assertEqual(row.scroll, ft.ScrollMode.AUTO)
+        self.assertEqual(row.width, float("inf"))
+
+    def test_app_shell_switches_between_mobile_menu_and_sidebar_on_resize(self):
+        page = SimpleNamespace(width=390, session={}, overlay=[], update_count=0)
+        page.update = lambda: setattr(page, "update_count", page.update_count + 1)
+        previous_resize_calls = []
+        page.on_resized = lambda event: previous_resize_calls.append(event)
+
+        shell = build_app_shell(page, ft.Text("Contenido"), title="Dashboard")
+        sidebar, body = shell.content.controls
+        mobile_menu = body.controls[0].content.controls[0]
+
+        self.assertFalse(sidebar.visible)
+        self.assertTrue(mobile_menu.visible)
+
+        page.width = 1280
+        resize_event = object()
+        page.on_resized(resize_event)
+
+        self.assertTrue(sidebar.visible)
+        self.assertFalse(mobile_menu.visible)
+        self.assertEqual(previous_resize_calls, [resize_event])
+        self.assertEqual(page.update_count, 1)
 
 
 if __name__ == "__main__":

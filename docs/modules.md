@@ -1,6 +1,6 @@
-# Módulos funcionales — Somatocarta v1.1.7
+# Módulos funcionales — Somatocarta v1.2.1
 
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 
 ---
 
@@ -12,7 +12,7 @@
 | **Usuarios involucrados** | Todos los usuarios del sistema. |
 | **Pantallas/rutas** | `main.py` (pantalla de login), `POST /auth/login` |
 | **Entradas** | Usuario (LOGIN_USER), contraseña (PSW_USER). |
-| **Procesos** | Verificación de credenciales, generación de token JWT (HS256, 15 min), registro en auditoría (LOGIN_SUCCESS / LOGIN_FAILED). |
+| **Procesos** | Verificación de credenciales, generación de token JWT HS256 configurable mediante `ACCESS_TOKEN_EXPIRE_MINUTES` (30 min por defecto), registro en auditoría. |
 | **Salidas** | Token de acceso, nombre de usuario, ID de usuario. Sesión almacenada en Flet. |
 | **Validaciones** | Credenciales no vacías. Usuario debe existir. Contraseña debe coincidir. |
 | **Dependencias** | `src/backend/auth_utils.py`, `src/backend/routers/auth.py`, tabla `CDRTablaUsuarios`. |
@@ -50,7 +50,7 @@
 | **Salidas** | Cambio de pantalla con contexto limpio. |
 | **Módulos accesibles** | Dashboard, Deportistas, Valoración Corporal, Historial, Análisis Longitudinal, Entidades, Deportes, Asignaciones, Acerca del Proyecto. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. Mantener pruebas de navegación y resize. |
 
 ---
 
@@ -67,7 +67,7 @@
 | **Validaciones** | ID obligatorio (máx 20), nombre obligatorio (máx 50), sexo M/F, email válido, fecha nac. no futura. |
 | **Dependencias** | Catálogos de tipos de documento, estratos, niveles educativos. |
 | **Estado** | Funcional. |
-| **Pendientes** | Eliminación con datos asociados no está restringida. |
+| **Pendientes** | Sin pendientes funcionales. La API y MySQL bloquean eliminaciones con dependencias mediante `RESTRICT` y HTTP 409. |
 
 ---
 
@@ -83,7 +83,7 @@
 | **Salidas** | Lista paginada, formulario de creación/edición. |
 | **Validaciones** | NIT obligatorio (máx 20), razón social obligatoria (máx 50), email válido si se proporciona. NIT único. |
 | **Estado** | Funcional. |
-| **Pendientes** | Eliminación con asignaciones asociadas no está restringida. |
+| **Pendientes** | Sin pendientes funcionales. La eliminación con asignaciones se bloquea mediante `RESTRICT` y HTTP 409. |
 
 ---
 
@@ -97,9 +97,9 @@
 | **Entradas** | Nombre del deporte, ID opcional. |
 | **Procesos** | Crear, listar paginado, buscar, editar, eliminar. |
 | **Salidas** | Lista paginada, formulario de creación/edición. |
-| **Validaciones** | Nombre obligatorio (máx 50). |
+| **Validaciones** | Nombre obligatorio (máx 50) y único sin distinguir mayúsculas/minúsculas. |
 | **Estado** | Funcional. |
-| **Pendientes** | No valida deportes duplicados (se pueden crear múltiples registros con el mismo nombre). |
+| **Pendientes** | Sin pendientes funcionales. Los duplicados se bloquean en servicio y base de datos. |
 
 ---
 
@@ -113,9 +113,9 @@
 | **Entradas** | Deportista (búsqueda), deporte (dropdown), entidad (dropdown). |
 | **Procesos** | Crear, listar paginado, buscar, editar, eliminar. Validación de referencias (deportista, deporte, entidad deben existir). |
 | **Salidas** | Lista paginada de asignaciones, formulario de creación/edición. |
-| **Validaciones** | IDs obligatorios. Referencias deben existir en las tablas correspondientes. |
+| **Validaciones** | IDs obligatorios, referencias existentes y combinación deporte/deportista/entidad única. |
 | **Estado** | Funcional. |
-| **Pendientes** | No valida asignaciones duplicadas. Eliminación sin restricción referencial. |
+| **Pendientes** | Sin pendientes funcionales. Duplicados e integridad referencial están protegidos en API y MySQL. |
 
 ---
 
@@ -132,7 +132,7 @@
 | **Validaciones** | 14 campos con rangos definidos en `src/anthropometry.py`. Fecha no futura. Deportista debe existir. |
 | **Dependencias** | `src/anthropometry.py` (reglas de validación), `src/backend/services/somatotipo_service.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. Edición, creación y eliminación de tomas están cubiertas por integración y E2E. |
 
 ---
 
@@ -144,12 +144,12 @@
 | **Usuarios involucrados** | Evaluadores, entrenadores, investigadores. |
 | **Pantallas/rutas** | `views/historial.py`, `GET /somatotipo/vista/deportista/{identi}` |
 | **Entradas** | Deportista (búsqueda). |
-| **Procesos** | Listado paginado de valoraciones (master-detail). Detalle con: KPIs, medidas, composición corporal (3 métodos de grasa, masas, balance), IMC, complexión, somatotipo con escalas, somatocarta con coordenadas. Descarga de PDF individual. Eliminación de valoración. |
+| **Procesos** | Listado paginado de valoraciones (master-detail). Detalle con KPIs, medidas, Yuhasz como método principal, Faulkner como comparación, masas, balance, IMC, complexión, somatotipo, somatocarta, PDF y eliminación confirmada. |
 | **Salidas** | Panel de análisis completo con gráficos, tablas y somatocarta. |
 | **Validaciones** | Layout master-detail adaptativo (escritorio: simultáneo; móvil: toggle). |
 | **Dependencias** | Vista SQL `CDRVistaValoracionCorporal`, `src/frontend/composition_analysis.py`, `src/frontend/somatocarta.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Los cálculos de mesomorfismo y peso óseo presentan valores anómalos (ver informe QA). |
+| **Pendientes** | Obtener aprobación metodológica formal del equipo de ciencias del deporte. La base activa ya tiene aplicada y verificada la migración `004`. |
 
 ---
 
@@ -162,12 +162,12 @@
 | **Pantallas/rutas** | `views/analisis_longitudinal.py`, `GET /somatotipo/vista/deportista/{identi}/longitudinal/pdf` |
 | **Entradas** | Deportista (búsqueda) con mínimo 2 valoraciones. |
 | **Procesos** | Tarjetas KPI (valor inicial, final, delta, % cambio). Gráficos de línea para 11 variables. Comparación de métodos de grasa. Somatocarta longitudinal con trayectoria cronológica. Gráfico peso vs masa muscular. Tabla histórica. Descarga de PDF longitudinal. |
-| **Variables graficables** | Peso, IMC, % graso Yuhasz, % graso Faulkner, masa muscular, endomorfismo, mesomorfismo, ectomorfismo, % grasa Johnston, masa ósea, masa residual. |
+| **Variables graficables** | Peso, IMC, % graso Yuhasz, % graso Faulkner, masa muscular, endomorfismo, mesomorfismo, ectomorfismo, masa ósea y masa residual. |
 | **Salidas** | Panel de análisis longitudinal interactivo con gráficos y PDF. |
 | **Validaciones** | Requiere mínimo 2 valoraciones. |
 | **Dependencias** | `src/frontend/longitudinal_analysis.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. Mantener pruebas de series, coordenadas y PDF longitudinal. |
 
 ---
 
@@ -179,11 +179,11 @@
 | **Usuarios involucrados** | Evaluadores, entrenadores, investigadores. |
 | **Pantallas/rutas** | `GET /somatotipo/{id}/pdf`, `GET /somatotipo/vista/deportista/{identi}/longitudinal/pdf` |
 | **Entradas** | ID de somatotipo (individual) o identificación de deportista (longitudinal). |
-| **Procesos** | Generación manual de PDF 1.4 sin dependencias externas. Decodificación interna de PNG con filtro Paeth. Inclusión de datos del deportista, métricas, mediciones, composición corporal, somatotipo, somatocarta, gráficos. |
+| **Procesos** | Generación manual de PDF 1.4. Pillow optimiza imágenes y el decodificador PNG interno queda como fallback. Inclusión de datos del deportista, métricas, mediciones, composición corporal, somatotipo, somatocarta y gráficos. |
 | **Salidas** | Archivo PDF descargable (~1.7 MB). |
-| **Dependencias** | `src/backend/services/pdf_service.py` (1358 líneas). |
+| **Dependencias** | `src/backend/services/pdf_service.py`, Pillow para imágenes y fallback PNG interno. |
 | **Estado** | Funcional. Los PDFs contienen los datos correctos del deportista. |
-| **Pendientes** | Todos los PDFs individuales tienen el mismo tamaño exacto, lo cual es sospechoso. Verificar variabilidad de contenido. |
+| **Pendientes** | Sin pendientes funcionales. Mantener pruebas de variabilidad y rendimiento. |
 
 ---
 
@@ -195,11 +195,11 @@
 | **Usuarios involucrados** | Evaluadores, investigadores. |
 | **Pantallas/rutas** | Panel dentro de `views/historial.py`. |
 | **Entradas** | Datos calculados desde la vista SQL. |
-| **Procesos** | Comparación de 3 métodos de grasa (Johnston, Faulkner, Yuhasz). Cálculo de distribución de masas (grasa, muscular, ósea, residual). Validación de balance de masas (umbral 5%). Gráfico de pastel de distribución. |
+| **Procesos** | Yuhasz como método principal para deportistas y Faulkner como comparación. Cálculo de distribución de masas (grasa, muscular, ósea, residual). Validación de balance de masas (umbral 5%). Gráfico de pastel de distribución. |
 | **Salidas** | Tablas comparativas, gráfico de pastel, mensaje de validación de balance. |
 | **Dependencias** | `src/frontend/composition_analysis.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. La metodología clínica sigue sujeta a aprobación profesional. |
 
 ---
 
@@ -215,7 +215,7 @@
 | **Salidas** | Gráfico de somatocarta con ubicación del deportista. |
 | **Dependencias** | `src/frontend/somatocarta.py`, `assets/Somatocarta.png`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. Fórmulas y coordenadas verificadas contra la calculadora Python. |
 
 ---
 
@@ -231,7 +231,7 @@
 | **Salidas** | Tarjeta de IMC con clasificación e imagen de referencia. |
 | **Dependencias** | `src/frontend/interpretation.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. Mantener criterios diferenciados para menores de edad. |
 
 ---
 
@@ -246,7 +246,7 @@
 | **Procesos** | Visualización del valor de complexión con su tipo (Pequeña, Mediana, Grande). Imagen de referencia. |
 | **Salidas** | Tarjeta de complexión con imagen de referencia. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. |
 
 ---
 
@@ -261,7 +261,7 @@
 | **Procesos** | Muestra descripción del proyecto, alcance y logotipos institucionales (CDR, ISC, UTP, Nyquist). |
 | **Salidas** | Pantalla informativa. |
 | **Estado** | Funcional. |
-| **Pendientes** | Pendiente de confirmar en código. |
+| **Pendientes** | Sin pendientes funcionales. |
 
 ---
 
@@ -290,8 +290,8 @@
 | **Implementación** | `src/frontend/components.py` (helpers responsive), `src/frontend/app_shell.py` (sidebar vs menú hamburguesa), `ResponsiveRow` de Flet en todas las vistas. |
 | **Breakpoints** | xs (móvil pequeño), sm (móvil grande), md (tablet), lg (escritorio). |
 | **Comportamiento** | Escritorio: sidebar + master-detail simultáneo. Móvil/tablet: menú hamburguesa + toggle entre lista y detalle. |
-| **Estado** | Implementado. Evaluación visual completa pendiente. |
-| **Pendientes** | Batería visual E2E en móvil/tablet/escritorio. |
+| **Estado** | Implementado con cambio dinámico entre sidebar y menú móvil, cubierto por pruebas automatizadas. |
+| **Pendientes** | Validación visual final en dispositivos reales móvil/tablet/escritorio. |
 
 ---
 
@@ -319,7 +319,7 @@
 | **Rutas/Carpetas** | `tests/`, `scripts/`. |
 | **Entradas** | Scripts de Python (pytest), scripts de PowerShell. |
 | **Procesos** | Ejecución de pruebas unitarias, de integración y endpoints. Migración y mantenimiento mediante scripts auxiliares. |
-| **Salidas** | Reportes de cobertura (162 tests exitosos), estado del preflight. |
+| **Salidas** | Reportes de cobertura (183 tests y 3 subpruebas), E2E crítico y estado del preflight. |
 | **Dependencias** | `pytest`, base de datos SQLite temporal en entorno de pruebas. |
 | **Estado** | Implementado y funcional. |
 | **Pendientes** | Ampliar cobertura de pruebas E2E visuales para UI responsive. |

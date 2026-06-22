@@ -3,7 +3,7 @@ import flet as ft
 from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.assets import REFERENCE_IMAGES, asset_path
+from src.frontend.assets import REFERENCE_IMAGES
 from src.frontend.components import page_header, page_width, responsive_padding, set_busy
 from src.frontend.composition_analysis import build_composition_panel, mass_balance_message, mass_balance_summary
 from src.frontend.interpretation import bmi_methodology_note, parse_float
@@ -12,14 +12,14 @@ from src.frontend.somatocarta import build_somatocarta_card
 from src.frontend.table_builders import build_historial_item, group_historial_rows
 
 
-def HistorialView(page: ft.Page):
+def HistorialView(page: ft.Page, initial_query=None):
     primary_color = theme.PRIMARY_COLOR
     background_color = theme.BACKGROUND_COLOR
     card_background = theme.CARD_BACKGROUND
     text_color = theme.TEXT_COLOR
     api = ApiClient(page)
 
-    current_details_view = ft.Column(scroll=ft.ScrollMode.AUTO, spacing=14)
+    current_details_view = ft.ListView(spacing=14, expand=True)
     search_status = ft.Text("Busca por nombre o ID para ver el historial corporal.", color=theme.SUBTITLE_COLOR, size=12)
     current_page = 1
     page_size = 10
@@ -168,13 +168,14 @@ def HistorialView(page: ft.Page):
         )
 
     def reference_image_card(title, image_name, caption, aspect_ratio=1.35, max_width=520):
-        available_width = min(max(page_width(page) - 80, 320), max_width)
+        available_width = min(max(page_width(page) - 140, 220), max_width)
         image_height = round(available_width / aspect_ratio)
         image = ft.Image(
-            src=asset_path(image_name),
+            src=image_name,
             width=available_width,
             height=image_height,
             fit=ft.ImageFit.CONTAIN,
+            error_content=ft.Text("No se pudo cargar la imagen de referencia.", color=theme.ERROR_COLOR),
         )
         return ft.Container(
             content=ft.Column(
@@ -249,7 +250,7 @@ def HistorialView(page: ft.Page):
         balance_text = mass_balance_message(balance)
         bmi_note = bmi_methodology_note(somatotipo.get("EDAD"), det.get("IMC"))
         insights = [
-            insight_banner("Método principal de composición: Johnston. Faulkner y Yuhasz se conservan como referencia comparativa."),
+            insight_banner("Método principal de composición: Yuhasz para población deportiva. Faulkner se conserva como referencia comparativa."),
             insight_banner(bmi_note) if bmi_note else ft.Container(visible=False),
         ]
         if balance_text:
@@ -444,7 +445,7 @@ def HistorialView(page: ft.Page):
         kpis = ft.ResponsiveRow(
             [
                 metric_card("IMC", value_with_unit(det.get("IMC"), "kg/m²"), det.get("EstadoIMC") or "", ft.Icons.MONITOR_WEIGHT_OUTLINED),
-                metric_card("Grasa Johnston", value_with_unit(det.get("PorcGrasoJonson"), "%"), "Método principal", ft.Icons.PIE_CHART_OUTLINE, theme.WARNING_COLOR),
+                metric_card("Grasa Yuhasz", value_with_unit(det.get("PorcRasoYuasz"), "%"), "Método principal", ft.Icons.PIE_CHART_OUTLINE, theme.WARNING_COLOR),
                 metric_card("Masa muscular", value_with_unit(det.get("Mma"), "kg"), "Composición", ft.Icons.FITNESS_CENTER, primary_color),
                 metric_card(
                     "Somatotipo",
@@ -598,6 +599,7 @@ def HistorialView(page: ft.Page):
 
     search_field = ft.TextField(
         label="Buscar deportista por nombre o ID",
+        value=initial_query or "",
         suffix_icon=ft.Icons.SEARCH,
         on_submit=lambda event: run_search_historial(event.control.value, 1),
         expand=True,
@@ -629,7 +631,7 @@ def HistorialView(page: ft.Page):
     master_container.visible = True
     detail_container.visible = False
 
-    return ft.Container(
+    view = ft.Container(
         content=ft.Column(
             [
                 page_header("Historial Corporal", on_back=lambda event: show_dashboard(page), color=text_color),
@@ -639,8 +641,13 @@ def HistorialView(page: ft.Page):
                 ft.ResponsiveRow([master_container, detail_container], expand=True),
             ],
             spacing=0,
+            expand=True,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
         ),
         padding=responsive_padding(page, desktop=20, tablet=16, mobile=10),
         bgcolor=background_color,
         expand=True,
     )
+    if initial_query:
+        return view, lambda: search_historial(initial_query, 1)
+    return view

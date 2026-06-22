@@ -1,97 +1,148 @@
-# Fórmulas y cálculos de somatotipo
+# Fórmulas y cálculos antropométricos
 
-## Estado actual
+## Estado
 
-La aplicación Python no calcula actualmente los indicadores clínicos de somatotipo.
+Las fórmulas corregidas están implementadas en `src/backend/domain/anthropometry_calculator.py` y replicadas en la migración `scripts/migrations/004_correct_anthropometric_formulas.sql`.
 
-El flujo actual es:
+La base de datos continúa calculando los indicadores mediante vistas SQL. La calculadora Python funciona como referencia testeable para evitar divergencias futuras.
 
-1. El frontend captura mediciones antropométricas.
-2. El backend guarda encabezado y detalle en:
-   - `CDRTablaSomatotipo`
-   - `CDRDetalleSomatotipo`
-3. El historial consulta `CDRVistaValoracionCorporal`.
-4. Los valores calculados se muestran desde esa vista SQL.
+## Contrato de unidades
 
-Por tanto, la fuente efectiva de las fórmulas es la base de datos, no el código Python.
+| Medida | Unidad almacenada |
+|--------|-------------------|
+| Estatura | cm |
+| Peso | kg |
+| Pliegues cutáneos | mm |
+| Diámetros óseos de muñeca, fémur y codo | mm |
+| Perímetros de brazo y pierna | cm |
+| Circunferencia de carpo | cm |
 
-## Campos calculados consumidos por la app
+La interfaz y `src/anthropometry.py` validan este contrato. No se deben introducir diámetros como `6.4` o `9.0`; deben registrarse como `64` o `90` mm.
 
-La vista `CDRVistaValoracionCorporal` expone, entre otros:
+## Somatotipo Heath-Carter
 
-- `PorcRasoYuasz`
-- `PorcGrasoFaulker`
-- `PorcGrasoJonson`
-- `PesoRasoYuazs`
-- `PesoRasoFaulker`
-- `PesoGrasoJhonston`
-- `PesoOseo`
-- `PesoResidual`
-- `Mma`
-- `IMC`
-- `EstadoIMC`
-- `Complexion`
-- `TipoComplexion`
-- `Endomorfismo`
-- `EscalaEndomorfismo`
-- `Mesomorfismo`
-- `EscalaMesomorfismo`
-- `Ectomorfismo`
-- `EscalaEctomorfismo`
-- `X`
-- `Y`
+### Endomorfismo
 
-Estos campos están mapeados en `src/backend/models.py` dentro de `VistaValoracionCorporal`.
+La suma corregida es:
 
-## Implicación arquitectónica
-
-Mientras las fórmulas vivan en la vista SQL:
-
-- los tests Python solo validan captura, persistencia, consulta y paginación;
-- la precisión clínica depende de la definición SQL de `CDRVistaValoracionCorporal`;
-- cualquier cambio de fórmula debe auditarse en la base de datos;
-- el backend no puede garantizar por sí solo que los cálculos sean clínicamente correctos.
-
-## Checklist de validación clínica
-
-Antes de considerar validados los cálculos:
-
-1. Obtener la definición SQL de `CDRVistaValoracionCorporal`.
-2. Identificar cada fórmula usada para:
-   - composición corporal;
-   - masas corporales;
-   - IMC;
-   - complexión;
-   - endomorfismo;
-   - mesomorfismo;
-   - ectomorfismo;
-   - coordenadas `X`, `Y`.
-3. Comparar cada fórmula contra la fuente metodológica esperada.
-4. Crear casos de prueba con mediciones conocidas y resultados esperados.
-5. Ejecutar esos casos contra la vista SQL.
-6. Documentar versión, fuente y supuestos de cada fórmula.
-
-Para inspeccionar columnas y definición SQL desde el entorno local:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\inspect_somatotipo_view.py
+```text
+X = (tricipital + subescapular + suprailiaco) × 170.18 / estatura_cm
+Endomorfismo = -0.7182 + 0.1451X - 0.00068X² + 0.0000014X³
 ```
 
-El script usa las variables de `.env` mediante `src/backend/database.py` y no imprime credenciales.
+### Mesomorfismo
 
-## Riesgos detectados
+Los diámetros se convierten de mm a cm. Los perímetros se corrigen con sus pliegues:
 
-- Algunos nombres de campos parecen tener errores ortográficos históricos, por ejemplo `Faulker`, `Jonson`, `Yuasz`, `Raso`.
-- Si esos nombres corresponden a columnas reales, cambiarlos rompería compatibilidad.
-- Se recomienda mantener nombres técnicos existentes y mejorar solo las etiquetas visibles en UI.
+```text
+brazo_corregido = brazo_cm - tricipital_mm / 10
+pierna_corregida = pierna_cm - pliegue_pierna_mm / 10
 
-## Recomendación futura
+Mesomorfismo = 0.858 × codo_cm
+              + 0.601 × fémur_cm
+              + 0.188 × brazo_corregido
+              + 0.161 × pierna_corregida
+              - 0.131 × estatura_cm
+              + 4.5
+```
 
-Si se requiere control total desde la app:
+### Ectomorfismo
 
-1. Crear un módulo Python de cálculo, por ejemplo `src/backend/domain/somatotipo_calculator.py`.
-2. Implementar fórmulas puras y testeables.
-3. Agregar pruebas con datos clínicos conocidos.
-4. Decidir si la vista SQL queda solo como reporte o si se elimina dependencia de cálculos en DB.
+```text
+HWR = estatura_cm / raíz_cúbica(peso_kg)
 
-Hasta que eso ocurra, la vista SQL debe considerarse la fuente de verdad de los cálculos.
+HWR >= 40.75       → 0.732 × HWR - 28.58
+38.25 < HWR < 40.75 → 0.463 × HWR - 17.63
+HWR <= 38.25       → 0.1
+```
+
+### Somatocarta
+
+```text
+X = ectomorfismo - endomorfismo
+Y = 2 × mesomorfismo - endomorfismo - ectomorfismo
+```
+
+## Composición corporal
+
+### Yuhasz
+
+Método principal para población deportiva:
+
+```text
+Hombres: 0.1051 × suma_6_pliegues + 2.58
+Mujeres: 0.1548 × suma_6_pliegues + 3.58
+```
+
+### Faulkner
+
+Método comparativo:
+
+```text
+Hombres: 0.153 × suma_4_pliegues + 5.783
+Mujeres: 0.213 × suma_4_pliegues + 7.9
+```
+
+### Masa ósea de Rocha
+
+La estatura y los diámetros se convierten a metros antes de aplicar:
+
+```text
+Masa ósea = 3.02 × ((estatura_m² × muñeca_m × fémur_m × 400) ^ 0.712)
+```
+
+### Masa residual
+
+```text
+Hombres: peso × 0.241
+Mujeres: peso × 0.209
+```
+
+### Masa muscular derivada
+
+```text
+Mma = peso - masa grasa Yuhasz - masa ósea - masa residual
+```
+
+`Mma` es una masa derivada por diferencia, no una medición directa.
+
+## Johnston
+
+Los campos históricos `PorcGrasoJonson` y `PesoGrasoJhonston` se conservan en el contrato de la vista por compatibilidad, pero la migración los devuelve como `NULL`. No se muestran como referencia clínica porque no se pudo identificar una fuente metodológica verificable para los coeficientes heredados.
+
+## Migración de datos
+
+La migración `004_correct_anthropometric_formulas.sql`:
+
+1. Crea `CDRBackupSomatotipoDetalleFormulaV2`.
+2. Detiene la ejecución si encuentra diámetros con escalas mezcladas dentro del mismo registro.
+3. Convierte a mm los registros históricos que guardaron los tres diámetros en cm.
+4. Corrige estaturas almacenadas en metros.
+5. Reemplaza las vistas de somatotipo, grasa, masa residual, masa ósea y masa muscular.
+6. Corrige el texto descriptivo de ectomorfismo.
+
+```powershell
+cmd /c "mysql -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -p %DB_NAME% < scripts\migrations\004_correct_anthropometric_formulas.sql"
+```
+
+Después de aplicarla, ejecutar la suite y comparar la vista SQL con los casos de `tests/test_anthropometry_calculator.py`.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\check_anthropometric_formulas.py
+```
+
+El verificador consulta todas las valoraciones y compara somatotipo, coordenadas, grasa, masa ósea y masa residual contra la calculadora Python.
+
+### Estado de la base activa
+
+El 21 de junio de 2026 se aplicó la migración completa y se ejecutó el verificador contra MySQL:
+
+- 12 sentencias de migración aplicadas.
+- 76 valoraciones verificadas.
+- 0 diferencias entre las vistas SQL y la calculadora Python.
+
+Las nuevas bases o copias restauradas deben ejecutar nuevamente la migración y el verificador.
+
+## Validación metodológica
+
+Las ecuaciones ya tienen pruebas técnicas de referencia. Antes de utilizarlas para decisiones clínicas o deportivas definitivas, el equipo de ciencias del deporte debe aprobar formalmente el protocolo, los sitios anatómicos y la técnica de medición.

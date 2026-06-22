@@ -36,8 +36,17 @@ def DeportistasView(page: ft.Page):
 
     # State
     current_edit_id = None 
-    selected_file_path = None # Store selected file path locally
     api = ApiClient(page)
+
+    def open_control(control):
+        if control not in page.overlay:
+            page.overlay.append(control)
+        control.open = True
+        page.update()
+
+    def close_control(control):
+        control.open = False
+        page.update()
 
     # Catalogs
     tipos_documentos = []
@@ -92,34 +101,15 @@ def DeportistasView(page: ft.Page):
 
     fecha_nac_btn = ft.IconButton(
         icon=ft.Icons.CALENDAR_MONTH,
-        on_click=lambda _: page.open(date_picker),
+        on_click=lambda _: open_control(date_picker),
     )
     
-    # Photo Upload Logic
     img_preview = ft.Image(
         src="https://via.placeholder.com/150", # Default placeholder
         width=150,
         height=150,
         fit=ft.ImageFit.CONTAIN,
         border_radius=ft.border_radius.all(10)
-    )
-    
-    def on_file_picked(e: ft.FilePickerResultEvent):
-        nonlocal selected_file_path
-        if e.files:
-            file_path = e.files[0].path
-            selected_file_path = file_path
-            img_preview.src = file_path # Show local preview
-            img_preview.update()
-            
-    file_picker = ft.FilePicker(on_result=on_file_picked)
-    if file_picker not in page.overlay:
-        page.overlay.append(file_picker)
-        
-    btn_upload_photo = ft.ElevatedButton(
-        "Seleccionar Foto",
-        icon=ft.Icons.UPLOAD_FILE,
-        on_click=lambda _: file_picker.pick_files(allow_multiple=False, file_type=ft.FilePickerFileType.IMAGE)
     )
 
     # Location - Birth
@@ -175,9 +165,8 @@ def DeportistasView(page: ft.Page):
     )
 
     def clean_form():
-        nonlocal current_edit_id, selected_file_path
+        nonlocal current_edit_id
         current_edit_id = None
-        selected_file_path = None
         identi.value = ""
         identi.read_only = False
         tipo_identi.value = None
@@ -199,15 +188,6 @@ def DeportistasView(page: ft.Page):
         observaciones.value = ""
         page.update()
 
-    def upload_photo(file_path):
-        try:
-            return api.upload_photo(file_path)
-        except ApiError as error:
-            show_snack(page, str(error))
-        except Exception as error:
-            show_snack(page, f"Error al subir foto: {error}")
-        return None
-
     save_button = ft.ElevatedButton("Guardar")
 
     def save_deportista(e):
@@ -223,15 +203,9 @@ def DeportistasView(page: ft.Page):
             page.update()
             return
 
-        set_busy(page, [save_button, btn_upload_photo], True)
+        set_busy(page, [save_button], True)
         try:
-            # 1. Upload photo if selected
             final_photo_url = img_preview.src
-            if selected_file_path:
-                uploaded_url = upload_photo(selected_file_path)
-                if uploaded_url:
-                    final_photo_url = uploaded_url
-
             data = build_deportista_payload(deportista_fields, final_photo_url)
 
             if current_edit_id:
@@ -243,93 +217,73 @@ def DeportistasView(page: ft.Page):
 
             show_snack(page, "Deportista guardado exitosamente")
             clean_form()
-            page.close(dlg_modal)
+            close_control(dlg_modal)
             load_deportistas()
         except ApiError as error:
             show_snack(page, str(error))
         except Exception as ex:
             show_snack(page, f"Error de conexion: {ex}")
         finally:
-            set_busy(page, [save_button, btn_upload_photo], False)
+            set_busy(page, [save_button], False)
         page.update()
 
     save_button.on_click = save_deportista
 
-    # Modal for Add/Edit using Tabs for organization
-    tabs = ft.Tabs(
-        selected_index=0,
-        tabs=[
-            ft.Tab(
-                text="Datos Básicos",
-                content=ft.Column([
-                    ft.Container(height=10),
-                    ft.ResponsiveRow([
-                        ft.Container(content=identi, col={"xs": 12, "sm": 6}),
-                        ft.Container(content=tipo_identi, col={"xs": 12, "sm": 6})
-                    ]),
-                    ft.ResponsiveRow([
-                        ft.Container(content=nombre, col={"xs": 12})
-                    ]),
-                    ft.ResponsiveRow([
-                        ft.Container(content=sexo, col={"xs": 12, "sm": 4}),
-                        ft.Container(content=fecha_nac, col={"xs": 10, "sm": 5}),
-                        ft.Container(content=fecha_nac_btn, col={"xs": 2, "sm": 1})
-                    ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                    ft.ResponsiveRow([
-                        ft.Container(content=img_preview, col={"xs": 12, "sm": 6}),
-                        ft.Container(content=btn_upload_photo, col={"xs": 12, "sm": 6})
-                    ], vertical_alignment=ft.CrossAxisAlignment.CENTER)
-                ], spacing=10)
-            ),
-            ft.Tab(
-                text="Ubicación y Contacto",
-                content=ft.Column([
-                    ft.Container(height=10),
-                    ft.Text("Lugar de Nacimiento:", weight="bold", size=13),
-                    ft.ResponsiveRow([
-                        ft.Container(content=pais_nac, col={"xs": 12, "sm": 4}),
-                        ft.Container(content=dep_nac, col={"xs": 12, "sm": 4}),
-                        ft.Container(content=ciudad_nac, col={"xs": 12, "sm": 4})
-                    ]),
-                    ft.Divider(),
-                    ft.Text("Residencia y Contacto:", weight="bold", size=13),
-                    ft.ResponsiveRow([
-                         ft.Container(content=dep_resi, col={"xs": 12, "sm": 6}),
-                         ft.Container(content=ciudad_resi, col={"xs": 12, "sm": 6})
-                    ]),
-                    ft.ResponsiveRow([
-                        ft.Container(content=direcc_resi, col={"xs": 12})
-                    ]),
-                    ft.ResponsiveRow([
-                         ft.Container(content=telefono, col={"xs": 12, "sm": 6}),
-                         ft.Container(content=email, col={"xs": 12, "sm": 6})
-                    ])
-                ], spacing=10)
-            ),
-            ft.Tab(
-                text="Socio-Económico",
-                content=ft.Column([
-                    ft.Container(height=10),
-                    ft.ResponsiveRow([
-                        ft.Container(content=estrato_dd, col={"xs": 12, "sm": 4}),
-                        ft.Container(content=nivel_edu_dd, col={"xs": 12, "sm": 4}),
-                        ft.Container(content=nombre_institu, col={"xs": 12, "sm": 4})
-                    ]),
-                    ft.Divider(),
-                    ft.ResponsiveRow([
-                        ft.Container(content=observaciones, col={"xs": 12})
-                    ])
-                ], spacing=10)
-            ),
+    form_content = ft.Column(
+        [
+            ft.Text("Datos básicos", weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
+            ft.ResponsiveRow([
+                ft.Container(content=identi, col={"xs": 12, "sm": 6}),
+                ft.Container(content=tipo_identi, col={"xs": 12, "sm": 6}),
+            ]),
+            ft.ResponsiveRow([ft.Container(content=nombre, col={"xs": 12})]),
+            ft.ResponsiveRow([
+                ft.Container(content=sexo, col={"xs": 12, "sm": 4}),
+                ft.Container(content=fecha_nac, col={"xs": 10, "sm": 5}),
+                ft.Container(content=fecha_nac_btn, col={"xs": 2, "sm": 1}),
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ft.ResponsiveRow([
+                ft.Container(content=img_preview, col={"xs": 12, "sm": 6}),
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ft.Divider(),
+            ft.Text("Ubicación y contacto", weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
+            ft.Text("Lugar de Nacimiento:", weight="bold", size=13),
+            ft.ResponsiveRow([
+                ft.Container(content=pais_nac, col={"xs": 12, "sm": 4}),
+                ft.Container(content=dep_nac, col={"xs": 12, "sm": 4}),
+                ft.Container(content=ciudad_nac, col={"xs": 12, "sm": 4}),
+            ]),
+            ft.Divider(),
+            ft.Text("Residencia y Contacto:", weight="bold", size=13),
+            ft.ResponsiveRow([
+                ft.Container(content=dep_resi, col={"xs": 12, "sm": 6}),
+                ft.Container(content=ciudad_resi, col={"xs": 12, "sm": 6}),
+            ]),
+            ft.ResponsiveRow([ft.Container(content=direcc_resi, col={"xs": 12})]),
+            ft.ResponsiveRow([
+                ft.Container(content=telefono, col={"xs": 12, "sm": 6}),
+                ft.Container(content=email, col={"xs": 12, "sm": 6}),
+            ]),
+            ft.Divider(),
+            ft.Text("Información socioeconómica", weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
+            ft.ResponsiveRow([
+                ft.Container(content=estrato_dd, col={"xs": 12, "sm": 4}),
+                ft.Container(content=nivel_edu_dd, col={"xs": 12, "sm": 4}),
+                ft.Container(content=nombre_institu, col={"xs": 12, "sm": 4}),
+            ]),
+            ft.Divider(),
+            ft.ResponsiveRow([ft.Container(content=observaciones, col={"xs": 12})]),
         ],
-        expand=1,
+        spacing=10,
+        scroll=ft.ScrollMode.AUTO,
+        expand=True,
     )
 
     dlg_modal = ft.AlertDialog(
         modal=True,
         title=ft.Text("Registrar Deportista"),
         content=ft.Container(
-            content=tabs,
+            content=form_content,
         ),
         actions=[
             ft.TextButton("Cancelar", on_click=lambda e: close_dlg()),
@@ -339,7 +293,7 @@ def DeportistasView(page: ft.Page):
     )
 
     def close_dlg():
-        page.close(dlg_modal)
+        close_control(dlg_modal)
 
     def open_add_modal(e):
         print("Opening add modal...")
@@ -349,15 +303,14 @@ def DeportistasView(page: ft.Page):
             dlg_modal.content.width = size["width"]
             dlg_modal.content.height = size["height"]
             dlg_modal.title.value = "Registrar Deportista"
-            dlg_modal.content.content = tabs
-            page.open(dlg_modal)
+            dlg_modal.content.content = form_content
+            open_control(dlg_modal)
         except Exception as ex:
             print(f"Error opening modal: {ex}")
         
     def open_edit_modal(deportista):
-        nonlocal current_edit_id, selected_file_path
+        nonlocal current_edit_id
         current_edit_id = deportista["IDENTI_DEPORTISTA"]
-        selected_file_path = None # Reset new file selection
         
         # Populate Basic
         identi.value = deportista["IDENTI_DEPORTISTA"]
@@ -390,7 +343,7 @@ def DeportistasView(page: ft.Page):
         dlg_modal.content.width = size["width"]
         dlg_modal.content.height = size["height"]
         dlg_modal.title.value = "Editar Deportista"
-        page.open(dlg_modal)
+        open_control(dlg_modal)
 
     # Delete Confirmation Logic
     def delete_deportista(id_deportista):
@@ -406,7 +359,7 @@ def DeportistasView(page: ft.Page):
 
     def confirm_delete(id_deportista):
         def close_confirm(e):
-            page.close(dlg_confirm)
+            close_control(dlg_confirm)
             
         def on_delete(e):
             delete_deportista(id_deportista)
@@ -422,18 +375,18 @@ def DeportistasView(page: ft.Page):
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        page.open(dlg_confirm)
+        open_control(dlg_confirm)
 
     # Data Table
     table = ft.DataTable(
         columns=[
+            ft.DataColumn(ft.Text("Acciones")),
             ft.DataColumn(ft.Text("ID")),
             ft.DataColumn(ft.Text("Nombre")),
             ft.DataColumn(ft.Text("Sexo")),
             ft.DataColumn(ft.Text("Edad")),
             ft.DataColumn(ft.Text("Ciudad")),
             ft.DataColumn(ft.Text("Contacto")),
-            ft.DataColumn(ft.Text("Acciones")),
         ],
         rows=[]
     )

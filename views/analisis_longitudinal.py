@@ -21,7 +21,12 @@ def AnalisisLongitudinalView(page: ft.Page):
         color=theme.SUBTITLE_COLOR,
         size=12,
     )
-    content_area = ft.Column(spacing=16, scroll=ft.ScrollMode.AUTO, expand=True)
+    content_area = ft.Column(
+        spacing=16,
+        scroll=ft.ScrollMode.AUTO,
+        expand=True,
+        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+    )
 
     search_field = ft.TextField(
         label="Buscar deportista por nombre o ID",
@@ -248,6 +253,7 @@ def AnalisisLongitudinalView(page: ft.Page):
             ],
             spacing=0,
             expand=True,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
         ),
         padding=responsive_padding(page, desktop=20, tablet=16, mobile=10),
         bgcolor=theme.BACKGROUND_COLOR,

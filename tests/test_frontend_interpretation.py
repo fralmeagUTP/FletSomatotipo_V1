@@ -18,8 +18,7 @@ class InterpretationTests(unittest.TestCase):
         warning = fat_equation_warning(
             {
                 "PorcRasoYuasz": 15.81,
-                "PorcGrasoFaulker": 13.08,
-                "PorcGrasoJonson": 8.11,
+                "PorcGrasoFaulker": 9.08,
             }
         )
 

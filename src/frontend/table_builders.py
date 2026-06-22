@@ -20,20 +20,21 @@ def build_deportista_row(deportista: dict, on_edit, on_delete):
     contact = display_value(deportista.get("E_MAIL"), display_value(deportista.get("TELEFONO")))
     return ft.DataRow(
         cells=[
+            ft.DataCell(
+                ft.Row(
+                    [
+                        edit_icon_button(on_click=lambda event, item=deportista: on_edit(item)),
+                        danger_icon_button(on_click=lambda event, item_id=identi: on_delete(item_id)),
+                    ],
+                    spacing=0,
+                )
+            ),
             ft.DataCell(ft.Text(str(identi))),
             ft.DataCell(ft.Text(deportista["NOMBRE_DEPORTISTA"])),
             ft.DataCell(ft.Text(deportista["SEXO_DEPORTISTA"])),
             ft.DataCell(ft.Text(age_from_birth_date(deportista.get("FECHA_NAC")))),
             ft.DataCell(ft.Text(display_value(deportista.get("CIUDAD_RESI")))),
             ft.DataCell(ft.Text(contact, no_wrap=True)),
-            ft.DataCell(
-                ft.Row(
-                    [
-                        edit_icon_button(on_click=lambda event, item=deportista: on_edit(item)),
-                        danger_icon_button(on_click=lambda event, item_id=identi: on_delete(item_id)),
-                    ]
-                )
-            ),
         ]
     )
 

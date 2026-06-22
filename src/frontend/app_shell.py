@@ -1,9 +1,22 @@
 import flet as ft
 
-from app_config import show_snack
+from app_config import session_clear, show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.components import page_width
+
+
+SHELL_MOBILE_BREAKPOINT = 900
+
+
+def open_overlay(page, control):
+    try:
+        if control not in page.overlay:
+            page.overlay.append(control)
+        control.open = True
+        page.update()
+    except Exception:
+        page.open(control)
 
 
 def close_overlay(page, control):
@@ -12,18 +25,24 @@ def close_overlay(page, control):
     try:
         page.close(control)
     except Exception:
-        pass
-    try:
         control.open = False
-    except Exception:
-        pass
-    overlay = getattr(page, "overlay", None)
-    if overlay is not None and control in overlay:
-        overlay.remove(control)
-    try:
-        page.update()
-    except Exception:
-        pass
+        try:
+            control.update()
+        except Exception:
+            page.update()
+
+
+def run_after_overlay_close(page, action):
+    def execute():
+        try:
+            action()
+        except Exception as error:
+            show_snack(page, f"No se pudo abrir la pantalla: {error}")
+
+    if hasattr(page, "run_thread"):
+        page.run_thread(execute)
+    else:
+        execute()
 
 
 def build_navigation_items(page):
@@ -62,8 +81,7 @@ def build_nav_button(item, active_key, compact=False):
     )
 
 
-def build_sidebar(page, active_key):
-    items = build_navigation_items(page)
+def perform_logout(page):
     logout_callback = None
     try:
         from src.frontend.navigation import get_logout_callback
@@ -72,13 +90,16 @@ def build_sidebar(page, active_key):
     except Exception:
         logout_callback = None
 
-    def logout(_=None):
-        if logout_callback:
-            logout_callback()
-            return
-        page.session.clear()
-        page.clean()
-        page.update()
+    if logout_callback:
+        logout_callback()
+        return
+    session_clear(page)
+    page.clean()
+    page.update()
+
+
+def build_sidebar(page, active_key):
+    items = build_navigation_items(page)
 
     return ft.Container(
         content=ft.Column(
@@ -99,7 +120,7 @@ def build_sidebar(page, active_key):
                     padding=ft.padding.symmetric(horizontal=12, vertical=10),
                     border_radius=theme.RADIUS_SMALL,
                     ink=True,
-                    on_click=logout,
+                    on_click=lambda _: perform_logout(page),
                 ),
             ],
             spacing=4,
@@ -114,28 +135,69 @@ def build_sidebar(page, active_key):
 
 def build_mobile_menu(page, active_key):
     items = build_navigation_items(page)
-    dialog = None
+    menu_panel = None
 
     def menu_item(item):
         def navigate(_):
-            close_overlay(page, dialog)
-            item["action"]()
+            menu_panel.visible = False
+            page.update()
+            run_after_overlay_close(page, item["action"])
 
         return build_nav_button({**item, "action": lambda: navigate(None)}, active_key, compact=True)
 
-    dialog = ft.AlertDialog(
-        modal=True,
-        title=ft.Text("Menú principal"),
+    def close_menu(_=None):
+        menu_panel.visible = False
+        page.update()
+
+    def logout(_=None):
+        close_menu()
+        run_after_overlay_close(page, lambda: perform_logout(page))
+
+    menu_height = min(620, max(320, (getattr(page, "height", 700) or 700) - 180))
+    menu_panel = ft.Container(
         content=ft.Container(
-            content=ft.Column([menu_item(item) for item in items], spacing=6),
-            width=360,
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            ft.Text("Menú principal", size=18, weight=ft.FontWeight.BOLD, expand=True),
+                            ft.IconButton(ft.Icons.CLOSE, tooltip="Cerrar", on_click=close_menu),
+                        ],
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    *[menu_item(item) for item in items],
+                    ft.Divider(),
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(ft.Icons.LOGOUT, color=theme.ERROR_COLOR, size=20),
+                                ft.Text("Cerrar sesión", color=theme.ERROR_COLOR, size=13, weight=ft.FontWeight.BOLD),
+                            ],
+                            spacing=10,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=12, vertical=10),
+                        border_radius=theme.RADIUS_SMALL,
+                        ink=True,
+                        on_click=logout,
+                    ),
+                ],
+                spacing=6,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            height=menu_height,
+            padding=12,
         ),
+        visible=False,
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
     )
 
     def open_menu(_):
-        page.open(dialog)
+        menu_panel.visible = not menu_panel.visible
+        page.update()
 
-    return ft.IconButton(ft.Icons.MENU, tooltip="Menú", icon_color=theme.PRIMARY_COLOR, on_click=open_menu)
+    button = ft.IconButton(ft.Icons.MENU, tooltip="Menú", icon_color=theme.PRIMARY_COLOR, on_click=open_menu)
+    return button, menu_panel
 
 
 def build_global_search(page):
@@ -155,7 +217,7 @@ def build_global_search(page):
     def navigate_from_result(action):
         def handler(_):
             close_search_dialog()
-            action()
+            run_after_overlay_close(page, action)
 
         return handler
 
@@ -179,8 +241,8 @@ def build_global_search(page):
                                 spacing=2,
                                 expand=True,
                             ),
-                            ft.TextButton("Valorar", on_click=navigate_from_result(lambda: navigation.show_valoracion(page))),
-                            ft.TextButton("Historial", on_click=navigate_from_result(lambda: navigation.show_historial(page))),
+                            ft.TextButton("Valorar", on_click=navigate_from_result(lambda athlete_id=identi: navigation.show_valoracion(page, athlete_id))),
+                            ft.TextButton("Historial", on_click=navigate_from_result(lambda athlete_id=identi: navigation.show_historial(page, athlete_id))),
                         ],
                         spacing=10,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -204,7 +266,7 @@ def build_global_search(page):
             items = result.get("items", []) if isinstance(result, dict) else result
             content_height = min(360, max(120, (len(items[:5]) or 1) * 72 + 24))
             dialog = ft.AlertDialog(
-                modal=True,
+                modal=False,
                 title=ft.Row(
                     [
                         ft.Text(f"Resultados para: {query}", expand=True),
@@ -217,7 +279,7 @@ def build_global_search(page):
                 actions_alignment=ft.MainAxisAlignment.END,
             )
             active_dialog["control"] = dialog
-            page.open(dialog)
+            open_overlay(page, dialog)
         except ApiError as error:
             show_snack(page, str(error))
         except Exception as error:
@@ -236,24 +298,48 @@ def build_global_search(page):
     )
 
 
-def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", actions=None):
-    is_mobile = page_width(page) < 900
-    top_bar = ft.Container(
-        content=ft.Row(
+def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", actions=None, show_search=True):
+    mobile_menu, mobile_navigation_panel = build_mobile_menu(page, active_key)
+    mobile_menu_container = ft.Container(
+        content=mobile_menu,
+        col={"xs": 2, "sm": 1, "md": 1},
+        alignment=ft.alignment.center_left,
+    )
+    title_container = ft.Container(
+        content=ft.Column(
             [
-                build_mobile_menu(page, active_key) if is_mobile else ft.Container(visible=False),
-                ft.Column(
-                    [
-                        ft.Text(title, size=22, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                        ft.Text("Panel operativo de Somatocarta", size=12, color=theme.SUBTITLE_COLOR),
-                    ],
-                    spacing=2,
-                ),
-                ft.Container(width=12),
-                build_global_search(page),
-                *(actions or []),
+                ft.Text(title, size=22, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
+                ft.Text("Panel operativo de Somatocarta", size=12, color=theme.SUBTITLE_COLOR),
             ],
+            spacing=2,
+        ),
+        col={"xs": 10, "sm": 5, "md": 4, "lg": 3},
+    )
+    search_container = None
+    if show_search:
+        search_container = ft.Container(
+            content=build_global_search(page),
+            col={"xs": 12, "sm": 6, "md": 5, "lg": 6},
+        )
+    actions_container = ft.Container(
+        content=ft.Row(
+            actions or [],
+            spacing=6,
+            alignment=ft.MainAxisAlignment.END,
+            scroll=ft.ScrollMode.AUTO,
+        ),
+        col={"xs": 12, "sm": 12, "md": 3, "lg": 3},
+        visible=bool(actions),
+    )
+    top_bar_controls = [mobile_menu_container, title_container]
+    if search_container is not None:
+        top_bar_controls.append(search_container)
+    top_bar_controls.append(actions_container)
+    top_bar = ft.Container(
+        content=ft.ResponsiveRow(
+            top_bar_controls,
             spacing=10,
+            run_spacing=8,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
         bgcolor=ft.Colors.WHITE,
@@ -261,11 +347,32 @@ def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", 
         border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
     )
     main_content = ft.Container(content=content, expand=True, bgcolor=theme.BACKGROUND_COLOR)
-    body = ft.Column([top_bar, main_content], spacing=0, expand=True)
-    if is_mobile:
-        return ft.Container(content=body, expand=True, bgcolor=theme.BACKGROUND_COLOR)
-    return ft.Container(
-        content=ft.Row([build_sidebar(page, active_key), body], spacing=0, expand=True),
+    body = ft.Column([top_bar, mobile_navigation_panel, main_content], spacing=0, expand=True)
+    sidebar = build_sidebar(page, active_key)
+    shell = ft.Container(
+        content=ft.Row([sidebar, body], spacing=0, expand=True),
         expand=True,
         bgcolor=theme.BACKGROUND_COLOR,
     )
+
+    previous_resize_handler = getattr(page, "on_resized", None)
+
+    def update_shell_layout(event=None, refresh=True):
+        is_mobile = page_width(page) < SHELL_MOBILE_BREAKPOINT
+        sidebar.visible = not is_mobile
+        mobile_menu_container.visible = is_mobile
+        mobile_navigation_panel.visible = mobile_navigation_panel.visible if is_mobile else False
+        title_container.col = {"xs": 10, "sm": 5, "md": 4, "lg": 3} if is_mobile else {"md": 4, "lg": 3}
+        if search_container is not None:
+            search_container.col = {"xs": 12, "sm": 6, "md": 5, "lg": 6} if is_mobile else {"md": 5, "lg": 6}
+        if refresh:
+            page.update()
+
+    def handle_resize(event):
+        if previous_resize_handler is not None:
+            previous_resize_handler(event)
+        update_shell_layout(event)
+
+    page.on_resized = handle_resize
+    update_shell_layout(refresh=False)
+    return shell

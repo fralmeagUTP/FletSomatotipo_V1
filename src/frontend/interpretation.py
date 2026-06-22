@@ -30,7 +30,6 @@ def fat_equation_warning(detail, threshold=5.0):
     values = [
         parse_float(detail.get("PorcRasoYuasz")),
         parse_float(detail.get("PorcGrasoFaulker")),
-        parse_float(detail.get("PorcGrasoJonson")),
     ]
     values = [value for value in values if value is not None]
     if len(values) < 2:

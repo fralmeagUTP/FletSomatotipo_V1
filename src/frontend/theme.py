@@ -5,6 +5,56 @@ if not hasattr(ft, "Colors") and hasattr(ft, "colors"):
     ft.Colors = ft.colors
 if not hasattr(ft, "Icons") and hasattr(ft, "icons"):
     ft.Icons = ft.icons
+if not hasattr(ft, "ImageFit") and hasattr(ft, "BoxFit"):
+    ft.ImageFit = ft.BoxFit
+if not hasattr(ft, "FilePickerResultEvent") and hasattr(ft, "Event"):
+    ft.FilePickerResultEvent = ft.Event
+
+for module_name, type_name, helpers in (
+    ("padding", "Padding", ("all", "only", "symmetric")),
+    ("margin", "Margin", ("all", "only", "symmetric")),
+    ("border", "Border", ("all", "only", "symmetric")),
+    ("border_radius", "BorderRadius", ("all", "only")),
+):
+    helper_module = getattr(ft, module_name)
+    helper_type = getattr(ft, type_name)
+    for helper in helpers:
+        if not hasattr(helper_module, helper):
+            setattr(helper_module, helper, getattr(helper_type, helper))
+
+for alignment_name in (
+    "bottom_center",
+    "bottom_left",
+    "bottom_right",
+    "center",
+    "center_left",
+    "center_right",
+    "top_center",
+    "top_left",
+    "top_right",
+):
+    if not hasattr(ft.alignment, alignment_name):
+        setattr(ft.alignment, alignment_name, getattr(ft.Alignment, alignment_name.upper()))
+
+try:
+    import flet_charts as flet_charts
+except ImportError:
+    flet_charts = None
+
+if flet_charts is not None:
+    for chart_control in (
+        "ChartAxis",
+        "ChartAxisLabel",
+        "ChartCirclePoint",
+        "ChartGridLines",
+        "LineChart",
+        "LineChartData",
+        "LineChartDataPoint",
+        "PieChart",
+        "PieChartSection",
+    ):
+        if not hasattr(ft, chart_control):
+            setattr(ft, chart_control, getattr(flet_charts, chart_control))
 
 
 PRIMARY_COLOR = "#2e5cb8"

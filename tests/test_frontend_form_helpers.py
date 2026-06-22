@@ -74,9 +74,9 @@ class FormHelpersTests(unittest.TestCase):
             "p_abdominal": control("13"),
             "p_muslo": control("14"),
             "p_pierna": control("15"),
-            "d_muneca": control("6"),
-            "d_femur": control("9"),
-            "d_codo": control("7"),
+            "d_muneca": control("60"),
+            "d_femur": control("90"),
+            "d_codo": control("70"),
             "perim_bicep": control("32"),
             "perim_pierna": control("40"),
             "c_carpo": control("17"),
@@ -86,6 +86,7 @@ class FormHelpersTests(unittest.TestCase):
 
         self.assertEqual(detail["ESTA_USER_CM"], 180)
         self.assertEqual(detail["PESO_kg"], 75)
+        self.assertEqual(detail["DIAMETRO_BIEPI_MUNECA"], 60)
         self.assertEqual(detail["CIRCUNFERENCIA_CARPO"], 17)
 
     def test_build_measurement_detail_rejects_out_of_range_values(self):

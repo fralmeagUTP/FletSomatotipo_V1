@@ -1,6 +1,6 @@
 import flet as ft
 
-from app_config import show_snack
+from app_config import session_get, show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.assets import MODULE_IMAGES, asset_path
@@ -19,14 +19,13 @@ from src.frontend.navigation import (
 
 def DashboardView(page: ft.Page):
     api = ApiClient(page)
-    username = page.session.get("username") or "Usuario"
+    username = session_get(page, "username") or "Usuario"
     summary = {
         "total_deportistas": "-",
         "total_valoraciones": "-",
         "total_deportes": "-",
         "total_entidades": "-",
         "total_asignaciones": "-",
-        "actividad_reciente": [],
         "vista_contrato": {"ok": False, "missing": []},
     }
 
@@ -119,35 +118,6 @@ def DashboardView(page: ft.Page):
             padding=18,
         )
 
-    def activity_item(item):
-        title = item.get("deportista") or "Deportista"
-        date = item.get("fecha") or "Sin fecha"
-        athlete_id = item.get("deportista_id") or ""
-        return ft.Container(
-            content=ft.Row(
-                [
-                    ft.Icon(ft.Icons.MONITOR_WEIGHT_OUTLINED, color=theme.PRIMARY_COLOR, size=22),
-                    ft.Column(
-                        [
-                            ft.Text(title, weight=ft.FontWeight.BOLD, color=theme.TEXT_COLOR),
-                            ft.Text(f"{date} · ID {athlete_id}", size=12, color=theme.SUBTITLE_COLOR),
-                        ],
-                        spacing=2,
-                        expand=True,
-                    ),
-                    ft.Icon(ft.Icons.CHEVRON_RIGHT, color=theme.SUBTITLE_COLOR),
-                ],
-                spacing=10,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=10,
-            border=ft.border.all(1, theme.SURFACE_BORDER),
-            border_radius=theme.RADIUS_SMALL,
-            bgcolor=ft.Colors.WHITE,
-            ink=True,
-            on_click=lambda event: show_historial(page),
-        )
-
     view_contract = summary.get("vista_contrato") or {}
     view_ok = bool(view_contract.get("ok"))
     missing_columns = view_contract.get("missing") or []
@@ -213,25 +183,6 @@ def DashboardView(page: ft.Page):
         run_spacing=14,
     )
 
-    recent = summary.get("actividad_reciente") or []
-    activity_panel = content_card(
-        ft.Column(
-            [
-                ft.Row(
-                    [
-                        ft.Text("Actividad reciente", size=17, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                        ft.Container(expand=True),
-                        ft.TextButton("Ver historial", icon=ft.Icons.ARROW_FORWARD, on_click=lambda event: show_historial(page)),
-                    ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                *([activity_item(item) for item in recent] if recent else [ft.Text("Aún no hay actividad reciente.", color=theme.SUBTITLE_COLOR)]),
-            ],
-            spacing=10,
-        ),
-        padding=18,
-    )
-
     operation_modules = [
         ("Valoración corporal", "Registrar una nueva medición", MODULE_IMAGES["valoracion"], ft.Icons.MONITOR_WEIGHT_OUTLINED, show_valoracion),
         ("Análisis de valoración corporal", "Consultar resultados y PDF individual", MODULE_IMAGES["historial"], ft.Icons.ANALYTICS_OUTLINED, show_historial),
@@ -252,7 +203,6 @@ def DashboardView(page: ft.Page):
             [
                 hero,
                 metrics,
-                activity_panel,
                 module_group("Operación y análisis", "Flujos principales del trabajo antropométrico.", operation_modules),
                 module_group("Gestión de datos", "Módulos administrativos y catálogos.", management_modules),
                 module_group("Sistema", "Información general del proyecto y estado operativo.", system_modules),

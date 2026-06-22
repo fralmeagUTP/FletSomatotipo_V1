@@ -1,15 +1,16 @@
 # Informe final de pruebas QA - Somatocarta
 
+> **Documento histórico (15 de junio de 2026).** Conserva la evidencia de esa ejecución. Los hallazgos de integridad, duplicados, fórmulas y PDFs fueron corregidos posteriormente. Para el estado vigente consulte `docs/estado_funcional.md` y `docs/qa_checklist.md`.
+
 ## 1. Resumen ejecutivo
 - Fecha de prueba: 2026-06-15
 - Entorno: Windows local, backend en http://127.0.0.1:8085, base MySQL remota configurada en el entorno
-- Usuario usado: admin
+- Usuario usado: cuenta autorizada de pruebas; identificador retirado por seguridad
 - Resultado general: Parcialmente satisfactorio
 - Nivel de estabilidad estimado: Medio-Alto en API y lógica, Medio en integridad de datos
 - ¿La app está lista para validación con usuarios reales?: Parcialmente
 
-Observación clave:
-- La credencial indicada inicialmente fue admin / CDR206, pero en el entorno real la válida fue admin / CDR2026.
+Observación de seguridad: las credenciales utilizadas durante la prueba fueron retiradas de la documentación.
 
 ## 2. Datos creados
 - Institución:

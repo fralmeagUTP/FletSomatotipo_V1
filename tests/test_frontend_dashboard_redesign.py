@@ -6,7 +6,6 @@ def test_dashboard_redesign_contains_required_operational_sections():
 
     required_text = [
         "Nueva valoración",
-        "Actividad reciente",
         "Operación y análisis",
         "Gestión de datos",
         "Sistema",
@@ -17,6 +16,7 @@ def test_dashboard_redesign_contains_required_operational_sections():
     for text in required_text:
         assert text in source
 
+    assert "Actividad reciente" not in source
     assert "Vista SQL" not in source
 
 

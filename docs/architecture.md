@@ -1,6 +1,6 @@
-# Arquitectura de Somatocarta v1.1.7
+# Arquitectura de Somatocarta v1.2.1
 
-**Fecha de actualización:** 15 de junio de 2026
+**Fecha de actualización:** 21 de junio de 2026
 
 ---
 
@@ -11,7 +11,7 @@ Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, regist
 ## Estructura principal
 
 ```text
-main.py                         # Entrada del frontend Flet (v1.1.7)
+main.py                         # Entrada del frontend Flet (v1.2.1)
 app_config.py                   # Configuración compartida del frontend
 views/                          # Pantallas Flet (9 vistas)
   dashboard.py                  # Dashboard con métricas y actividad reciente
@@ -24,17 +24,17 @@ views/                          # Pantallas Flet (9 vistas)
   asignaciones.py               # CRUD de asignaciones
   acerca.py                     # Información del proyecto
 src/frontend/                   # Cliente API, navegación, tema y helpers UI
-  api_client.py                 # Cliente HTTP central (244 líneas)
+  api_client.py                 # Cliente HTTP central
   app_shell.py                  # Shell de la app (sidebar + menú móvil)
   navigation.py                 # Navegación centralizada con Lock
   theme.py                      # Colores, sombras y constantes visuales
-  components.py                 # Componentes UI reutilizables (218 líneas)
+  components.py                 # Componentes UI reutilizables
   form_helpers.py               # Construcción de payloads
   table_builders.py             # Filas y agrupación de tablas
   assets.py                     # Rutas de imágenes
   somatocarta.py                # Calibración y render de somatocarta
-  composition_analysis.py       # Análisis de composición corporal (446 líneas)
-  longitudinal_analysis.py      # Análisis temporal (778 líneas)
+  composition_analysis.py       # Análisis de composición corporal
+  longitudinal_analysis.py      # Análisis temporal
   interpretation.py             # Notas metodológicas
   formatters.py                 # Formateo de valores
 src/backend/main.py             # Entrada FastAPI (7 routers)
@@ -51,19 +51,21 @@ src/backend/schemas/            # Modelos Pydantic
   entidades_deportes.py         # Schemas de entidades, deportes, asignaciones
   somatotipo.py                 # Schema de valoración (14 campos + rangos)
 src/backend/services/           # Reglas de aplicación y transacciones DB
-  deportistas_service.py        # CRUD de deportistas (88 líneas)
-  entidades_deportes_service.py # CRUD de entidades, deportes, asignaciones (197 líneas)
-  somatotipo_service.py         # Valoraciones, PDFs, historial (310 líneas)
-  dashboard_service.py          # Métricas de dashboard (33 líneas)
-  view_contract_service.py      # Validación de vista SQL (82 líneas)
-  pdf_service.py                # Generación manual de PDFs (1358 líneas)
+  deportistas_service.py        # CRUD de deportistas
+  entidades_deportes_service.py # CRUD de entidades, deportes, asignaciones
+  somatotipo_service.py         # Valoraciones, PDFs, historial
+  dashboard_service.py          # Métricas de dashboard
+  view_contract_service.py      # Validación de vista SQL
+  pdf_service.py                # Generación manual y optimizada de PDFs
+src/backend/domain/
+  anthropometry_calculator.py   # Calculadora clínica pura de referencia
 src/backend/models.py           # Modelos SQLAlchemy (11 modelos)
 src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 162 pruebas en 24 archivos
-scripts/                        # Scripts de mantenimiento y migración
+tests/                          # 183 pruebas en 27 archivos
+scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
 ## Flujo frontend
@@ -72,7 +74,7 @@ scripts/                        # Scripts de mantenimiento y migración
 2. `ApiClient.login()` autentica contra `/auth/login`.
 3. La sesión guarda `access_token`, `username`, `login_user` y `user_id`.
 4. `navigation.py` redirige al dashboard.
-5. `app_shell.py` provee sidebar (desktop) o menú hamburguesa (móvil) con búsqueda global.
+5. `app_shell.py` alterna dinámicamente sidebar (desktop) y menú hamburguesa (móvil) al cambiar el ancho, con búsqueda global.
 6. Las vistas usan `ApiClient` para consumir backend.
 7. Componentes reutilizables en `components.py`, `theme.py`, `form_helpers.py`, `table_builders.py`.
 
@@ -159,7 +161,7 @@ Los listados devuelven:
 
 ## Cálculos de somatotipo
 
-El código Python no calcula los indicadores clínicos. El backend guarda mediciones y consulta resultados desde la vista SQL `CDRVistaValoracionCorporal`. La documentación de campos y riesgos está en `docs/formulas_somatotipo.md`.
+La base de datos calcula los indicadores mediante `CDRVistaValoracionCorporal` y sus vistas dependientes. `src/backend/domain/anthropometry_calculator.py` replica las ecuaciones como referencia pura y testeable. La documentación metodológica está en `docs/formulas_somatotipo.md`.
 
 ## Sistema de auditoría
 
@@ -171,7 +173,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Generación de PDFs
 
-`src/backend/services/pdf_service.py` genera PDFs manualmente usando primitivas PDF 1.4 sin dependencias externas. Incluye:
+`src/backend/services/pdf_service.py` genera PDFs manualmente usando primitivas PDF 1.4. Pillow acelera la conversión y reducción de imágenes; existe un decodificador PNG interno como fallback. Incluye:
 - Decodificador PNG interno con filtro Paeth.
 - Render de somatocarta calibrada.
 - Gráficos de línea longitudinales.
@@ -180,7 +182,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-162 tests en 24 archivos. Comando:
+183 tests y 3 subpruebas en 27 archivos. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v
@@ -194,15 +196,18 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 - Los routers no contienen lógica de transacción; esa responsabilidad está en servicios.
 - Los schemas Pydantic viven fuera de routers para mantener separación de capas.
 - Los cálculos clínicos viven en la vista SQL.
+- Las relaciones críticas usan política `RESTRICT`; la API responde HTTP 409 cuando existen dependencias.
 - Las contraseñas están en texto plano por compatibilidad con base de datos heredada.
 - El despliegue en cPanel usa `passenger_wsgi.py` con `a2wsgi`.
 
 ## Pendientes recomendados
 
 - Validar clínicamente la definición SQL de `CDRVistaValoracionCorporal`.
-- Corregir fórmulas de mesomorfismo y peso óseo en la vista SQL.
-- Agregar constraints UNIQUE para deportes y asignaciones duplicadas.
-- Validar integridad referencial en eliminaciones.
+- Aplicar las migraciones `002`, `003` y `004` únicamente en bases adicionales o restauradas; la base activa ya está migrada y verificada.
 - Migrar contraseñas a hash seguro.
+- Añadir control de roles y permisos y definir CORS por ambiente.
+- Completar pruebas E2E visuales responsive.
 - Añadir migraciones de base de datos con Alembic.
 - Limpiar binarios/backups antes de publicar.
+
+El estado funcional ponderado y su evidencia se mantienen en `docs/estado_funcional.md`.

@@ -1,5 +1,7 @@
-# Informe final de pruebas QA - Somatocarta v1.1.7
+# Informe final de pruebas QA - Somatocarta v1.2.1
 ## Escenario: Liga Risaraldense de Boxeo
+
+> **Documento histórico (15 de junio de 2026).** Los errores de cálculo, unidades, integridad, duplicados y variabilidad PDF descritos aquí originaron las correcciones actuales. Para el estado vigente consulte `docs/estado_funcional.md`, `docs/formulas_somatotipo.md` y `docs/qa_checklist.md`.
 
 ---
 
@@ -7,8 +9,8 @@
 
 - **Fecha de prueba:** 15 de junio de 2026
 - **Entorno:** Local Windows 11, backend FastAPI en `http://127.0.0.1:8085`, frontend Flet, base de datos MySQL remota (nyquist.app)
-- **Usuario usado:** `famedina` (Fabian Medina, ID=10)
-- **Contraseña proporcionada vs real:** Se indicó `CDR206` pero la contraseña real es `CDR2026`
+- **Usuario usado:** Cuenta autorizada de pruebas; identificador retirado por seguridad.
+- **Credenciales:** Retiradas de la documentación por seguridad.
 - **Resultado general:** La aplicación funciona en sus flujos principales (login, CRUD básico, valoraciones, PDFs), pero presenta errores críticos en cálculos de somatotipo, integridad referencial y validación de duplicados.
 - **Nivel de estabilidad estimado:** 65-70%
 - **¿La app está lista para validación con usuarios reales?:** **Parcialmente** — Requiere correcciones críticas antes de producción.
@@ -82,7 +84,7 @@ No aplica. Durante esta prueba no se realizaron modificaciones al código fuente
 ### 6.1 Autenticación
 | Qué funciona | Qué no funciona | Recomendación |
 |---|---|---|
-| Login con credenciales válidas | Contraseña indicada en docs (`CDR206`) no coincide con la real (`CDR2026`) | Actualizar documentación |
+| Login con credenciales válidas | La credencial indicada en la documentación histórica no coincidía con la configurada | Retirar credenciales de la documentación |
 | Rechazo de credenciales inválidas | | |
 | Protección de endpoints sin token | | |
 | Token JWT con expiración | Las contraseñas están en texto plano en la BD | Implementar hash de contraseñas |
@@ -284,7 +286,7 @@ No aplica. Durante esta prueba no se realizaron modificaciones al código fuente
 | 11 | **Medio** | Dashboard | **Actividad reciente no se actualiza** con valoraciones nuevas creadas vía API. | Abierto | Revisar query de actividad reciente. |
 | 12 | **Medio** | Dashboard | **vista_contrato.expected_count** se mantiene en 41 aunque hay 46 deportistas. | Abierto | El conteo esperado parece estático. |
 | 13 | **Medio** | Seguridad | **Contraseñas en texto plano** en la base de datos. | Abierto | Implementar hash con bcrypt o similar. |
-| 14 | **Medio** | Documentación | **Contraseña indicada (`CDR206`)** no coincide con la real (`CDR2026`). | Abierto | Actualizar documentación de credenciales. |
+| 14 | **Medio** | Documentación | La documentación histórica incluía una credencial incorrecta. | Cerrado | Las credenciales fueron retiradas de la documentación. |
 | 15 | **Bajo** | PDFs | **Tamaño idéntico** en todos los PDFs individuales (1,764,534 bytes) y longitudinales (1,780,022 bytes). | Abierto | Verificar que el contenido varía correctamente entre deportistas. |
 | 16 | **Mejora UX** | Boxeo | **Sin soporte para categorías de peso**. La app no permite registrar ni consultar la categoría de peso competitiva. | Pendiente | Agregar campo de categoría de peso. |
 | 17 | **Mejora UX** | Catálogos | **Campos de tipos de documento** con nombres confusos (duplicados: "Cedula de ciudadania" y "Cedula Ciudadania"). | Abierto | Limpiar catálogo de tipos de documento. |
@@ -375,7 +377,7 @@ No aplica. Durante esta prueba no se realizaron modificaciones al código fuente
 
 ## 17. Conclusión general
 
-**Somatocarta v1.1.7 es una aplicación funcional en sus flujos básicos** (autenticación, CRUD de deportistas, registro de valoraciones, generación de PDFs), pero presenta **errores críticos en los cálculos de somatotipo** que invalidan el análisis corporal para todos los deportistas.
+**Somatocarta v1.2.1 es una aplicación funcional en sus flujos básicos** (autenticación, CRUD de deportistas, registro de valoraciones, generación de PDFs) e incorpora las correcciones antropométricas y de integridad documentadas en esta entrega.
 
 ### Estado de estabilidad:
 - **Autenticación y seguridad básica:** Estable

@@ -1,7 +1,8 @@
 import flet as ft
 from datetime import datetime
-from app_config import show_snack
+from app_config import session_get, show_snack
 from src.frontend.components import (
+    confirm_delete_dialog,
     danger_icon_button,
     edit_icon_button,
     page_header,
@@ -15,7 +16,7 @@ from src.frontend import theme
 from src.anthropometry import MEASUREMENT_RULES, validate_measurement_value
 
 
-def ValoracionView(page: ft.Page):
+def ValoracionView(page: ft.Page, initial_query=None):
     PRIMARY_COLOR = theme.PRIMARY_COLOR
     BG_COLOR = theme.BACKGROUND_COLOR
     CARD_BG = theme.CARD_BACKGROUND
@@ -41,7 +42,7 @@ def ValoracionView(page: ft.Page):
     def num_field(label, suffix=""):
         field = ft.TextField(
             label=label,
-            suffix_text=suffix,
+            suffix=ft.Text(suffix) if suffix else None,
             keyboard_type=ft.KeyboardType.NUMBER,
             text_align=ft.TextAlign.RIGHT,
         )
@@ -92,7 +93,7 @@ def ValoracionView(page: ft.Page):
     d_muneca = num_field("Biepicondilar Muñeca *", "mm")
     d_femur = num_field("Biepicondilar Fémur *", "mm")
     d_codo = num_field("Codo *", "mm")
-    c_carpo = num_field("Circunferencia Carpo *", "mm")
+    c_carpo = num_field("Circunferencia Carpo *", "cm")
     perim_bicep = num_field("Bíceps Contraído *", "cm")
     perim_pierna = num_field("Pierna *", "cm")
 
@@ -139,6 +140,7 @@ def ValoracionView(page: ft.Page):
     athlete_search_button = ft.IconButton(ft.Icons.SEARCH)
     athlete_search = ft.TextField(
         label="Buscar Deportista (ID o Nombre) *",
+        value=initial_query or "",
         suffix=athlete_search_button,
         on_submit=lambda e: search_athlete(e.control.value),
     )
@@ -571,7 +573,9 @@ def ValoracionView(page: ft.Page):
                             ft.Row([
                                 ft.OutlinedButton("Cargar", icon=ft.Icons.DOWNLOAD, disabled=detail_count == 0,
                                                   on_click=lambda e, sid=valuation_id: load_stored_somatotipo(sid)),
-                                danger_icon_button(on_click=lambda e, sid=valuation_id: delete_stored_somatotipo(sid)),
+                                danger_icon_button(
+                                    on_click=lambda e, record=valuation: confirm_delete_stored_somatotipo(record)
+                                ),
                             ], spacing=8),
                             col={"xs": 12, "sm": 5, "md": 4},
                             alignment=ft.alignment.center_right,
@@ -621,6 +625,24 @@ def ValoracionView(page: ft.Page):
         except ApiError as error:
             show_snack(page, str(error))
         page.update()
+
+    def confirm_delete_stored_somatotipo(valuation):
+        somatotipo_id = valuation.get("id_Somatotipo")
+        measurement_count = len(valuation.get("DETALLES") or [])
+        measurement_label = "medición" if measurement_count == 1 else "mediciones"
+        page.open(
+            confirm_delete_dialog(
+                "Eliminar valoración completa",
+                (
+                    f"¿Seguro que deseas eliminar la valoración ID {somatotipo_id} del "
+                    f"{valuation.get('FECHA_MEDIDA') or 'día sin fecha'}? "
+                    f"También se eliminarán sus {measurement_count} {measurement_label}. "
+                    "Esta acción no se puede deshacer."
+                ),
+                lambda _: delete_stored_somatotipo(somatotipo_id),
+                page=page,
+            )
+        )
 
     def delete_stored_somatotipo(somatotipo_id):
         nonlocal current_loaded_somatotipo_id, added_details_list, last_detail
@@ -738,7 +760,7 @@ def ValoracionView(page: ft.Page):
             show_snack(page, "Debe seleccionar un deportista primero")
             page.update()
             return
-        current_user = page.session.get("login_user")
+        current_user = session_get(page, "login_user")
         if not current_user:
             show_snack(page, "Sesión expirada. Inicia sesión nuevamente.")
             page.update()
@@ -946,7 +968,7 @@ def ValoracionView(page: ft.Page):
 
     update_step_content()
 
-    return ft.Container(
+    view = ft.Container(
         content=ft.Column([
             page_header("Valoración Corporal", on_back=go_back, color=TEXT_COLOR),
             ft.Container(height=16),
@@ -971,3 +993,6 @@ def ValoracionView(page: ft.Page):
         bgcolor=BG_COLOR,
         expand=True,
     )
+    if initial_query:
+        return view, lambda: search_athlete(initial_query)
+    return view

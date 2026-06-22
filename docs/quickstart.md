@@ -1,7 +1,7 @@
-# Guía rápida de inicio — Somatocarta v1.1.7
+# Guía rápida de inicio — Somatocarta v1.2.1
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 
 ---
 
@@ -85,7 +85,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **162 tests pasando**.
+Estado esperado: **183 tests y 3 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -102,6 +102,33 @@ Estado esperado: **162 tests pasando**.
 ```
 
 El archivo queda en: `build\apk\app-release.apk`
+
+El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En escritorio, `API_URL` definido en `.env` sigue teniendo prioridad.
+
+### APK de pruebas móviles
+
+El build optimizado usa `requirements-apk.txt` para evitar empaquetar dependencias exclusivas del backend. Artefacto verificado:
+
+```text
+build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+```
+
+- Paquete: `com.nyquist.somatocarta`
+- Versión: `1.2.1` (`versionCode=8`)
+- Android mínimo: API 24 (Android 7.0)
+- Arquitectura: ARM64
+- Runtime: Flet `0.85.3` y `flet-charts 0.85.3`
+- Firma: debug, válida únicamente para instalación y pruebas internas
+
+Instalación mediante USB con depuración habilitada:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+```
+
+Este APK fue validado directamente en un dispositivo Android 16 con ABI `arm64-v8a`.
+
+Para publicación se debe generar y proteger un keystore de release propio; no distribuir públicamente el APK firmado con certificado debug.
 
 ---
 
@@ -124,4 +151,7 @@ git push origin main --tags
 | Especificación completa | `docs/specs/somatocarta_spec.md` |
 | Guía de usuario | `docs/user_guide.md` |
 | Fórmulas y cálculos | `docs/formulas_somatotipo.md` |
+| Integridad referencial | `docs/integridad_referencial.md` |
+| Estado funcional vigente | `docs/estado_funcional.md` |
 | Plan de pruebas | `docs/testing_plan.md` |
+| Gobernanza y changelog | `docs/documentation_governance.md`, `docs/changelog_documentation.md` |

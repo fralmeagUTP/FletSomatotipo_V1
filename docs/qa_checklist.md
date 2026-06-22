@@ -1,6 +1,6 @@
-# Checklist de evaluación QA — Somatocarta v1.1.7
+# Checklist de evaluación QA — Somatocarta v1.2.1
 
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 
 ---
 
@@ -56,8 +56,8 @@ Marque cada ítem con:
 | 3.10 | Rechaza email inválido | ✅ | Error 422 |
 | 3.11 | Rechaza fecha de nacimiento futura | ✅ | Error 422 |
 | 3.12 | Rechaza campos obligatorios vacíos | ✅ | Error 422 |
-| 3.13 | Carga de fotografía funciona | 🔲 | No evaluado visualmente |
-| 3.14 | Deportista con valoraciones se elimina sin restricción | ❌ | Riesgo de integridad |
+| 3.13 | Carga de fotografía funciona | ✅ | Cubierta por flujo E2E autenticado |
+| 3.14 | Bloquea eliminar deportista con asignaciones o valoraciones | ✅ | Error 409 |
 
 ## 4. CRUD Entidades
 
@@ -69,7 +69,7 @@ Marque cada ítem con:
 | 4.4 | Editar entidad | ✅ | |
 | 4.5 | Eliminar entidad | ✅ | |
 | 4.6 | Rechaza NIT duplicado | ✅ | Error 400 |
-| 4.7 | Entidad con asignaciones se elimina sin restricción | ❌ | Riesgo de integridad |
+| 4.7 | Bloquea eliminar entidad con asignaciones | ✅ | Error 409 |
 
 ## 5. CRUD Deportes
 
@@ -80,8 +80,8 @@ Marque cada ítem con:
 | 5.3 | Buscar deporte | ✅ | |
 | 5.4 | Editar deporte | ✅ | |
 | 5.5 | Eliminar deporte | ✅ | |
-| 5.6 | Rechaza deporte duplicado | ❌ | Permite duplicados (200) |
-| 5.7 | Deporte con asignaciones se elimina sin restricción | ❌ | Riesgo de integridad |
+| 5.6 | Rechaza deporte duplicado | ✅ | Error 409 |
+| 5.7 | Bloquea eliminar deporte con asignaciones | ✅ | Error 409 |
 
 ## 6. CRUD Asignaciones
 
@@ -92,7 +92,7 @@ Marque cada ítem con:
 | 6.3 | Editar asignación | ✅ | |
 | 6.4 | Eliminar asignación | ✅ | |
 | 6.5 | Valida que deportista exista | ✅ | Error 422 |
-| 6.6 | Rechaza asignación duplicada | ❌ | Permite duplicados (200) |
+| 6.6 | Rechaza asignación duplicada | ✅ | Error 409 |
 
 ## 7. Valoración Corporal
 
@@ -101,8 +101,8 @@ Marque cada ítem con:
 | 7.1 | Crear valoración con 1 toma | ✅ | |
 | 7.2 | Crear valoración con 3 tomas | ✅ | |
 | 7.3 | Agregar toma adicional a valoración existente | ✅ | |
-| 7.4 | Editar detalle de valoración almacenada | ⚠️ | Endpoint inconsistente |
-| 7.5 | Eliminar detalle individual | 🔲 | No evaluado a fondo |
+| 7.4 | Editar detalle de valoración almacenada | ✅ | Cubierta por flujo E2E autenticado |
+| 7.5 | Eliminar detalle individual | ✅ | Cubierta por pruebas de ruta e integración |
 | 7.6 | Eliminar valoración completa | ✅ | |
 | 7.7 | Rechaza valores fuera de rango | ✅ | Error 422 |
 | 7.8 | Rechaza valoración sin detalles | ✅ | Error 422 |
@@ -121,9 +121,9 @@ Marque cada ítem con:
 | 8.5 | Detalle muestra complexión física | ✅ | |
 | 8.6 | Detalle muestra somatotipo | ✅ | |
 | 8.7 | Somatocarta ubica al deportista | ✅ | |
-| 8.8 | Mesomorfismo muestra valores coherentes | ❌ | Valores negativos para atletas |
-| 8.9 | Peso óseo muestra valores coherentes | ❌ | 0.35-0.50 kg (irreal) |
-| 8.10 | Textos de escala son coherentes | ❌ | Texto corrupto en ectomorfismo |
+| 8.8 | Mesomorfismo muestra valores coherentes | ✅ | Fórmula y unidades corregidas; verificación MySQL completa |
+| 8.9 | Peso óseo muestra valores coherentes | ✅ | Diámetros normalizados a mm y fórmula corregida |
+| 8.10 | Textos de escala son coherentes | ✅ | Texto de ectomorfismo corregido por migración `004` |
 
 ## 9. Análisis Longitudinal
 
@@ -147,7 +147,7 @@ Marque cada ítem con:
 | 10.5 | PDF longitudinal se genera y descarga | ✅ | |
 | 10.6 | PDF longitudinal es válido | ✅ | |
 | 10.7 | PDF longitudinal contiene datos correctos | ✅ | |
-| 10.8 | PDFs varían entre deportistas | ⚠️ | Todos tienen el mismo tamaño exacto |
+| 10.8 | PDFs varían entre deportistas | ✅ | Identidad, métricas y bytes comparados automáticamente |
 
 ## 11. Responsive
 
@@ -165,7 +165,7 @@ Marque cada ítem con:
 |---|----------|--------|---------------|
 | 12.1 | Contraseñas en texto plano | ❌ | Riesgo de seguridad |
 | 12.2 | SECRET_KEY configurable por .env | ✅ | |
-| 12.3 | Token JWT con expiración | ✅ | 15 min |
+| 12.3 | Token JWT con expiración | ✅ | 30 min por defecto, configurable por entorno |
 | 12.4 | Auditoría de operaciones CRUD | ✅ | |
 | 12.5 | Control de roles y permisos | ❌ | No implementado |
 | 12.6 | CORS configurado | ❌ | No configurado explícitamente |
@@ -178,21 +178,21 @@ Marque cada ítem con:
 |-----------|-------|------|------|---------|-------------|
 | Autenticación | 8 | 8 | 0 | 0 | 0 |
 | Dashboard | 8 | 7 | 0 | 1 | 0 |
-| CRUD Deportistas | 14 | 12 | 1 | 0 | 1 |
-| CRUD Entidades | 7 | 6 | 1 | 0 | 0 |
-| CRUD Deportes | 7 | 5 | 2 | 0 | 0 |
-| CRUD Asignaciones | 6 | 5 | 1 | 0 | 0 |
-| Valoración Corporal | 11 | 10 | 0 | 1 | 0 |
-| Análisis Individual | 10 | 7 | 3 | 0 | 0 |
+| CRUD Deportistas | 14 | 14 | 0 | 0 | 0 |
+| CRUD Entidades | 7 | 7 | 0 | 0 | 0 |
+| CRUD Deportes | 7 | 7 | 0 | 0 | 0 |
+| CRUD Asignaciones | 6 | 6 | 0 | 0 | 0 |
+| Valoración Corporal | 11 | 11 | 0 | 0 | 0 |
+| Análisis Individual | 10 | 10 | 0 | 0 | 0 |
 | Análisis Longitudinal | 6 | 6 | 0 | 0 | 0 |
-| Informes PDF | 8 | 7 | 0 | 1 | 0 |
+| Informes PDF | 8 | 8 | 0 | 0 | 0 |
 | Responsive | 5 | 0 | 0 | 0 | 5 |
 | Seguridad | 6 | 3 | 3 | 0 | 0 |
-| **Total** | **96** | **76** | **11** | **3** | **6** |
+| **Total** | **96** | **87** | **3** | **1** | **5** |
 
-**Tasa de aprobación:** 79.2% (76/96)
-**Tasa de fallo:** 11.5% (11/96)
+**Tasa de aprobación:** 90.6% (87/96)
+**Tasa de fallo:** 3.1% (3/96)
 
 ---
 
-*Checklist basado en pruebas ejecutadas el 15 de junio de 2026. Las pruebas responsive requieren evaluación visual manual.*
+*Checklist actualizado el 21 de junio de 2026. Las pruebas responsive requieren evaluación visual manual. El porcentaje funcional ponderado se documenta en `docs/estado_funcional.md`.*

@@ -1,6 +1,6 @@
-# Plan de pruebas — Somatocarta v1.1.7
+# Plan de pruebas — Somatocarta v1.2.1
 
-**Fecha:** 15 de junio de 2026
+**Fecha:** 21 de junio de 2026
 
 ---
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ### 1.3 Resultado actual
 
-**162 tests pasando** en 24 archivos de prueba.
+**183 tests y 3 subpruebas pasando** en 27 archivos de prueba.
 
 ---
 
@@ -49,7 +49,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `test_backend_schemas.py` | Validación Pydantic de schemas |
 | `test_backend_services.py` | Servicios backend, rollback, transacciones |
 | `test_backend_integration_sqlite.py` | Integración con SQLite temporal |
-| `test_backend_pdf_service.py` | Generación de PDFs |
+| `test_backend_pdf_service.py` | Validez, contenido variable y rendimiento de PDFs |
 | `test_backend_dashboard_service.py` | Métricas de dashboard |
 | `test_backend_view_contract.py` | Contrato de vista SQL |
 
@@ -59,11 +59,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 |---------|-----------|
 | `test_frontend_api_client.py` | Cliente API HTTP |
 | `test_frontend_assets.py` | Rutas de assets |
-| `test_frontend_components.py` | Componentes UI reutilizables |
+| `test_frontend_components.py` | Componentes UI y cambio responsive móvil/escritorio |
 | `test_frontend_composition_analysis.py` | Análisis de composición corporal |
 | `test_frontend_dashboard_redesign.py` | Dashboard y métricas |
 | `test_frontend_formatters.py` | Formateo de valores |
 | `test_frontend_form_helpers.py` | Helpers de formularios y payloads |
+| `test_frontend_global_search.py` | Cierre del modal, navegación diferida y transmisión del deportista seleccionado |
 | `test_frontend_interpretation.py` | Notas de interpretación clínica |
 | `test_frontend_longitudinal_analysis.py` | Análisis longitudinal |
 | `test_frontend_navigation.py` | Navegación entre pantallas |
@@ -83,6 +84,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 |---------|-----------|
 | `test_app_config.py` | Configuración de la app |
 | `test_database_migrations.py` | Migraciones de base de datos |
+
+### 2.5 E2E
+
+| Archivo | Cobertura |
+|---------|-----------|
+| `test_e2e_workflow.py` | Login, fotografía, CRUD, asignación, valoración, edición, PDF individual/longitudinal y eliminación ordenada |
 
 ---
 
@@ -224,7 +231,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ## 7. Criterios de aceptación de pruebas
 
-- Todos los tests automatizados deben pasar (162/162).
+- Todos los tests automatizados deben pasar (183/183 y 3 subpruebas).
 - Los flujos funcionales críticos deben operar sin errores.
 - Los PDFs generados deben ser válidos y contener los datos correctos.
 - La interfaz debe ser usable en las 5 resoluciones objetivo.

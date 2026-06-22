@@ -1,6 +1,7 @@
 import unittest
 from datetime import date
 
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -8,12 +9,19 @@ from src.backend.database import Base
 from src.backend.models import Deportista, DeporteDeportista, Entidad, Somatotipo, SomatotipoDetalle, VistaValoracionCorporal
 from src.backend.schemas.entidades_deportes import DeporteCreate, DeporteDeportistaCreate, EntidadCreate
 from src.backend.schemas.somatotipo import SomatotipoCreate, SomatotipoDetalleBase
-from src.backend.services.deportistas_service import create_deportista, list_deportistas_page
+from src.backend.services.deportistas_service import (
+    create_deportista,
+    delete_deportista,
+    list_deportistas_page,
+    update_deportista,
+)
 from src.backend.services.entidades_deportes_service import (
     create_asignacion,
     create_deporte,
     create_entidad,
     delete_asignacion,
+    delete_deporte,
+    delete_entidad,
     list_asignaciones_page,
     list_deportes_page,
     list_entidades_page,
@@ -24,6 +32,7 @@ from src.backend.services.entidades_deportes_service import (
 from src.backend.services.somatotipo_service import (
     create_somatotipo,
     create_somatotipo_detalle,
+    delete_somatotipo,
     delete_somatotipo_detalle,
     get_historial_somatotipos,
     get_historial_vista_page,
@@ -124,6 +133,93 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
         self.assertEqual(self.db.query(DeporteDeportista).count(), 0)
         self.assertEqual(self.db.query(Entidad).count(), 1)
 
+    def test_parent_deletes_are_rejected_while_dependencies_exist(self):
+        athlete = Deportista(
+            IDENTI_DEPORTISTA="123",
+            TIPO_IDENTI=1,
+            NOMBRE_DEPORTISTA="Ana Perez",
+            SEXO_DEPORTISTA="F",
+        )
+        entity = Entidad(NIT_ENTIDAD="900", RAZON_SOCIAL="Club Deportivo")
+        sport = create_deporte(self.db, {"ID_DEPORTE": 7, "DEPORTE": "Natación"})
+        self.db.add_all([athlete, entity])
+        self.db.commit()
+        assignment = create_asignacion(
+            self.db,
+            {"ID_DEPORTE": sport.ID_DEPORTE, "IDENTI_DEPORTISTA": "123", "NIT_ENTIDAD": "900"},
+        )
+        valuation = Somatotipo(
+            FECHA_MEDIDA=date(2026, 6, 20),
+            IDENTI_DEPORTISTA="123",
+            LOGIN_USER="admin",
+        )
+        self.db.add(valuation)
+        self.db.commit()
+
+        for delete_call, identifier in (
+            (delete_deportista, "123"),
+            (delete_entidad, "900"),
+            (delete_deporte, 7),
+        ):
+            with self.subTest(delete_call=delete_call.__name__):
+                with self.assertRaises(HTTPException) as context:
+                    delete_call(self.db, identifier)
+                self.assertEqual(context.exception.status_code, 409)
+
+        self.assertEqual(self.db.query(Deportista).count(), 1)
+        self.assertEqual(self.db.query(Entidad).count(), 1)
+        self.assertEqual(self.db.query(DeporteDeportista).count(), 1)
+
+        delete_asignacion(self.db, assignment.id)
+        delete_somatotipo(self.db, valuation.id_Somatotipo)
+        delete_entidad(self.db, "900")
+        delete_deporte(self.db, 7)
+        delete_deportista(self.db, "123")
+
+        self.assertEqual(self.db.query(Deportista).count(), 0)
+        self.assertEqual(self.db.query(Entidad).count(), 0)
+
+    def test_duplicate_sports_and_assignments_are_rejected(self):
+        self.db.add_all(
+            [
+                Deportista(IDENTI_DEPORTISTA="123", NOMBRE_DEPORTISTA="Ana", SEXO_DEPORTISTA="F"),
+                Entidad(NIT_ENTIDAD="900", RAZON_SOCIAL="Club"),
+            ]
+        )
+        self.db.commit()
+        sport = create_deporte(self.db, {"ID_DEPORTE": 7, "DEPORTE": "Natación"})
+        payload = {"ID_DEPORTE": sport.ID_DEPORTE, "IDENTI_DEPORTISTA": "123", "NIT_ENTIDAD": "900"}
+        create_asignacion(self.db, payload)
+
+        with self.assertRaises(HTTPException) as sport_context:
+            create_deporte(self.db, {"DEPORTE": "natación"})
+        with self.assertRaises(HTTPException) as assignment_context:
+            create_asignacion(self.db, payload)
+
+        self.assertEqual(sport_context.exception.status_code, 409)
+        self.assertEqual(assignment_context.exception.status_code, 409)
+        self.assertEqual(self.db.query(DeporteDeportista).count(), 1)
+
+    def test_primary_identifiers_cannot_be_changed(self):
+        athlete = Deportista(IDENTI_DEPORTISTA="123", NOMBRE_DEPORTISTA="Ana", SEXO_DEPORTISTA="F")
+        entity = Entidad(NIT_ENTIDAD="900", RAZON_SOCIAL="Club")
+        self.db.add_all([athlete, entity])
+        self.db.commit()
+
+        with self.assertRaises(HTTPException) as athlete_context:
+            update_deportista(
+                self.db,
+                "123",
+                {"IDENTI_DEPORTISTA": "456", "NOMBRE_DEPORTISTA": "Ana", "SEXO_DEPORTISTA": "F"},
+            )
+        with self.assertRaises(HTTPException) as entity_context:
+            update_entidad(self.db, "900", {"NIT_ENTIDAD": "901", "RAZON_SOCIAL": "Club"})
+
+        self.assertEqual(athlete_context.exception.status_code, 409)
+        self.assertEqual(entity_context.exception.status_code, 409)
+        self.assertIsNotNone(self.db.query(Deportista).filter_by(IDENTI_DEPORTISTA="123").first())
+        self.assertIsNotNone(self.db.query(Entidad).filter_by(NIT_ENTIDAD="900").first())
+
     def test_somatotipo_create_persists_header_and_detail(self):
         self.db.add(
             Deportista(
@@ -150,9 +246,9 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
                     "PLIEGUE_ABDOMINAL": 13,
                     "PLIEGUE_MUSLO_ANT": 14,
                     "PLIEGUE_MEDIAL_PIERNA": 15,
-                    "DIAMETRO_BIEPI_MUNECA": 6,
-                    "DIAMETRO_BIEPI_FEMUR": 9,
-                    "DIAMETRO_CODO": 7,
+                    "DIAMETRO_BIEPI_MUNECA": 60,
+                    "DIAMETRO_BIEPI_FEMUR": 90,
+                    "DIAMETRO_CODO": 70,
                     "PERIMETRO_BICED_CONTRAIDO": 32,
                     "PERIMETRO_PIERNA": 40,
                     "CIRCUNFERENCIA_CARPO": 17,
@@ -195,9 +291,9 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
                     "PLIEGUE_ABDOMINAL": 13,
                     "PLIEGUE_MUSLO_ANT": 14,
                     "PLIEGUE_MEDIAL_PIERNA": 15,
-                    "DIAMETRO_BIEPI_MUNECA": 6,
-                    "DIAMETRO_BIEPI_FEMUR": 9,
-                    "DIAMETRO_CODO": 7,
+                    "DIAMETRO_BIEPI_MUNECA": 60,
+                    "DIAMETRO_BIEPI_FEMUR": 90,
+                    "DIAMETRO_CODO": 70,
                     "PERIMETRO_BICED_CONTRAIDO": 32,
                     "PERIMETRO_PIERNA": 40,
                     "CIRCUNFERENCIA_CARPO": 17,
@@ -221,9 +317,9 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
                 PLIEGUE_ABDOMINAL=13,
                 PLIEGUE_MUSLO_ANT=14,
                 PLIEGUE_MEDIAL_PIERNA=15,
-                DIAMETRO_BIEPI_MUNECA=6,
-                DIAMETRO_BIEPI_FEMUR=9,
-                DIAMETRO_CODO=7,
+                DIAMETRO_BIEPI_MUNECA=60,
+                DIAMETRO_BIEPI_FEMUR=90,
+                DIAMETRO_CODO=70,
                 PERIMETRO_BICED_CONTRAIDO=32,
                 PERIMETRO_PIERNA=40,
                 CIRCUNFERENCIA_CARPO=17,
@@ -241,9 +337,9 @@ class BackendSqliteIntegrationTests(unittest.TestCase):
                 PLIEGUE_ABDOMINAL=13,
                 PLIEGUE_MUSLO_ANT=14,
                 PLIEGUE_MEDIAL_PIERNA=15,
-                DIAMETRO_BIEPI_MUNECA=6,
-                DIAMETRO_BIEPI_FEMUR=9,
-                DIAMETRO_CODO=7,
+                DIAMETRO_BIEPI_MUNECA=60,
+                DIAMETRO_BIEPI_FEMUR=90,
+                DIAMETRO_CODO=70,
                 PERIMETRO_BICED_CONTRAIDO=32,
                 PERIMETRO_PIERNA=40,
                 CIRCUNFERENCIA_CARPO=17,

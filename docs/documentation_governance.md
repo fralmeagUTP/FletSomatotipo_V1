@@ -1,7 +1,7 @@
-# Gobernanza documental — Somatocarta v1.1.7
+# Gobernanza documental — Somatocarta v1.2.1
 
-**Fusionado de:** `documentation_inventory.md` + `deprecated_docs_report.md` + `changelog_documentation.md`
-**Fecha:** 15 de junio de 2026
+**Origen:** consolidación de inventario, reporte de obsolescencia y changelog histórico.
+**Fecha de actualización:** 21 de junio de 2026
 
 ---
 
@@ -14,18 +14,21 @@ docs/
 ├── specs/
 │   └── somatocarta_spec.md          # Especificación unificada (SDD + Spec Kit)
 ├── qa/
-│   ├── informe_qa_boxeo.md          # Informe QA escenario boxeo
-│   ├── informe_qa_somatocarta.md    # Informe QA escenario natación
-│   ├── informe_final_documentacion.md # Informe de sesión documental
-│   └── informe_redundancias.md      # Análisis de redundancias
+│   ├── informe_qa_boxeo.md          # Evidencia QA histórica
+│   ├── informe_qa_somatocarta.md    # Evidencia QA histórica
+│   ├── informe_final_documentacion.md # Informe histórico de consolidación
+│   └── informe_redundancias.md      # Inventario histórico
 ├── architecture.md                   # Arquitectura técnica
 ├── modules.md                        # Módulos funcionales
 ├── formulas_somatotipo.md            # Fórmulas y cálculos
+├── integridad_referencial.md          # Política RESTRICT y migraciones
+├── estado_funcional.md                # Estado vigente y porcentaje ponderado
 ├── user_guide.md                     # Guía de usuario
 ├── quickstart.md                     # Instalación y ejecución
 ├── testing_plan.md                   # Plan de pruebas
 ├── qa_checklist.md                   # Checklist QA
 ├── documentation_governance.md       # Este documento
+├── changelog_documentation.md         # Registro cronológico de cambios
 ├── publicacion.md                    # Checklist de publicación
 └── uploads.md                        # Política de uploads
 ```
@@ -37,15 +40,10 @@ docs/
 | `README.md` | Guía principal | Actualizado | Mantener |
 | `requirements.txt` | Dependencias | Actualizado | Mantener |
 | `requirements-apk.txt` | Dependencias APK | Actualizado | Mantener |
-| `Respaldo_20251214_0840.zip` | Backup | No relacionado | Recomendar eliminación |
-| `Respaldo_v1.1.1.zip` | Backup | No relacionado | Recomendar eliminación |
 
 ### 1.3 Documentos de referencia (no .md)
 
-| Archivo | Tipo | Acción |
-|---------|------|--------|
-| `comandos.txt` (raíz) | Referencia rápida | Mantener como respaldo |
-| `EJECUTAR_POWERSHELL.txt` (raíz) | Guía de ejecución | Mantener como respaldo |
+Las instrucciones operativas se concentran en `README.md`, `docs/quickstart.md` y `docs/publicacion.md`. No existen guías `.txt` vigentes en la raíz.
 
 ---
 
@@ -90,6 +88,10 @@ Los siguientes documentos fueron eliminados el 15 de junio de 2026 durante la co
 | `docs/architecture.md` | Arquitectura técnica vigente. |
 | `docs/user_guide.md` | Guía de usuario única. |
 | `docs/specs/somatocarta_spec.md` | Especificación unificada. Fuente de verdad. |
+
+Los documentos sí pueden actualizarse cuando cambia el código; la tabla significa que no deben eliminarse ni fusionarse sin una revisión documental explícita.
+
+Los informes dentro de `docs/qa/` son evidencia histórica y no representan el estado vigente. El estado actual se consulta en `docs/estado_funcional.md` y `docs/qa_checklist.md`.
 
 ---
 
@@ -146,9 +148,17 @@ Los siguientes documentos fueron eliminados el 15 de junio de 2026 durante la co
 **Pendientes:**
 
 - Confirmar eliminación de archivos ZIP de respaldo en la raíz.
-- Documentar definición SQL de `CDRVistaValoracionCorporal`.
-- Agregar casos de prueba clínicos conocidos para validar cálculos.
-- Validar con el equipo si `comandos.txt` y `EJECUTAR_POWERSHELL.txt` de la raíz se eliminan.
+- Confirmar periódicamente que no reaparezcan guías operativas duplicadas en la raíz.
+
+### 2026-06-21 — Actualización integral
+
+- Estado funcional ponderado establecido en 94%.
+- Fórmulas y 76 valoraciones MySQL verificadas sin diferencias.
+- Integridad referencial `RESTRICT`, duplicados y confirmaciones documentados como resueltos.
+- Responsive dinámico, E2E crítico y PDFs variables/optimizados incorporados.
+- Suite actualizada a 183 pruebas y 3 subpruebas.
+- Informes QA antiguos etiquetados como históricos y credenciales retiradas.
+- Creado `docs/changelog_documentation.md` como registro independiente.
 
 ---
 

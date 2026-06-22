@@ -1,7 +1,7 @@
 # Somatocarta
 
-**Versión:** v1.1.7
-**Estado:** Funcional con hallazgos QA pendientes
+**Versión:** v1.2.1
+**Estado:** 94% funcional; responsive dinámico, E2E crítico y PDFs optimizados
 
 Aplicación Flet + FastAPI para gestión de deportistas, valoración corporal antropométrica, análisis de composición corporal, somatotipo (Heath-Carter), análisis longitudinal e informes PDF.
 
@@ -16,9 +16,9 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 - **CRUD de deportes** con catálogo.
 - **CRUD de asignaciones** deportista-entidad-deporte.
 - **Valoración corporal** con 14 campos antropométricos y múltiples tomas de medición.
-- **Análisis individual** con composición corporal (3 métodos de grasa), IMC, complexión, somatotipo y somatocarta.
+- **Análisis individual** con Yuhasz como método principal, Faulkner como comparación, IMC, complexión, somatotipo y somatocarta.
 - **Análisis longitudinal** con gráficos de tendencia, somatocarta con trayectoria y comparación temporal.
-- **Informes PDF** individuales y longitudinales generados sin dependencias externas.
+- **Informes PDF** individuales y longitudinales construidos internamente, con Pillow para optimizar imágenes.
 - **Sistema de auditoría** con registro en base de datos y archivo log.
 - **Diseño responsive** para escritorio, tablet y móvil (incluye Android).
 
@@ -32,8 +32,8 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 | Base de datos | MySQL (pymysql) |
 | Validación | Pydantic + email-validator |
 | Autenticación | JWT (python-jose) |
-| PDF | Generación manual PDF 1.4 (sin dependencias) |
-| Testing | pytest (162 tests) |
+| PDF | Generación manual PDF 1.4 + Pillow para imágenes |
+| Testing | pytest (183 tests) |
 | Despliegue | cPanel/Passenger (a2wsgi) |
 
 ## Instalación y ejecución
@@ -66,6 +66,7 @@ DB_PORT=3306
 DB_PASSWORD=contrasena
 DB_NAME=somatocarta
 SECRET_KEY=cambia-este-valor
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 ### 4. Ejecutar backend
@@ -137,8 +138,9 @@ SomatoCarta_V1.0/
 │       ├── audit.py            # Sistema de auditoría
 │       ├── routers/            # 7 routers API
 │       ├── schemas/            # Schemas Pydantic
-│       └── services/           # Lógica de negocio (6 servicios)
-├── tests/                      # 162 tests en 24 archivos
+│       ├── services/           # Lógica de negocio y PDFs
+│       └── domain/             # Calculadora antropométrica de referencia
+├── tests/                      # 183 tests en 27 archivos
 ├── scripts/                    # Migraciones y utilidades
 ├── assets/                     # Imágenes, íconos, logotipos
 └── docs/                       # Documentación
@@ -150,11 +152,13 @@ SomatoCarta_V1.0/
     ├── user_guide.md           # Guía de usuario
     ├── testing_plan.md         # Plan de pruebas
     ├── qa_checklist.md         # Checklist QA
-    ├── documentation_inventory.md
-    ├── deprecated_docs_report.md
+    ├── estado_funcional.md     # Porcentaje y pendientes vigentes
+    ├── integridad_referencial.md
+    ├── documentation_governance.md
     ├── changelog_documentation.md
     ├── publicacion.md          # Checklist de publicación
-    └── uploads.md              # Política de uploads
+    ├── uploads.md              # Política de uploads
+    └── qa/                     # Informes históricos
 ```
 
 ## Módulos
@@ -174,7 +178,7 @@ SomatoCarta_V1.0/
 | Acerca | Información institucional |
 | Gestión de usuarios | *(Pendiente)* Actualmente en BD sin interfaz |
 | Menú principal | Navegación responsive entre módulos |
-| Pruebas / QA | 162 pruebas unitarias y de integración (`tests/`) |
+| Pruebas / QA | 183 pruebas unitarias, de integración y E2E (`tests/`) |
 
 ## Pruebas
 
@@ -182,7 +186,7 @@ SomatoCarta_V1.0/
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Resultado actual: **162 tests pasando**.
+Resultado actual: **183 tests y 3 subpruebas pasando**.
 
 Preflight de publicación:
 
@@ -203,8 +207,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `docs/qa_checklist.md` | Checklist de evaluación QA |
 | `docs/publicacion.md` | Checklist de publicación |
 | `docs/uploads.md` | Política de archivos subidos |
-| `docs/documentation_inventory.md` | Inventario documental |
-| `docs/deprecated_docs_report.md` | Documentos obsoletos |
+| `docs/integridad_referencial.md` | Política `RESTRICT`, duplicados y migración MySQL |
+| `docs/estado_funcional.md` | Porcentaje funcional, evidencia y pendientes vigentes |
+| `docs/documentation_governance.md` | Inventario, reglas y fuentes de verdad documentales |
 | `docs/changelog_documentation.md` | Historial de cambios documentales |
 
 ## Contexto institucional
@@ -220,17 +225,18 @@ Somatocarta es desarrollada en el marco de:
 
 ## Estado actual
 
-- **Versión:** v1.1.7
-- **Tests:** 162 pasando
-- **Estabilidad:** Funcional con hallazgos QA documentados
-- **Última evaluación QA:** 15 de junio de 2026
+- **Versión:** v1.2.1
+- **Tests:** 183 y 3 subpruebas pasando
+- **Estabilidad:** 94% funcional; flujos principales y E2E crítico operativos
+- **Última evaluación QA:** 21 de junio de 2026
+- **MySQL:** 76 valoraciones verificadas, 0 diferencias de cálculo
 
 ## Advertencias importantes
 
-1. **Cálculos clínicos:** Los indicadores de somatotipo se calculan en la vista SQL `CDRVistaValoracionCorporal`. Se han detectado valores anómalos en mesomorfismo (negativo) y peso óseo (irrealmente bajo). Pendiente de validación clínica.
+1. **Cálculos antropométricos:** La migración `004` está aplicada en la base activa; 76 valoraciones coinciden con la calculadora Python. Las bases adicionales también deben migrarse y el protocolo requiere aprobación metodológica del equipo de ciencias del deporte.
 2. **Seguridad:** Las contraseñas están almacenadas en texto plano por compatibilidad con la base de datos heredada. Se recomienda migrar a hash seguro.
-3. **Integridad referencial:** Las operaciones de eliminación no validan dependencias. Se pueden eliminar entidades, deportes o deportistas con datos asociados.
-4. **Duplicados:** El sistema no previene la creación de deportes o asignaciones duplicadas.
+3. **Integridad referencial:** La API y la base activa bloquean la eliminación de deportistas, entidades o deportes con dependencias. Las bases adicionales deben aplicar las migraciones `002` y `003`.
+4. **Duplicados:** La API y la migración MySQL impiden deportes y asignaciones duplicadas.
 
 ## Notas de mantenimiento
 

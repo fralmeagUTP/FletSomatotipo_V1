@@ -16,7 +16,7 @@ android_log("module import start")
 # Ensure the current directory is in the path for module resolution
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-APP_VERSION = "v1.1.7"
+APP_VERSION = "v1.2.1"
 
 def main(page):
     android_log("main(page) entered")
@@ -43,7 +43,7 @@ def main(page):
     android_log("startup text rendered")
 
     try:
-        from app_config import API_URL
+        from app_config import API_URL, session_clear, session_set
         from src.frontend import theme
         from src.frontend.api_client import ApiClient, ApiError
         from src.frontend.assets import (
@@ -241,7 +241,7 @@ def main(page):
 
     def handle_logout():
         """Cierra la sesión y vuelve al login"""
-        page.session.clear()
+        session_clear(page)
         username_field.value = ""
         password_field.value = ""
         error_text.value = ""
@@ -292,10 +292,10 @@ def main(page):
 
             data = ApiClient(page).login(username_field.value, password_field.value)
             if data:
-                page.session.set("username", data["username"])
-                page.session.set("login_user", data["login_user"])
-                page.session.set("access_token", data["access_token"])
-                page.session.set("user_id", str(data["user_id"]))
+                session_set(page, "username", data["username"])
+                session_set(page, "login_user", data["login_user"])
+                session_set(page, "access_token", data["access_token"])
+                session_set(page, "user_id", str(data["user_id"]))
                 
                 page.bgcolor = theme.BACKGROUND_COLOR
                 show_dashboard(page, handle_logout)
@@ -316,6 +316,7 @@ def main(page):
 
     # Initial login screen
     try:
+        page.clean()
         page.add(build_login_ui())
         android_log("login rendered")
     except Exception as ex:

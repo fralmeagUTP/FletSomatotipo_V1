@@ -1,5 +1,6 @@
 from fastapi import HTTPException
-from sqlalchemy import or_
+from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import Deportista, Deporte, DeporteDeportista, Entidad
@@ -48,8 +49,11 @@ def create_entidad(db: Session, data: dict):
 
 def update_entidad(db: Session, nit: str, data: dict):
     entidad = get_entidad_or_404(db, nit)
-    if data["NIT_ENTIDAD"] != nit and db.query(Entidad).filter(Entidad.NIT_ENTIDAD == data["NIT_ENTIDAD"]).first():
-        raise HTTPException(status_code=400, detail="Ya existe una entidad con ese NIT")
+    if data["NIT_ENTIDAD"] != nit:
+        raise HTTPException(
+            status_code=409,
+            detail="El NIT de la entidad no se puede modificar; cree un registro nuevo si necesita cambiarlo",
+        )
     try:
         for field, value in data.items():
             setattr(entidad, field, value)
@@ -63,10 +67,25 @@ def update_entidad(db: Session, nit: str, data: dict):
 
 def delete_entidad(db: Session, nit: str):
     entidad = get_entidad_or_404(db, nit)
+    assignment_count = db.query(DeporteDeportista).filter(DeporteDeportista.NIT_ENTIDAD == nit).count()
+    if assignment_count:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"No se puede eliminar la entidad porque tiene {assignment_count} asignación(es) asociadas. "
+                "Elimine primero las asignaciones"
+            ),
+        )
     try:
         db.delete(entidad)
         db.commit()
         return {"message": "Entidad eliminada correctamente"}
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="No se puede eliminar la entidad porque tiene datos asociados",
+        ) from error
     except Exception:
         db.rollback()
         raise
@@ -90,12 +109,17 @@ def create_deporte(db: Session, data: dict):
     payload = {key: value for key, value in data.items() if value is not None}
     if payload.get("ID_DEPORTE") and db.query(Deporte).filter(Deporte.ID_DEPORTE == payload["ID_DEPORTE"]).first():
         raise HTTPException(status_code=400, detail="Ya existe un deporte con ese ID")
+    if db.query(Deporte).filter(func.lower(Deporte.DEPORTE) == payload["DEPORTE"].lower()).first():
+        raise HTTPException(status_code=409, detail="Ya existe un deporte con ese nombre")
     try:
         deporte = Deporte(**payload)
         db.add(deporte)
         db.commit()
         db.refresh(deporte)
         return deporte
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Ya existe un deporte con ese nombre") from error
     except Exception:
         db.rollback()
         raise
@@ -103,11 +127,24 @@ def create_deporte(db: Session, data: dict):
 
 def update_deporte(db: Session, deporte_id: int, data: dict):
     deporte = get_deporte_or_404(db, deporte_id)
+    duplicate = (
+        db.query(Deporte)
+        .filter(
+            func.lower(Deporte.DEPORTE) == data["DEPORTE"].lower(),
+            Deporte.ID_DEPORTE != deporte_id,
+        )
+        .first()
+    )
+    if duplicate:
+        raise HTTPException(status_code=409, detail="Ya existe un deporte con ese nombre")
     try:
         deporte.DEPORTE = data["DEPORTE"]
         db.commit()
         db.refresh(deporte)
         return deporte
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Ya existe un deporte con ese nombre") from error
     except Exception:
         db.rollback()
         raise
@@ -115,10 +152,25 @@ def update_deporte(db: Session, deporte_id: int, data: dict):
 
 def delete_deporte(db: Session, deporte_id: int):
     deporte = get_deporte_or_404(db, deporte_id)
+    assignment_count = db.query(DeporteDeportista).filter(DeporteDeportista.ID_DEPORTE == deporte_id).count()
+    if assignment_count:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"No se puede eliminar el deporte porque tiene {assignment_count} asignación(es) asociadas. "
+                "Elimine primero las asignaciones"
+            ),
+        )
     try:
         db.delete(deporte)
         db.commit()
         return {"message": "Deporte eliminado correctamente"}
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="No se puede eliminar el deporte porque tiene datos asociados",
+        ) from error
     except Exception:
         db.rollback()
         raise
@@ -161,12 +213,22 @@ def get_asignacion_or_404(db: Session, assignment_id: int):
 
 def create_asignacion(db: Session, data: dict):
     validate_assignment_refs(db, data)
+    duplicate = db.query(DeporteDeportista).filter(
+        DeporteDeportista.ID_DEPORTE == data["ID_DEPORTE"],
+        DeporteDeportista.IDENTI_DEPORTISTA == data["IDENTI_DEPORTISTA"],
+        DeporteDeportista.NIT_ENTIDAD == data["NIT_ENTIDAD"],
+    ).first()
+    if duplicate:
+        raise HTTPException(status_code=409, detail="La asignación ya existe")
     try:
         assignment = DeporteDeportista(**data)
         db.add(assignment)
         db.commit()
         db.refresh(assignment)
         return assignment
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="La asignación ya existe") from error
     except Exception:
         db.rollback()
         raise
@@ -175,12 +237,23 @@ def create_asignacion(db: Session, data: dict):
 def update_asignacion(db: Session, assignment_id: int, data: dict):
     assignment = get_asignacion_or_404(db, assignment_id)
     validate_assignment_refs(db, data)
+    duplicate = db.query(DeporteDeportista).filter(
+        DeporteDeportista.ID_DEPORTE == data["ID_DEPORTE"],
+        DeporteDeportista.IDENTI_DEPORTISTA == data["IDENTI_DEPORTISTA"],
+        DeporteDeportista.NIT_ENTIDAD == data["NIT_ENTIDAD"],
+        DeporteDeportista.id != assignment_id,
+    ).first()
+    if duplicate:
+        raise HTTPException(status_code=409, detail="La asignación ya existe")
     try:
         for field, value in data.items():
             setattr(assignment, field, value)
         db.commit()
         db.refresh(assignment)
         return assignment
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="La asignación ya existe") from error
     except Exception:
         db.rollback()
         raise
