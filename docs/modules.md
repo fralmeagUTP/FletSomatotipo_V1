@@ -1,6 +1,6 @@
 # Módulos funcionales — Somatocarta v1.2.1
 
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 
 ---
 
@@ -29,12 +29,12 @@
 | **Usuarios involucrados** | Todos los usuarios autenticados. |
 | **Pantallas/rutas** | `views/dashboard.py`, `GET /dashboard/summary` |
 | **Entradas** | Token de autenticación. |
-| **Procesos** | Consulta de totales (deportistas, valoraciones, deportes, entidades, asignaciones), actividad reciente (últimas 6 valoraciones), validación de contrato de vista SQL. |
-| **Salidas** | Tarjetas de métricas, lista de actividad reciente, indicador de salud del sistema. |
+| **Procesos** | Consulta de totales operativos, validación de contrato de vista SQL y construcción de accesos rápidos a módulos. |
+| **Salidas** | Tarjetas de métricas, indicador de salud y tarjetas de navegación con iconos Material vectoriales. |
 | **Validaciones** | Token válido. |
 | **Dependencias** | `src/backend/services/dashboard_service.py`, `src/backend/services/view_contract_service.py`. |
 | **Estado** | Funcional. |
-| **Pendientes** | La actividad reciente no siempre refleja las valoraciones más nuevas. |
+| **Pendientes** | Sin pendientes funcionales; mantener validación visual responsive. |
 
 ---
 
@@ -46,7 +46,7 @@
 | **Usuarios involucrados** | Todos los usuarios autenticados. |
 | **Pantallas/rutas** | `src/frontend/app_shell.py`, `src/frontend/navigation.py` |
 | **Entradas** | Selección de módulo por el usuario. |
-| **Procesos** | Sidebar responsive (desktop) o menú hamburguesa (móvil). Búsqueda global de deportistas. Lazy-loading de vistas. |
+| **Procesos** | Sidebar responsive (desktop) o menú hamburguesa (móvil), historial de rutas y carga diferida de vistas. |
 | **Salidas** | Cambio de pantalla con contexto limpio. |
 | **Módulos accesibles** | Dashboard, Deportistas, Valoración Corporal, Historial, Análisis Longitudinal, Entidades, Deportes, Asignaciones, Acerca del Proyecto. |
 | **Estado** | Funcional. |
@@ -290,8 +290,8 @@
 | **Implementación** | `src/frontend/components.py` (helpers responsive), `src/frontend/app_shell.py` (sidebar vs menú hamburguesa), `ResponsiveRow` de Flet en todas las vistas. |
 | **Breakpoints** | xs (móvil pequeño), sm (móvil grande), md (tablet), lg (escritorio). |
 | **Comportamiento** | Escritorio: sidebar + master-detail simultáneo. Móvil/tablet: menú hamburguesa + toggle entre lista y detalle. |
-| **Estado** | Implementado con cambio dinámico entre sidebar y menú móvil, cubierto por pruebas automatizadas. |
-| **Pendientes** | Validación visual final en dispositivos reales móvil/tablet/escritorio. |
+| **Estado** | Implementado con cambio dinámico entre sidebar y menú móvil, compartido por Android, escritorio y Flet Web. Assets y login Web fueron verificados en Chrome móvil. |
+| **Pendientes** | Validación visual autenticada final en navegadores, tablet y dispositivos Android adicionales. |
 
 ---
 
@@ -305,7 +305,7 @@
 | **Entradas** | Credenciales de usuario, tipo de usuario. |
 | **Procesos** | Autenticación y cruce de datos en vista `CDRVistaValoracionCorporal`. |
 | **Salidas** | N/A en UI actualmente. |
-| **Estado** | No implementado en la aplicación web. |
+| **Estado** | No implementado en ninguna interfaz (Android, escritorio ni Web). |
 | **Pendientes** | Desarrollar módulo CRUD de gestión de usuarios, roles (Administrador, Evaluador) y migrar contraseñas a Hash. |
 
 ---
@@ -319,7 +319,7 @@
 | **Rutas/Carpetas** | `tests/`, `scripts/`. |
 | **Entradas** | Scripts de Python (pytest), scripts de PowerShell. |
 | **Procesos** | Ejecución de pruebas unitarias, de integración y endpoints. Migración y mantenimiento mediante scripts auxiliares. |
-| **Salidas** | Reportes de cobertura (183 tests y 3 subpruebas), E2E crítico y estado del preflight. |
+| **Salidas** | Reportes de cobertura (206 tests y 7 subpruebas), E2E crítico y estado del preflight. |
 | **Dependencias** | `pytest`, base de datos SQLite temporal en entorno de pruebas. |
 | **Estado** | Implementado y funcional. |
 | **Pendientes** | Ampliar cobertura de pruebas E2E visuales para UI responsive. |

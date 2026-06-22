@@ -2,6 +2,20 @@
 
 Este archivo registra cambios que afectan el estado, alcance o interpretación de la documentación de Somatocarta.
 
+## 22 de junio de 2026 — Primera versión Flet Web
+
+- Añadida especificación Spec Kit en `docs/specs/flet_web/`.
+- Añadidos `web_main.py` y `start_web.bat` reutilizando la entrada, vistas, tema, activos y `ApiClient` existentes.
+- Añadida fábrica ASGI para despliegue web sin interfaz gráfica.
+- Fijada la dependencia `flet-web==0.85.3` para mantener compatibilidad con Flet.
+- Añadida configuración de host, puerto y orígenes CORS mediante variables de entorno.
+- Adaptadas las descargas PDF para navegador sin cambiar el guardado nativo de Android/escritorio.
+- Añadidas guía de despliegue, checklist QA web y pruebas automatizadas de arranque HTTP.
+- Corregidas las rutas absolutas de Login, Dashboard y Acerca para servir en Web los mismos assets de Android.
+- Verificados todos los recursos de `assets/` desde ASGI y el login responsive real en Chrome a 390 × 844 px.
+- Sustituidas las miniaturas PNG del Dashboard por iconos Material vectoriales uniformes, legibles en Web y Android.
+- Sincronizados README, arquitectura, módulos, guía de usuario, quickstart, publicación, uploads, planes y checklists con el estado funcional del 95% y 206 pruebas aprobadas.
+
 ## 22 de junio de 2026 — Release v1.2.1
 
 - Integridad referencial reforzada mediante migraciones SQL y respuestas HTTP 409 para dependencias activas.

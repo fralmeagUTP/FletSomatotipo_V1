@@ -3,7 +3,6 @@ import flet as ft
 from app_config import session_get, show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.assets import MODULE_IMAGES, asset_path
 from src.frontend.components import content_card, primary_button, responsive_padding, secondary_button
 from src.frontend.navigation import (
     show_acerca,
@@ -67,16 +66,19 @@ def DashboardView(page: ft.Page):
             col={"xs": 12, "sm": 6, "lg": 3},
         )
 
-    def module_card(label, description, image_name, icon, action):
-        visual = (
-            ft.Image(src=asset_path(image_name), width=56, height=56, fit=ft.ImageFit.CONTAIN)
-            if image_name
-            else ft.Icon(icon, size=34, color=theme.PRIMARY_COLOR)
+    def module_card(label, description, icon, action):
+        visual = ft.Container(
+            content=ft.Icon(icon, size=28, color=theme.PRIMARY_COLOR),
+            width=48,
+            height=48,
+            bgcolor=theme.INFO_BACKGROUND,
+            border_radius=theme.RADIUS_SMALL,
+            alignment=ft.alignment.center,
         )
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Container(content=visual, width=64, height=64, alignment=ft.alignment.center),
+                    visual,
                     ft.Column(
                         [
                             ft.Text(label, size=14, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
@@ -184,18 +186,18 @@ def DashboardView(page: ft.Page):
     )
 
     operation_modules = [
-        ("Valoración corporal", "Registrar una nueva medición", MODULE_IMAGES["valoracion"], ft.Icons.MONITOR_WEIGHT_OUTLINED, show_valoracion),
-        ("Análisis de valoración corporal", "Consultar resultados y PDF individual", MODULE_IMAGES["historial"], ft.Icons.ANALYTICS_OUTLINED, show_historial),
-        ("Análisis longitudinal", "Revisar evolución temporal", MODULE_IMAGES["analisis_longitudinal"], ft.Icons.SHOW_CHART, show_analisis_longitudinal),
+        ("Valoración corporal", "Registrar una nueva medición", ft.Icons.MONITOR_WEIGHT_OUTLINED, show_valoracion),
+        ("Análisis de valoración corporal", "Consultar resultados y PDF individual", ft.Icons.ANALYTICS_OUTLINED, show_historial),
+        ("Análisis longitudinal", "Revisar evolución temporal", ft.Icons.SHOW_CHART, show_analisis_longitudinal),
     ]
     management_modules = [
-        ("Deportistas", "Crear y administrar deportistas", MODULE_IMAGES["deportistas"], ft.Icons.PEOPLE_OUTLINE, show_deportistas),
-        ("Deportes", "Gestionar catálogo deportivo", MODULE_IMAGES["deportes"], ft.Icons.SPORTS_SOCCER, show_deportes),
-        ("Entidades", "Administrar instituciones", MODULE_IMAGES["entidades"], ft.Icons.BUSINESS_OUTLINED, show_entidades),
-        ("Asignaciones", "Relacionar deportistas, deportes y entidades", MODULE_IMAGES["asignaciones"], ft.Icons.LINK, show_asignaciones),
+        ("Deportistas", "Crear y administrar deportistas", ft.Icons.PEOPLE_OUTLINE, show_deportistas),
+        ("Deportes", "Gestionar catálogo deportivo", ft.Icons.SPORTS_SOCCER, show_deportes),
+        ("Entidades", "Administrar instituciones", ft.Icons.BUSINESS_OUTLINED, show_entidades),
+        ("Asignaciones", "Relacionar deportistas, deportes y entidades", ft.Icons.LINK, show_asignaciones),
     ]
     system_modules = [
-        ("Acerca del proyecto", "Información del alcance y soporte", None, ft.Icons.INFO_OUTLINE, show_acerca),
+        ("Acerca del proyecto", "Información del alcance y soporte", ft.Icons.INFO_OUTLINE, show_acerca),
     ]
 
     return ft.Container(

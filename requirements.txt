@@ -4,6 +4,7 @@ sqlalchemy
 pymysql
 flet==0.85.3
 flet-charts==0.85.3
+flet-web==0.85.3
 python-dotenv
 pydantic
 email-validator

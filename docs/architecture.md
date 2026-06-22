@@ -1,6 +1,6 @@
 # Arquitectura de Somatocarta v1.2.1
 
-**Fecha de actualización:** 21 de junio de 2026
+**Fecha de actualización:** 22 de junio de 2026
 
 ---
 
@@ -12,9 +12,10 @@ Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, regist
 
 ```text
 main.py                         # Entrada del frontend Flet (v1.2.1)
+web_main.py                     # Entrada y fábrica ASGI de Flet Web
 app_config.py                   # Configuración compartida del frontend
 views/                          # Pantallas Flet (9 vistas)
-  dashboard.py                  # Dashboard con métricas y actividad reciente
+  dashboard.py                  # Dashboard con métricas y accesos rápidos
   deportistas.py                # CRUD de deportistas
   valoracion.py                 # Captura de valoración corporal
   historial.py                  # Análisis individual de valoración
@@ -31,12 +32,13 @@ src/frontend/                   # Cliente API, navegación, tema y helpers UI
   components.py                 # Componentes UI reutilizables
   form_helpers.py               # Construcción de payloads
   table_builders.py             # Filas y agrupación de tablas
-  assets.py                     # Rutas de imágenes
+  assets.py                     # Inventario y resolución Web/nativa de imágenes
   somatocarta.py                # Calibración y render de somatocarta
   composition_analysis.py       # Análisis de composición corporal
   longitudinal_analysis.py      # Análisis temporal
   interpretation.py             # Notas metodológicas
   formatters.py                 # Formateo de valores
+  runtime.py                    # Diferencias controladas de archivos Web/nativo
 src/backend/main.py             # Entrada FastAPI (7 routers)
 src/backend/routers/            # Capa HTTP/API
   auth.py                       # Autenticación (login, JWT)
@@ -64,7 +66,7 @@ src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 183 pruebas en 27 archivos
+tests/                          # 206 pruebas en 30 archivos
 scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
@@ -74,9 +76,11 @@ scripts/                        # Migraciones, inspección y verificación MySQL
 2. `ApiClient.login()` autentica contra `/auth/login`.
 3. La sesión guarda `access_token`, `username`, `login_user` y `user_id`.
 4. `navigation.py` redirige al dashboard.
-5. `app_shell.py` alterna dinámicamente sidebar (desktop) y menú hamburguesa (móvil) al cambiar el ancho, con búsqueda global.
+5. `app_shell.py` alterna dinámicamente sidebar (desktop) y menú hamburguesa (móvil) al cambiar el ancho.
 6. Las vistas usan `ApiClient` para consumir backend.
 7. Componentes reutilizables en `components.py`, `theme.py`, `form_helpers.py`, `table_builders.py`.
+8. `web_main.py` reutiliza la misma función `main` y expone `create_web_app()` para despliegue ASGI.
+9. `asset_src()` entrega nombres públicos en Web y rutas locales en nativo; los controles visuales son compartidos.
 
 ## Flujo backend
 
@@ -86,6 +90,7 @@ scripts/                        # Migraciones, inspección y verificación MySQL
 4. Los servicios usan modelos SQLAlchemy y controlan `commit()` / `rollback()`.
 5. Las rutas privadas usan `Depends(get_current_user)`.
 6. `audit.py` registra operaciones en `CDRTablaAuditoria` y `audit.log`.
+7. `WEB_ALLOWED_ORIGINS` habilita CORS solo para los orígenes declarados por ambiente.
 
 ## Endpoints principales
 
@@ -182,7 +187,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-183 tests y 3 subpruebas en 27 archivos. Comando:
+206 tests y 7 subpruebas en 30 archivos. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v

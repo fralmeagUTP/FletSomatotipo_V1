@@ -21,6 +21,26 @@ class FakePage:
 
 
 class ApiClientTests(unittest.TestCase):
+    def test_pdf_bytes_methods_use_authenticated_endpoints(self):
+        response = Mock(status_code=200, content=b"%PDF-1.4")
+
+        with patch("src.frontend.api_client.requests.request", return_value=response) as request:
+            individual = ApiClient(FakePage()).get_somatotipo_pdf_bytes(9)
+            longitudinal = ApiClient(FakePage()).get_longitudinal_pdf_bytes("1001")
+
+        self.assertEqual(individual, b"%PDF-1.4")
+        self.assertEqual(longitudinal, b"%PDF-1.4")
+        self.assertTrue(request.call_args_list[0].args[1].endswith("/somatotipo/9/pdf"))
+        self.assertTrue(
+            request.call_args_list[1].args[1].endswith(
+                "/somatotipo/vista/deportista/1001/longitudinal/pdf"
+            )
+        )
+        self.assertEqual(
+            request.call_args_list[0].kwargs["headers"]["Authorization"],
+            "Bearer token-prueba",
+        )
+
     def test_list_deportistas_uses_auth_headers_and_search(self):
         response = Mock(status_code=200, content=b"{}")
         response.json.return_value = {

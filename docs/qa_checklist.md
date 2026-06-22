@@ -1,6 +1,6 @@
 # Checklist de evaluación QA — Somatocarta v1.2.1
 
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 
 ---
 
@@ -36,7 +36,7 @@ Marque cada ítem con:
 | 2.3 | Muestra total de deportes | ✅ | |
 | 2.4 | Muestra total de entidades | ✅ | |
 | 2.5 | Muestra total de asignaciones | ✅ | |
-| 2.6 | Muestra actividad reciente | ⚠️ | No siempre refleja las más nuevas |
+| 2.6 | Accesos rápidos usan iconos vectoriales legibles | ✅ | Iconos Material compartidos por Web y Android |
 | 2.7 | Muestra estado del contrato de vista SQL | ✅ | |
 | 2.8 | Navegación a módulos funciona | ✅ | |
 
@@ -153,7 +153,7 @@ Marque cada ítem con:
 
 | # | Criterio | Estado | Observaciones |
 |---|----------|--------|---------------|
-| 11.1 | Login en móvil | 🔲 | No evaluado visualmente |
+| 11.1 | Login en navegador móvil | ✅ | Validado en Chrome a 390 × 844 px con assets completos |
 | 11.2 | Dashboard en móvil | 🔲 | No evaluado visualmente |
 | 11.3 | Historial master-detail en escritorio | 🔲 | No evaluado visualmente |
 | 11.4 | Historial toggle en móvil | 🔲 | No evaluado visualmente |
@@ -168,7 +168,7 @@ Marque cada ítem con:
 | 12.3 | Token JWT con expiración | ✅ | 30 min por defecto, configurable por entorno |
 | 12.4 | Auditoría de operaciones CRUD | ✅ | |
 | 12.5 | Control de roles y permisos | ❌ | No implementado |
-| 12.6 | CORS configurado | ❌ | No configurado explícitamente |
+| 12.6 | CORS configurable por entorno | ✅ | `WEB_ALLOWED_ORIGINS`; falta definir dominio productivo |
 
 ---
 
@@ -177,7 +177,7 @@ Marque cada ítem con:
 | Categoría | Total | Pass | Fail | Parcial | No evaluado |
 |-----------|-------|------|------|---------|-------------|
 | Autenticación | 8 | 8 | 0 | 0 | 0 |
-| Dashboard | 8 | 7 | 0 | 1 | 0 |
+| Dashboard | 8 | 8 | 0 | 0 | 0 |
 | CRUD Deportistas | 14 | 14 | 0 | 0 | 0 |
 | CRUD Entidades | 7 | 7 | 0 | 0 | 0 |
 | CRUD Deportes | 7 | 7 | 0 | 0 | 0 |
@@ -186,13 +186,13 @@ Marque cada ítem con:
 | Análisis Individual | 10 | 10 | 0 | 0 | 0 |
 | Análisis Longitudinal | 6 | 6 | 0 | 0 | 0 |
 | Informes PDF | 8 | 8 | 0 | 0 | 0 |
-| Responsive | 5 | 0 | 0 | 0 | 5 |
-| Seguridad | 6 | 3 | 3 | 0 | 0 |
-| **Total** | **96** | **87** | **3** | **1** | **5** |
+| Responsive | 5 | 1 | 0 | 0 | 4 |
+| Seguridad | 6 | 4 | 2 | 0 | 0 |
+| **Total** | **96** | **90** | **2** | **0** | **4** |
 
-**Tasa de aprobación:** 90.6% (87/96)
-**Tasa de fallo:** 3.1% (3/96)
+**Tasa de aprobación:** 93.8% (90/96)
+**Tasa de fallo:** 2.1% (2/96)
 
 ---
 
-*Checklist actualizado el 21 de junio de 2026. Las pruebas responsive requieren evaluación visual manual. El porcentaje funcional ponderado se documenta en `docs/estado_funcional.md`.*
+*Checklist actualizado el 22 de junio de 2026. La matriz detallada para navegador está en `docs/flet_web_qa_checklist.md`; las vistas autenticadas responsive aún requieren evaluación visual manual. El porcentaje funcional ponderado se documenta en `docs/estado_funcional.md`.*

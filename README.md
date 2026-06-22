@@ -1,7 +1,7 @@
 # Somatocarta
 
 **Versión:** v1.2.1
-**Estado:** 94% funcional; responsive dinámico, E2E crítico y PDFs optimizados
+**Estado:** 95% funcional; Android y Flet Web comparten frontend responsive, E2E crítico y PDFs optimizados
 
 Aplicación Flet + FastAPI para gestión de deportistas, valoración corporal antropométrica, análisis de composición corporal, somatotipo (Heath-Carter), análisis longitudinal e informes PDF.
 
@@ -10,7 +10,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 ## Funcionalidades principales
 
 - **Autenticación JWT** con auditoría de login.
-- **Dashboard** con métricas operativas y actividad reciente.
+- **Dashboard** con métricas operativas y accesos rápidos mediante iconos vectoriales.
 - **CRUD de deportistas** con fotografía, catálogos y validaciones.
 - **CRUD de entidades** deportivas (ligas, clubes, instituciones).
 - **CRUD de deportes** con catálogo.
@@ -33,7 +33,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 | Validación | Pydantic + email-validator |
 | Autenticación | JWT (python-jose) |
 | PDF | Generación manual PDF 1.4 + Pillow para imágenes |
-| Testing | pytest (183 tests) |
+| Testing | pytest (206 tests y 7 subpruebas) |
 | Despliegue | cPanel/Passenger (a2wsgi) |
 
 ## Instalación y ejecución
@@ -93,15 +93,52 @@ O manualmente:
 .\.venv\Scripts\python.exe main.py
 ```
 
+## Ejecución Web con Flet
+
+La versión web reutiliza la misma función `main`, las mismas vistas, el tema y `ApiClient` de Android. Requiere `flet-web==0.85.3`, incluido en `requirements.txt`.
+
+Configurar en `.env`:
+
+```text
+API_URL=http://127.0.0.1:8085
+WEB_HOST=0.0.0.0
+WEB_PORT=8550
+WEB_ALLOWED_ORIGINS=http://localhost:8550,http://127.0.0.1:8550
+```
+
+Iniciar FastAPI y, en otra terminal, Flet Web:
+
+```powershell
+.\start_backend.bat
+.\start_web.bat
+```
+
+Abrir `http://localhost:8550`. También puede ejecutarse manualmente:
+
+```powershell
+$env:APP_RUNTIME="web"
+.\.venv\Scripts\python.exe web_main.py
+```
+
+Para un servidor sin interfaz gráfica se expone una fábrica ASGI:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn web_main:create_web_app --factory --host 0.0.0.0 --port 8550
+```
+
+La guía de publicación, proxy HTTPS y variables está en `docs/flet_web_deployment.md`.
+
 ## Estructura del proyecto
 
 ```text
 SomatoCarta_V1.0/
 ├── main.py                     # Entrada del frontend Flet
+├── web_main.py                 # Entrada y fábrica ASGI de Flet Web
 ├── app_config.py               # Configuración compartida
 ├── passenger_wsgi.py           # Despliegue cPanel/Passenger
 ├── start_backend.bat           # Script de inicio del backend
 ├── start_frontend.bat          # Script de inicio del frontend
+├── start_web.bat               # Script de inicio de Flet Web
 ├── requirements.txt            # Dependencias completas
 ├── requirements-apk.txt        # Dependencias para APK Android
 ├── views/                      # Pantallas Flet (9 vistas)
@@ -125,6 +162,7 @@ SomatoCarta_V1.0/
 │   │   ├── form_helpers.py
 │   │   ├── table_builders.py
 │   │   ├── assets.py
+│   │   ├── runtime.py          # Descargas diferenciadas Web/nativo
 │   │   ├── somatocarta.py
 │   │   ├── composition_analysis.py
 │   │   ├── longitudinal_analysis.py
@@ -140,12 +178,13 @@ SomatoCarta_V1.0/
 │       ├── schemas/            # Schemas Pydantic
 │       ├── services/           # Lógica de negocio y PDFs
 │       └── domain/             # Calculadora antropométrica de referencia
-├── tests/                      # 183 tests en 27 archivos
+├── tests/                      # 206 tests en 30 archivos
 ├── scripts/                    # Migraciones y utilidades
 ├── assets/                     # Imágenes, íconos, logotipos
 └── docs/                       # Documentación
     ├── specs/
-    │   └── somatocarta_spec.md # Especificación Spec Kit
+    │   ├── somatocarta_spec.md # Especificación Spec Kit
+    │   └── flet_web/           # Especificación Web
     ├── architecture.md         # Arquitectura técnica
     ├── modules.md              # Módulos funcionales
     ├── formulas_somatotipo.md  # Fórmulas y cálculos
@@ -158,6 +197,8 @@ SomatoCarta_V1.0/
     ├── changelog_documentation.md
     ├── publicacion.md          # Checklist de publicación
     ├── uploads.md              # Política de uploads
+    ├── flet_web_deployment.md  # Despliegue Web
+    ├── flet_web_qa_checklist.md
     └── qa/                     # Informes históricos
 ```
 
@@ -166,7 +207,7 @@ SomatoCarta_V1.0/
 | Módulo | Descripción |
 |--------|-------------|
 | Login | Autenticación JWT con auditoría |
-| Dashboard | Métricas operativas y actividad reciente |
+| Dashboard | Métricas operativas, estado del sistema y accesos rápidos |
 | Deportistas | CRUD con fotografía y catálogos |
 | Entidades | CRUD de entidades deportivas |
 | Deportes | CRUD de catálogo de deportes |
@@ -178,7 +219,7 @@ SomatoCarta_V1.0/
 | Acerca | Información institucional |
 | Gestión de usuarios | *(Pendiente)* Actualmente en BD sin interfaz |
 | Menú principal | Navegación responsive entre módulos |
-| Pruebas / QA | 183 pruebas unitarias, de integración y E2E (`tests/`) |
+| Pruebas / QA | 206 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
 
 ## Pruebas
 
@@ -186,7 +227,7 @@ SomatoCarta_V1.0/
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Resultado actual: **183 tests y 3 subpruebas pasando**.
+Resultado actual: **206 tests y 7 subpruebas pasando**.
 
 Preflight de publicación:
 
@@ -211,6 +252,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `docs/estado_funcional.md` | Porcentaje funcional, evidencia y pendientes vigentes |
 | `docs/documentation_governance.md` | Inventario, reglas y fuentes de verdad documentales |
 | `docs/changelog_documentation.md` | Historial de cambios documentales |
+| `docs/flet_web_deployment.md` | Ejecución y despliegue de Flet Web |
+| `docs/flet_web_qa_checklist.md` | Checklist responsive y funcional de Flet Web |
+| `docs/specs/flet_web/` | Especificación, plan y tareas de la versión web |
 
 ## Contexto institucional
 
@@ -226,9 +270,9 @@ Somatocarta es desarrollada en el marco de:
 ## Estado actual
 
 - **Versión:** v1.2.1
-- **Tests:** 183 y 3 subpruebas pasando
-- **Estabilidad:** 94% funcional; flujos principales y E2E crítico operativos
-- **Última evaluación QA:** 21 de junio de 2026
+- **Tests:** 206 y 7 subpruebas pasando
+- **Estabilidad:** 95% funcional; flujos principales, Web inicial y E2E crítico operativos
+- **Última evaluación QA:** 22 de junio de 2026
 - **MySQL:** 76 valoraciones verificadas, 0 diferencias de cálculo
 
 ## Advertencias importantes
@@ -237,6 +281,7 @@ Somatocarta es desarrollada en el marco de:
 2. **Seguridad:** Las contraseñas están almacenadas en texto plano por compatibilidad con la base de datos heredada. Se recomienda migrar a hash seguro.
 3. **Integridad referencial:** La API y la base activa bloquean la eliminación de deportistas, entidades o deportes con dependencias. Las bases adicionales deben aplicar las migraciones `002` y `003`.
 4. **Duplicados:** La API y la migración MySQL impiden deportes y asignaciones duplicadas.
+5. **Flet Web:** Antes de publicar, configure `WEB_ALLOWED_ORIGINS`, HTTPS y un proxy con soporte WebSocket.
 
 ## Notas de mantenimiento
 

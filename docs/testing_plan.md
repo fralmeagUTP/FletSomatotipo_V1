@@ -1,6 +1,6 @@
 # Plan de pruebas — Somatocarta v1.2.1
 
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 
 ---
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ### 1.3 Resultado actual
 
-**183 tests y 3 subpruebas pasando** en 27 archivos de prueba.
+**206 tests y 7 subpruebas pasando** en 30 archivos de prueba.
 
 ---
 
@@ -59,7 +59,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 |---------|-----------|
 | `test_frontend_api_client.py` | Cliente API HTTP |
 | `test_frontend_assets.py` | Rutas de assets |
-| `test_frontend_components.py` | Componentes UI y cambio responsive móvil/escritorio |
+| `test_flet_web.py` | Entrada Web, fábrica ASGI, entrega PDF y publicación de todos los assets |
+| `test_frontend_components.py` | Componentes UI y cambio responsive móvil/escritorio/Web |
 | `test_frontend_composition_analysis.py` | Análisis de composición corporal |
 | `test_frontend_dashboard_redesign.py` | Dashboard y métricas |
 | `test_frontend_formatters.py` | Formateo de valores |
@@ -129,16 +130,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | EN-001 | Crear entidad | Completar formulario | Entidad creada |
 | EN-002 | NIT duplicado | Crear con NIT existente | Error 400 |
 | EN-003 | Editar entidad | Modificar y guardar | Actualización exitosa |
-| EN-004 | Eliminar entidad | Eliminar entidad con asignaciones | **Actualmente elimina sin restricción** |
+| EN-004 | Eliminar entidad | Eliminar entidad con asignaciones | HTTP 409; no elimina por `RESTRICT` |
 
 ### 3.4 CRUD Deportes
 
 | ID | Caso | Paso | Resultado esperado |
 |----|------|------|--------------------|
 | DE-001 | Crear deporte | Ingresar nombre | Deporte creado |
-| DE-002 | Deporte duplicado | Crear con nombre existente | **Actualmente permite duplicado** |
+| DE-002 | Deporte duplicado | Crear con nombre existente | HTTP 409; no crea duplicado |
 | DE-003 | Editar deporte | Modificar nombre | Actualización exitosa |
-| DE-004 | Eliminar deporte | Eliminar deporte con asignaciones | **Actualmente elimina sin restricción** |
+| DE-004 | Eliminar deporte | Eliminar deporte con asignaciones | HTTP 409; no elimina por `RESTRICT` |
 
 ### 3.5 Valoraciones
 
@@ -203,6 +204,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | Laptop | 1366×768 |
 | Escritorio | 1920×1080 |
 
+La entrada Web debe probarse adicionalmente mediante `web_main:create_web_app`, respuesta HTTP y conexión WebSocket desde navegador.
+
 ### 5.2 Pantallas a evaluar
 
 - Login
@@ -223,15 +226,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | NEG-002 | JSON malformado | 422 |
 | NEG-003 | Campo con tipo incorrecto | 422 |
 | NEG-004 | ID inexistente en GET | 404 |
-| NEG-005 | Asignación duplicada | **Actualmente permite** |
-| NEG-006 | Deporte duplicado | **Actualmente permite** |
-| NEG-007 | Eliminar con referencias | **Actualmente permite sin restricción** |
+| NEG-005 | Asignación duplicada | HTTP 409; no crea duplicado |
+| NEG-006 | Deporte duplicado | HTTP 409; no crea duplicado |
+| NEG-007 | Eliminar con referencias | HTTP 409 y política MySQL `RESTRICT` |
 
 ---
 
 ## 7. Criterios de aceptación de pruebas
 
-- Todos los tests automatizados deben pasar (183/183 y 3 subpruebas).
+- Todos los tests automatizados deben pasar (206/206 y 7 subpruebas).
 - Los flujos funcionales críticos deben operar sin errores.
 - Los PDFs generados deben ser válidos y contener los datos correctos.
 - La interfaz debe ser usable en las 5 resoluciones objetivo.

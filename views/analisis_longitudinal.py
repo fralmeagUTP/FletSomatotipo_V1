@@ -6,6 +6,7 @@ from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.components import page_header, responsive_padding, set_busy
 from src.frontend.longitudinal_analysis import build_longitudinal_panel
 from src.frontend.navigation import show_dashboard
+from src.frontend.runtime import deliver_pdf
 
 
 def AnalisisLongitudinalView(page: ft.Page):
@@ -60,8 +61,12 @@ def AnalisisLongitudinalView(page: ft.Page):
             show_snack(page, "No se encontró la identificación del deportista.")
             return
         try:
-            path = api.download_longitudinal_pdf(identi)
-            show_snack(page, f"PDF longitudinal guardado en: {path}")
+            target = deliver_pdf(
+                page,
+                api.get_longitudinal_pdf_bytes(identi),
+                f"analisis_longitudinal_{identi}.pdf",
+            )
+            show_snack(page, f"PDF longitudinal generado: {target}")
         except ApiError as error:
             show_snack(page, str(error))
         except Exception as error:

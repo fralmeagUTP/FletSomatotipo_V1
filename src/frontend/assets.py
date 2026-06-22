@@ -35,3 +35,9 @@ def asset_path(filename: str) -> str:
     if candidate.exists():
         return str(candidate)
     return filename
+
+
+def asset_src(page, filename: str) -> str:
+    if bool(getattr(page, "web", False)):
+        return filename
+    return asset_path(filename)
