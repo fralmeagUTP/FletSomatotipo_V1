@@ -15,6 +15,7 @@ Este archivo registra cambios que afectan el estado, alcance o interpretación d
 - Verificados todos los recursos de `assets/` desde ASGI y el login responsive real en Chrome a 390 × 844 px.
 - Sustituidas las miniaturas PNG del Dashboard por iconos Material vectoriales uniformes, legibles en Web y Android.
 - Sincronizados README, arquitectura, módulos, guía de usuario, quickstart, publicación, uploads, planes y checklists con el estado funcional del 95% y 206 pruebas aprobadas.
+- Añadida configuración sin VPS mediante Render, dependencias Web separadas y dominio recomendado `somatocarta.nyquist.app`, conservando FastAPI/MySQL en cPanel.
 
 ## 22 de junio de 2026 — Release v1.2.1
 

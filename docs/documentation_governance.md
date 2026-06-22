@@ -33,6 +33,7 @@ docs/
 ├── publicacion.md                    # Checklist de publicación
 ├── uploads.md                        # Política de uploads
 ├── flet_web_deployment.md            # Ejecución y despliegue Web
+├── flet_web_no_vps.md                 # Despliegue administrado con backend cPanel
 └── flet_web_qa_checklist.md           # Checklist QA Web
 ```
 

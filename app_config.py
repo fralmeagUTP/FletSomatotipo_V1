@@ -10,8 +10,8 @@ def _clean_base_url(value: str) -> str:
     return value.rstrip("/")
 
 
-API_URL = _clean_base_url(os.getenv("API_URL", "http://127.0.0.1:8085"))
-#API_URL = _clean_base_url(os.getenv("API_URL", "https://nyquist.app/somatocarta"))
+#API_URL = _clean_base_url(os.getenv("API_URL", "http://127.0.0.1:8085"))
+API_URL = _clean_base_url(os.getenv("API_URL", "https://nyquist.app/somatocarta"))
 BACKEND_HOST = os.getenv("BACKEND_HOST", "0.0.0.0")
 BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8085"))
 APP_RUNTIME = os.getenv("APP_RUNTIME", "native").strip().lower()

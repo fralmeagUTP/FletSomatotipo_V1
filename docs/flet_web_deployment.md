@@ -1,5 +1,7 @@
 # Ejecución y despliegue de Flet Web
 
+> Para el hosting compartido actual, use la arquitectura administrada descrita en `docs/flet_web_no_vps.md`. No requiere VPS y mantiene FastAPI/MySQL en cPanel.
+
 ## Arquitectura
 
 Flet Web y FastAPI son procesos separados:

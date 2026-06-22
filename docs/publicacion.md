@@ -71,6 +71,8 @@ Antes de exponer la interfaz web:
 - completar `docs/flet_web_qa_checklist.md` en escritorio, tablet y móvil;
 - confirmar que fotografías y PDF funcionan desde el dominio final.
 
+Sin VPS, use `render.yaml`, `requirements-web.txt` y la guía `docs/flet_web_no_vps.md`; el backend y los uploads permanecen en cPanel.
+
 ## Cambios que requieren decisión manual
 
 - Imágenes históricas ya versionadas en `src/backend/static/uploads/`: decidir si deben permanecer en Git o migrarse fuera del repositorio.

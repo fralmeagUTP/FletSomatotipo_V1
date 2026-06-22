@@ -128,6 +128,8 @@ Para un servidor sin interfaz gráfica se expone una fábrica ASGI:
 
 La guía de publicación, proxy HTTPS y variables está en `docs/flet_web_deployment.md`.
 
+Para hosting compartido sin VPS, la arquitectura recomendada conserva FastAPI en cPanel y publica Flet Web en Render bajo `https://somatocarta.nyquist.app`. Consulte `docs/flet_web_no_vps.md`.
+
 ## Estructura del proyecto
 
 ```text
@@ -140,6 +142,8 @@ SomatoCarta_V1.0/
 ├── start_frontend.bat          # Script de inicio del frontend
 ├── start_web.bat               # Script de inicio de Flet Web
 ├── requirements.txt            # Dependencias completas
+├── requirements-web.txt        # Dependencias mínimas de Flet Web
+├── render.yaml                 # Despliegue administrado sin VPS
 ├── requirements-apk.txt        # Dependencias para APK Android
 ├── views/                      # Pantallas Flet (9 vistas)
 │   ├── dashboard.py
@@ -253,6 +257,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `docs/documentation_governance.md` | Inventario, reglas y fuentes de verdad documentales |
 | `docs/changelog_documentation.md` | Historial de cambios documentales |
 | `docs/flet_web_deployment.md` | Ejecución y despliegue de Flet Web |
+| `docs/flet_web_no_vps.md` | Despliegue recomendado manteniendo el backend en cPanel |
 | `docs/flet_web_qa_checklist.md` | Checklist responsive y funcional de Flet Web |
 | `docs/specs/flet_web/` | Especificación, plan y tareas de la versión web |
 
