@@ -53,7 +53,7 @@ build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
 - Código de versión: `7`
 - Android mínimo: API 24, Android 7.0
 - Arquitectura de dependencias Python: ARM64
-- SHA-256: `2300AD71A6EB6733679B777E40016DDD6D365CC7DFE146D5748CE5F7F88AB4C3`
+- SHA-256: `C8D35A8558910087B74C86CFDA5AD20232DF445B9776D09881DEAA939E201309`
 - Firma: debug, apta para pruebas internas, no para publicación en Google Play
 
 ## 6. Instrucciones de instalación

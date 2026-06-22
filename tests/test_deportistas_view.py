@@ -1,3 +1,5 @@
+import asyncio
+
 import flet as ft
 
 import views.deportistas as deportistas_module
@@ -8,6 +10,7 @@ class FakePage:
         self.width = 1280
         self.height = 800
         self.overlay = []
+        self.services = []
         self.snack_bar = None
         self.updated = 0
 
@@ -71,15 +74,47 @@ def test_deportistas_view_builds_with_current_flet_api(monkeypatch):
 
     assert isinstance(view, ft.Container)
     assert not any(isinstance(control, ft.FilePicker) for control in page.overlay)
+    assert any(isinstance(service, ft.FilePicker) for service in page.services)
 
 
-def test_deportistas_avoids_runtime_incompatible_controls():
+def test_deportistas_registers_file_picker_as_service():
     source = open(deportistas_module.__file__, encoding="utf-8").read()
 
-    assert "ft.FilePicker(" not in source
+    assert "file_picker = ft.FilePicker()" in source
+    assert "page.services.append(file_picker)" in source
+    assert "page.overlay.append(file_picker)" not in source
     assert "ft.Tabs(" not in source
     assert "ft.TabBar(" not in source
     assert "form_content = ft.Column(" in source
+
+
+def test_photo_button_reads_selected_image_bytes(monkeypatch):
+    monkeypatch.setattr(deportistas_module, "ApiClient", FakeApiClient)
+    page = FakePage()
+    view = deportistas_module.DeportistasView(page)
+    picker = next(service for service in page.services if isinstance(service, ft.FilePicker))
+
+    async def fake_pick_files(**kwargs):
+        assert kwargs["with_data"] is True
+        assert kwargs["file_type"] == ft.FilePickerFileType.IMAGE
+        return [ft.FilePickerFile(id=1, name="foto.jpg", size=4, bytes=b"foto")]
+
+    monkeypatch.setattr(picker, "pick_files", fake_pick_files)
+    controls = controls_in(view)
+    add_button = next(control for control in controls if getattr(control, "content", None) == "Agregar Deportista")
+    add_button.on_click(None)
+    dialog_controls = controls_in(page.overlay)
+    photo_button = next(
+        control
+        for control in dialog_controls
+        if getattr(control, "content", None) == "Cargar o cambiar foto"
+    )
+
+    asyncio.run(photo_button.on_click(None))
+
+    preview = next(control for control in dialog_controls if isinstance(control, ft.Image))
+    assert preview.src == b"foto"
+    assert any(isinstance(control, ft.Text) and control.value == "foto.jpg" for control in dialog_controls)
 
 
 def test_add_edit_and_delete_buttons_open_their_dialogs(monkeypatch):

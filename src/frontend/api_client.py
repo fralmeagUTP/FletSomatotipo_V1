@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 import requests
@@ -154,15 +155,25 @@ class ApiClient:
     def delete_asignacion(self, assignment_id: int):
         return self._request("DELETE", f"/asignaciones/{assignment_id}")
 
-    def upload_photo(self, file_path: str):
-        path = Path(file_path)
-        with path.open("rb") as file:
+    def upload_photo(self, file_path: str | None = None, file_name: str | None = None, file_bytes: bytes | None = None):
+        upload_name = file_name or (Path(file_path).name if file_path else "foto.jpg")
+        content_type = mimetypes.guess_type(upload_name)[0] or "application/octet-stream"
+        if file_bytes is not None:
             result = self._request(
                 "POST",
                 "/files/upload",
-                files={"file": (path.name, file)},
+                files={"file": (upload_name, file_bytes, content_type)},
                 timeout=30,
             )
+        else:
+            path = Path(file_path)
+            with path.open("rb") as file:
+                result = self._request(
+                    "POST",
+                    "/files/upload",
+                    files={"file": (upload_name, file, content_type)},
+                    timeout=30,
+                )
         return f"{self.base_url}{result['url']}"
 
     def create_somatotipo(self, data: dict):
