@@ -90,6 +90,23 @@ class ApiClientTests(unittest.TestCase):
 
         self.assertIn("backend", str(context.exception))
 
+    def test_upload_photo_accepts_android_file_bytes(self):
+        response = Mock(status_code=200, content=b"{}")
+        response.json.return_value = {"url": "/static/uploads/foto.jpg"}
+
+        with patch("src.frontend.api_client.requests.request", return_value=response) as request:
+            result = ApiClient(FakePage()).upload_photo(
+                file_name="foto.jpg",
+                file_bytes=b"contenido-imagen",
+            )
+
+        self.assertTrue(result.endswith("/static/uploads/foto.jpg"))
+        self.assertEqual(request.call_args.args[0], "POST")
+        self.assertEqual(
+            request.call_args.kwargs["files"],
+            {"file": ("foto.jpg", b"contenido-imagen", "image/jpeg")},
+        )
+
     def test_create_somatotipo_posts_payload(self):
         response = Mock(status_code=200, content=b'{"id": 1}')
         response.json.return_value = {"id": 1}

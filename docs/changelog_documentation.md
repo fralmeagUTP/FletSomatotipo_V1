@@ -9,9 +9,9 @@ Este archivo registra cambios que afectan el estado, alcance o interpretación d
 - Confirmaciones de eliminación incorporadas en los módulos CRUD.
 - Dashboard y navegación móvil simplificados y adaptados a Android.
 - Análisis corporal, longitudinal, gráficos y generación de PDF ajustados para pantallas móviles.
-- Pantalla Deportistas migrada a controles compatibles con el runtime Android; la selección local de fotografía queda temporalmente deshabilitada por incompatibilidad de `FilePicker`.
+- Pantalla Deportistas migrada a controles compatibles con Android; `FilePicker` se registra como servicio y permite cargar o cambiar fotografías desde almacenamiento o galería.
 - Retroceso Android configurado mediante navegación de rutas y callback clásico del manifiesto.
-- APK ARM64 `versionCode=8`, versión visible `1.2.1` y firma verificada; SHA-256 `2300AD71A6EB6733679B777E40016DDD6D365CC7DFE146D5748CE5F7F88AB4C3`.
+- APK ARM64 `versionCode=8`, versión visible `1.2.1` y firma verificada; SHA-256 `C8D35A8558910087B74C86CFDA5AD20232DF445B9776D09881DEAA939E201309`.
 - Suite automatizada completa aprobada.
 
 ## 21 de junio de 2026 — Navegación móvil

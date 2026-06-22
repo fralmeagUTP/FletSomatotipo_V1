@@ -36,6 +36,7 @@ def DeportistasView(page: ft.Page):
 
     # State
     current_edit_id = None 
+    selected_photo = None
     api = ApiClient(page)
 
     def open_control(control):
@@ -111,6 +112,43 @@ def DeportistasView(page: ft.Page):
         fit=ft.ImageFit.CONTAIN,
         border_radius=ft.border_radius.all(10)
     )
+    photo_name = ft.Text("Sin foto nueva seleccionada", size=12, color=theme.SUBTITLE_COLOR)
+    file_picker = ft.FilePicker()
+    if not hasattr(page, "services"):
+        page.services = []
+    if file_picker not in page.services:
+        page.services.append(file_picker)
+
+    async def pick_photo(_):
+        nonlocal selected_photo
+        try:
+            files = await file_picker.pick_files(
+                allow_multiple=False,
+                file_type=ft.FilePickerFileType.IMAGE,
+                with_data=True,
+            )
+            if not files:
+                return
+            selected_photo = files[0]
+            if selected_photo.bytes is not None:
+                img_preview.src = selected_photo.bytes
+            elif selected_photo.path:
+                img_preview.src = selected_photo.path
+            else:
+                selected_photo = None
+                show_snack(page, "Android no permitió leer la foto seleccionada")
+                return
+            photo_name.value = selected_photo.name
+            page.update()
+        except Exception as error:
+            show_snack(page, f"No se pudo seleccionar la foto: {error}")
+            page.update()
+
+    photo_button = ft.ElevatedButton(
+        "Cargar o cambiar foto",
+        icon=ft.Icons.ADD_A_PHOTO,
+        on_click=pick_photo,
+    )
 
     # Location - Birth
     pais_nac = ft.TextField(label="País Nacimiento")
@@ -165,8 +203,9 @@ def DeportistasView(page: ft.Page):
     )
 
     def clean_form():
-        nonlocal current_edit_id
+        nonlocal current_edit_id, selected_photo
         current_edit_id = None
+        selected_photo = None
         identi.value = ""
         identi.read_only = False
         tipo_identi.value = None
@@ -174,6 +213,7 @@ def DeportistasView(page: ft.Page):
         sexo.value = None
         fecha_nac.value = ""
         img_preview.src = "https://via.placeholder.com/150"
+        photo_name.value = "Sin foto nueva seleccionada"
         pais_nac.value = ""
         dep_nac.value = ""
         ciudad_nac.value = ""
@@ -203,9 +243,15 @@ def DeportistasView(page: ft.Page):
             page.update()
             return
 
-        set_busy(page, [save_button], True)
+        set_busy(page, [save_button, photo_button], True)
         try:
             final_photo_url = img_preview.src
+            if selected_photo is not None:
+                final_photo_url = api.upload_photo(
+                    file_path=selected_photo.path,
+                    file_name=selected_photo.name,
+                    file_bytes=selected_photo.bytes,
+                )
             data = build_deportista_payload(deportista_fields, final_photo_url)
 
             if current_edit_id:
@@ -224,7 +270,7 @@ def DeportistasView(page: ft.Page):
         except Exception as ex:
             show_snack(page, f"Error de conexion: {ex}")
         finally:
-            set_busy(page, [save_button], False)
+            set_busy(page, [save_button, photo_button], False)
         page.update()
 
     save_button.on_click = save_deportista
@@ -244,6 +290,10 @@ def DeportistasView(page: ft.Page):
             ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.ResponsiveRow([
                 ft.Container(content=img_preview, col={"xs": 12, "sm": 6}),
+                ft.Container(
+                    content=ft.Column([photo_button, photo_name], spacing=6),
+                    col={"xs": 12, "sm": 6},
+                ),
             ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Divider(),
             ft.Text("Ubicación y contacto", weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
@@ -309,8 +359,10 @@ def DeportistasView(page: ft.Page):
             print(f"Error opening modal: {ex}")
         
     def open_edit_modal(deportista):
-        nonlocal current_edit_id
+        nonlocal current_edit_id, selected_photo
         current_edit_id = deportista["IDENTI_DEPORTISTA"]
+        selected_photo = None
+        photo_name.value = "Sin foto nueva seleccionada"
         
         # Populate Basic
         identi.value = deportista["IDENTI_DEPORTISTA"]
