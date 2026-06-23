@@ -1,17 +1,17 @@
 import flet as ft
 
 from src.frontend import theme
-from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, asset_path
+from src.frontend.assets import LOGO_CDR, LOGO_ISC, LOGO_NYQUIST, LOGO_SOMATOCARTA, LOGO_UTP, asset_src
 from src.frontend.components import content_card, responsive_padding
 
 
 def AcercaView(page: ft.Page):
     logos = ft.Row(
         [
-            ft.Image(src=asset_path(LOGO_CDR), height=36, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_ISC), height=36, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_UTP), height=36, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_NYQUIST), height=36, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_CDR), height=36, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_ISC), height=36, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_UTP), height=36, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_NYQUIST), height=36, fit=ft.ImageFit.CONTAIN),
         ],
         spacing=14,
         wrap=True,
@@ -34,7 +34,7 @@ def AcercaView(page: ft.Page):
                     ft.ResponsiveRow(
                         [
                             ft.Container(
-                                ft.Image(src=asset_path(LOGO_SOMATOCARTA), width=120, height=120, fit=ft.ImageFit.CONTAIN),
+                                ft.Image(src=asset_src(page, LOGO_SOMATOCARTA), width=120, height=120, fit=ft.ImageFit.CONTAIN),
                                 col={"xs": 12, "md": 3},
                                 alignment=ft.alignment.center,
                             ),

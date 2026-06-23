@@ -1,6 +1,6 @@
 # Informe final de actualización documental — Somatocarta v1.2.1
 
-> **Documento histórico (15 de junio de 2026).** Describe la consolidación inicial. La actualización integral vigente del 21 de junio de 2026 está registrada en `docs/changelog_documentation.md` y prevalece ante cualquier cifra o pendiente de este informe.
+> **Documento histórico (15 de junio de 2026).** Describe la consolidación inicial. La actualización integral vigente del 22 de junio de 2026 está registrada en `docs/changelog_documentation.md` y prevalece ante cualquier cifra o pendiente de este informe.
 
 **Fecha:** 15 de junio de 2026
 **Enfoque:** SDD — Spec-Driven Development con plantilla Spec Kit

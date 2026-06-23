@@ -8,6 +8,7 @@ from src.frontend.components import page_header, page_width, responsive_padding,
 from src.frontend.composition_analysis import build_composition_panel, mass_balance_message, mass_balance_summary
 from src.frontend.interpretation import bmi_methodology_note, parse_float
 from src.frontend.navigation import show_dashboard
+from src.frontend.runtime import deliver_pdf
 from src.frontend.somatocarta import build_somatocarta_card
 from src.frontend.table_builders import build_historial_item, group_historial_rows
 
@@ -383,10 +384,12 @@ def HistorialView(page: ft.Page, initial_query=None):
             pdf_button.text = "Generando PDF..."
             page.update()
             try:
-                target_path = api.download_somatotipo_pdf(somatotipo_id)
-                show_snack(page, f"PDF descargado: {target_path}")
-                if hasattr(page, "launch_url"):
-                    page.launch_url(target_path.as_uri())
+                target = deliver_pdf(
+                    page,
+                    api.get_somatotipo_pdf_bytes(somatotipo_id),
+                    f"valoracion_{somatotipo_id}.pdf",
+                )
+                show_snack(page, f"PDF generado: {target}")
             except ApiError as error:
                 show_snack(page, str(error))
             except Exception as error:

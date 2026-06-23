@@ -54,6 +54,7 @@ def main(page):
             LOGO_UTP,
             WINDOW_ICON,
             asset_path,
+            asset_src,
         )
         from src.frontend.navigation import show_dashboard
         android_log("app imports loaded")
@@ -101,7 +102,7 @@ def main(page):
     # --- UI Elements ---
     
     logo_icon = ft.Image(
-        src=asset_path(LOGO_SOMATOCARTA),
+        src=asset_src(page, LOGO_SOMATOCARTA),
         width=116,
         height=116,
         fit=ft.ImageFit.CONTAIN,
@@ -109,10 +110,10 @@ def main(page):
 
     institutional_logos = ft.Row(
         [
-            ft.Image(src=asset_path(LOGO_CDR), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_ISC), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_UTP), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_path(LOGO_NYQUIST), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_CDR), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_ISC), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_UTP), height=32, fit=ft.ImageFit.CONTAIN),
+            ft.Image(src=asset_src(page, LOGO_NYQUIST), height=32, fit=ft.ImageFit.CONTAIN),
         ],
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=12,

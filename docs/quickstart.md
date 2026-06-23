@@ -1,7 +1,7 @@
 # Guía rápida de inicio — Somatocarta v1.2.1
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 
 ---
 
@@ -31,6 +31,9 @@ python -m venv .venv
 
 # Terminal 2: Frontend (en otra terminal)
 .\start_frontend.bat
+
+# Alternativa Web
+.\start_web.bat
 ```
 
 ### Opción manual (comandos directos)
@@ -41,6 +44,9 @@ python -m venv .venv
 
 # Frontend
 .\.venv\Scripts\python.exe main.py
+
+# Flet Web
+.\.venv\Scripts\python.exe web_main.py
 ```
 
 ---
@@ -49,7 +55,15 @@ python -m venv .venv
 
 La URL de la API se toma desde la variable `API_URL` en `.env`.
 
-Si no existe, se usa por defecto: `http://127.0.0.1:8085`
+Si no existe, la aplicación usa el backend público `https://nyquist.app/somatocarta`. Para desarrollo local se recomienda definir explícitamente `API_URL=http://127.0.0.1:8085`.
+
+Para Flet Web también se admiten:
+
+```text
+WEB_HOST=0.0.0.0
+WEB_PORT=8550
+WEB_ALLOWED_ORIGINS=http://localhost:8550,http://127.0.0.1:8550
+```
 
 ### Acceder desde otro dispositivo en la red local
 
@@ -74,6 +88,7 @@ API_URL=http://192.168.1.106:8085
 | API raíz | `http://127.0.0.1:8085/` |
 | Documentación Swagger | `http://127.0.0.1:8085/docs` |
 | Health check | `http://127.0.0.1:8085/health` |
+| Flet Web | `http://127.0.0.1:8550/` |
 
 ---
 
@@ -85,7 +100,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **183 tests y 3 subpruebas pasando**.
+Estado esperado: **206 tests y 7 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -155,3 +170,5 @@ git push origin main --tags
 | Estado funcional vigente | `docs/estado_funcional.md` |
 | Plan de pruebas | `docs/testing_plan.md` |
 | Gobernanza y changelog | `docs/documentation_governance.md`, `docs/changelog_documentation.md` |
+| Despliegue Flet Web | `docs/flet_web_deployment.md` |
+| QA Flet Web | `docs/flet_web_qa_checklist.md` |

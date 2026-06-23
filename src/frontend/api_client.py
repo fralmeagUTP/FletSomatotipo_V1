@@ -235,7 +235,7 @@ class ApiClient:
         return self._request("DELETE", f"/somatotipo/{somatotipo_id}")
 
     def download_somatotipo_pdf(self, somatotipo_id: int, output_dir: str | Path | None = None):
-        pdf_bytes = self._request_bytes("GET", f"/somatotipo/{somatotipo_id}/pdf")
+        pdf_bytes = self.get_somatotipo_pdf_bytes(somatotipo_id)
         if not pdf_bytes.startswith(b"%PDF"):
             raise ApiError("El servidor no devolvió un PDF válido.")
         target_dir = Path(output_dir) if output_dir else Path.home() / "Downloads"
@@ -244,8 +244,11 @@ class ApiClient:
         target_path.write_bytes(pdf_bytes)
         return target_path
 
+    def get_somatotipo_pdf_bytes(self, somatotipo_id: int):
+        return self._request_bytes("GET", f"/somatotipo/{somatotipo_id}/pdf")
+
     def download_longitudinal_pdf(self, identi: str, output_dir: str | Path | None = None):
-        pdf_bytes = self._request_bytes("GET", f"/somatotipo/vista/deportista/{identi}/longitudinal/pdf")
+        pdf_bytes = self.get_longitudinal_pdf_bytes(identi)
         if not pdf_bytes.startswith(b"%PDF"):
             raise ApiError("El servidor no devolvió un PDF válido.")
         target_dir = Path(output_dir) if output_dir else Path.home() / "Downloads"
@@ -253,3 +256,6 @@ class ApiClient:
         target_path = target_dir / f"analisis_longitudinal_{identi}.pdf"
         target_path.write_bytes(pdf_bytes)
         return target_path
+
+    def get_longitudinal_pdf_bytes(self, identi: str):
+        return self._request_bytes("GET", f"/somatotipo/vista/deportista/{identi}/longitudinal/pdf")

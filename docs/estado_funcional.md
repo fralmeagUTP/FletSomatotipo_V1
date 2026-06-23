@@ -1,7 +1,7 @@
 # Estado funcional
 
-**Fecha de evaluación:** 21 de junio de 2026  
-**Estado estimado:** 94% funcional
+**Fecha de evaluación:** 22 de junio de 2026
+**Estado estimado:** 95% funcional
 
 El porcentaje es una estimación de preparación operativa, no cobertura de código. Se calcula sobre seis áreas ponderadas que suman 100 puntos.
 
@@ -9,11 +9,11 @@ El porcentaje es una estimación de preparación operativa, no cobertura de cód
 |------|------|-----------|-----------|
 | Flujos principales | 30 | 30 | El E2E recorre login, fotografía, CRUD, asignación, valoración, edición, PDF y eliminación ordenada. |
 | Cálculos e integridad de datos | 25 | 25 | Las 76 valoraciones MySQL coinciden con la calculadora de referencia; claves foráneas y reglas `RESTRICT` verificadas. |
-| Calidad automatizada | 15 | 15 | 183 pruebas y 3 subpruebas unitarias, de integración y E2E aprobadas. |
+| Calidad automatizada | 15 | 15 | 206 pruebas y 7 subpruebas unitarias, de integración y E2E aprobadas. |
 | Interfaz e informes | 15 | 14 | Shell responsive dinámico y PDFs variables optimizados; falta validación visual en dispositivos reales. |
-| Seguridad y accesos | 10 | 5 | JWT y auditoría activos; faltan hash de contraseñas, roles administrativos y política CORS explícita. |
+| Seguridad y accesos | 10 | 6 | JWT, auditoría y CORS configurable activos; faltan hash de contraseñas, roles administrativos y fijar orígenes productivos. |
 | Operación y documentación | 5 | 5 | Backend, health check, migraciones y procedimientos documentados. |
-| **Total** | **100** | **94** | **La aplicación supera el objetivo del 90% funcional.** |
+| **Total** | **100** | **95** | **La aplicación supera el objetivo del 90% funcional.** |
 
 ## Validaciones cerradas
 
@@ -25,12 +25,14 @@ El porcentaje es una estimación de preparación operativa, no cobertura de cód
 - Responsive: sidebar y menú móvil cambian dinámicamente al redimensionar sin perder el layout interno de la vista.
 - E2E: flujo crítico completo validado sobre FastAPI y SQLite aislado.
 - PDF: contenido distinto por deportista y generación principal inferior a 1 segundo en pruebas.
+- Flet Web: entrada local y fábrica ASGI funcionales; todos los assets móviles se sirven desde Web y el login fue validado en Chrome a 390 × 844 px.
+- Dashboard: accesos rápidos usan iconos Material vectoriales uniformes en Web y Android.
 
 ## Trabajo restante
 
 1. Migrar contraseñas heredadas a un hash seguro.
 2. Implementar administración de usuarios, roles y permisos.
-3. Definir CORS por ambiente de despliegue.
+3. Definir el valor productivo de `WEB_ALLOWED_ORIGINS`, dominio, HTTPS y proxy WebSocket.
 4. Ejecutar validación visual en dispositivos reales: móvil, tablet y escritorio.
 5. Obtener aprobación metodológica formal del protocolo antropométrico.
 

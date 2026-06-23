@@ -1,0 +1,21 @@
+# Tareas: Somatocarta Flet Web
+
+- [x] Auditar arquitectura, módulos, endpoints y documentación actual.
+- [x] Definir alcance, requisitos y criterios de aceptación web.
+- [x] Definir plan de reutilización y separación Android/Web.
+- [x] Crear el punto de entrada `web_main.py`.
+- [x] Crear script local `start_web.bat`.
+- [x] Añadir configuración explícita del modo web y `API_URL`.
+- [x] Adaptar el arranque compartido a cambios de tamaño del navegador.
+- [ ] Verificar login JWT real desde un navegador contra producción.
+- [x] Verificar menú y acceso a todos los módulos mediante pruebas compartidas.
+- [x] Adaptar descargas PDF para navegador sin afectar Android.
+- [x] Conservar selección, carga y visualización web de fotografías.
+- [x] Verificar que todos los assets móviles se sirvan y rendericen en Web.
+- [x] Añadir pruebas automatizadas de entrada y configuración web.
+- [x] Ejecutar pruebas específicas de frontend y navegación.
+- [x] Iniciar la aplicación ASGI y comprobar respuesta HTTP local.
+- [x] Ejecutar la suite completa de regresión (206 pruebas y 7 subpruebas).
+- [x] Documentar ejecución, despliegue y variables de entorno.
+- [x] Crear checklist QA responsive y de seguridad.
+- [x] Actualizar README y registro documental.

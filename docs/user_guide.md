@@ -1,6 +1,6 @@
 # Guía de usuario — Somatocarta v1.2.1
 
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 
 ---
 
@@ -23,6 +23,9 @@ Somatocarta es una aplicación para registrar deportistas, realizar valoraciones
 
 # Terminal 2: Frontend
 .\start_frontend.bat
+
+# Alternativa desde navegador
+.\start_web.bat
 ```
 
 ---
@@ -50,7 +53,8 @@ El Dashboard es la pantalla principal. Muestra:
 - **Tarjetas de métricas:** total de deportistas, valoraciones, asignaciones y estado del sistema.
 - **Accesos operativos:** métricas, valoración, análisis y módulos de gestión.
 - **Módulos del sistema:** accesos rápidos a cada funcionalidad.
-- **Botón de cerrar sesión** en la esquina superior derecha.
+- **Iconos Material vectoriales:** accesos legibles y consistentes en Web y Android.
+- **Cerrar sesión** al final del menú principal.
 
 En móviles, use **Menú** para desplegar la navegación. El panel puede desplazarse e incluye **Cerrar sesión**.
 
@@ -58,7 +62,7 @@ En móviles, use **Menú** para desplegar la navegación. El panel puede desplaz
 
 - **Escritorio:** Use el menú lateral izquierdo para navegar entre módulos.
 - **Móvil/Tablet:** Use el botón de menú (☰) para acceder a los módulos.
-- **Búsqueda global:** Escriba el nombre de un deportista en la barra de búsqueda para acceder rápidamente a su valoración o historial.
+- **Atrás:** En Android y navegador puede regresar usando el historial de rutas cuando la plataforma lo permita.
 
 ---
 
@@ -73,11 +77,12 @@ En móviles, use **Menú** para desplegar la navegación. El panel puede desplaz
 
 ### 4.2 Crear un deportista
 
-1. Pulse el botón **Nuevo deportista**.
-2. Complete el formulario en 3 pestañas:
-   - **Datos básicos:** Identificación, tipo de documento, nombre, sexo, fecha de nacimiento.
-   - **Ubicación y contacto:** País, departamento, ciudad, dirección, teléfono, email.
-   - **Socio-económico:** Estrato, nivel educativo, institución, observaciones.
+1. Pulse el botón **Agregar Deportista**.
+2. Complete el formulario único desplazable:
+   - **Datos básicos:** identificación, tipo de documento, nombre, sexo, fecha de nacimiento y fotografía.
+   - **Ubicación y contacto:** país, departamento, ciudad, dirección, teléfono y email.
+   - **Información adicional:** estrato, nivel educativo, institución y observaciones.
+3. Para agregar o cambiar la foto, pulse **Cargar o cambiar foto** y seleccione una imagen JPG o PNG.
 3. Opcionalmente, cargue una fotografía (JPG o PNG, máximo 5 MB).
 4. Pulse **Guardar**.
 

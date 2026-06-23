@@ -1,7 +1,7 @@
 # Somatocarta — Software Specification (Spec Kit)
 
 **Versión:** 1.0
-**Fecha:** 21 de junio de 2026
+**Fecha:** 22 de junio de 2026
 **Estado:** Vigente
 
 ---
@@ -158,7 +158,7 @@ US-003: Como usuario, quiero cerrar sesión explícitamente cuando termine mi se
 
 ```text
 US-004: Como usuario, quiero ver un resumen del sistema al iniciar sesión para conocer el estado general.
-US-005: Como usuario, quiero ver la actividad reciente para saber qué operaciones se realizaron.
+US-005: Como usuario, quiero identificar rápidamente el estado del sistema y sus módulos principales.
 US-006: Como usuario, quiero acceder rápidamente a los módulos principales desde el dashboard.
 ```
 
@@ -231,7 +231,7 @@ El sistema debe permitir inicio de sesión con usuario y contraseña, generar to
 
 ### FR-002: Dashboard
 
-El sistema debe mostrar métricas operativas (totales de deportistas, valoraciones, deportes, entidades, asignaciones), actividad reciente y estado de salud de la vista SQL.
+El sistema debe mostrar métricas operativas, estado de salud de la vista SQL y accesos rápidos a los módulos principales.
 
 ### FR-003: CRUD de deportistas
 
@@ -587,8 +587,8 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 |----|-----------|
 | UX-001 | Dashboard con saludo personalizado y métricas clave. |
 | UX-002 | Navegación lateral (sidebar) en escritorio, menú hamburguesa en móvil. |
-| UX-003 | Búsqueda global de deportistas desde la barra de navegación. |
-| UX-004 | Tarjetas de módulo con imágenes representativas. |
+| UX-003 | Historial de rutas compatible con navegación atrás en Android y navegador. |
+| UX-004 | Tarjetas de módulo con iconos Material vectoriales uniformes. |
 | UX-005 | Estados vacíos con mensajes informativos y acción sugerida. |
 | UX-006 | Formularios con validación en tiempo real. |
 | UX-007 | Confirmación modal antes de operaciones destructivas. |
@@ -651,7 +651,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 183 tests y 3 subpruebas pasando.
+**Resultado actual:** 206 tests y 7 subpruebas pasando.
 
 ---
 
@@ -1099,7 +1099,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (183 tests y 3 subpruebas).
+- Suite de pruebas amplia para el tamaño actual de la app (206 tests y 7 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.

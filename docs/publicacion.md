@@ -48,6 +48,8 @@ git status --short
 - `app_config.py`
 - `start_backend.bat`
 - `start_frontend.bat`
+- `start_web.bat`
+- `web_main.py`
 - `src/backend/`
 - `src/frontend/`
 - `views/`
@@ -57,6 +59,19 @@ git status --short
 - `.env.example`
 - `.gitignore`
 - `passenger_wsgi.py` si se va a desplegar en cPanel/Passenger
+
+## Publicación Flet Web
+
+Antes de exponer la interfaz web:
+
+- definir `API_URL` con HTTPS;
+- definir `WEB_ALLOWED_ORIGINS` sin comodines;
+- ejecutar Flet mediante `web_main:create_web_app --factory`;
+- configurar el proxy inverso para conservar WebSocket;
+- completar `docs/flet_web_qa_checklist.md` en escritorio, tablet y móvil;
+- confirmar que fotografías y PDF funcionan desde el dominio final.
+
+Sin VPS, use `render.yaml`, `requirements-web.txt` y la guía `docs/flet_web_no_vps.md`; el backend y los uploads permanecen en cPanel.
 
 ## Cambios que requieren decisión manual
 
@@ -106,7 +121,7 @@ En la base activa, las migraciones `002`, `003` y `004` están aplicadas. La ver
 ## Comando de commit sugerido
 
 ```powershell
-git add .gitignore .env.example README.md docs main.py app_config.py passenger_wsgi.py start_backend.bat start_frontend.bat requirements.txt scripts/preflight_publicacion.ps1 scripts/migrations src/backend src/frontend views tests
+git add .gitignore .env.example README.md docs main.py web_main.py app_config.py passenger_wsgi.py start_backend.bat start_frontend.bat start_web.bat requirements.txt scripts/preflight_publicacion.ps1 scripts/migrations src/backend src/frontend views tests
 git commit -m "Mejora arquitectura frontend backend y pruebas"
 ```
 

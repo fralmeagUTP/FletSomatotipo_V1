@@ -11,7 +11,13 @@ from src.frontend.assets import (
     REFERENCE_IMAGES,
     WINDOW_ICON,
     asset_path,
+    asset_src,
 )
+
+
+class FakePage:
+    def __init__(self, web):
+        self.web = web
 
 
 def test_brand_assets_exist():
@@ -39,6 +45,24 @@ def test_dashboard_module_images_exist():
 def test_reference_images_exist():
     for filename in REFERENCE_IMAGES.values():
         assert Path(asset_path(filename)).exists()
+
+
+def test_web_assets_use_public_logical_names():
+    assert asset_src(FakePage(web=True), LOGO_SOMATOCARTA) == LOGO_SOMATOCARTA
+
+
+def test_native_assets_keep_existing_local_resolution():
+    assert Path(asset_src(FakePage(web=False), LOGO_SOMATOCARTA)).exists()
+
+
+def test_static_image_controls_do_not_send_local_paths_to_web():
+    sources = [
+        Path("main.py").read_text(encoding="utf-8"),
+        Path("views/dashboard.py").read_text(encoding="utf-8"),
+        Path("views/acerca.py").read_text(encoding="utf-8"),
+    ]
+
+    assert all("src=asset_path(" not in source for source in sources)
 
 
 def test_main_sets_window_icon_to_somatocarta_logo():
