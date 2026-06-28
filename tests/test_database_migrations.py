@@ -5,6 +5,7 @@ MIGRATION_PATH = Path("scripts/migrations/001_unique_somatotipo_deportista_fecha
 REFERENTIAL_MIGRATION_PATH = Path("scripts/migrations/002_referential_integrity.sql")
 RESTRICT_FK_MIGRATION_PATH = Path("scripts/migrations/003_normalize_foreign_keys_restrict.sql")
 FORMULA_MIGRATION_PATH = Path("scripts/migrations/004_correct_anthropometric_formulas.sql")
+PHYSICAL_TEST_MIGRATION_PATH = Path("scripts/migrations/005_prueba_fisica_representacion_utp.sql")
 
 
 def test_unique_somatotipo_fecha_migration_has_duplicate_guard_and_unique_index():
@@ -67,3 +68,17 @@ def test_formula_migration_normalizes_units_and_replaces_equations():
     assert "THEN 0.241 ELSE 0.209" in sql
     assert "CAST(NULL AS DECIMAL(19, 2)) AS PorcGrasoJonson" in sql
     assert "fat.PESO_kg - fat.PesoRasoYuazs" in sql
+
+
+def test_physical_test_migration_aligns_athlete_fk_column_before_constraint():
+    sql = PHYSICAL_TEST_MIGRATION_PATH.read_text(encoding="utf-8")
+
+    create_table_sql = sql.split("DELIMITER //", 1)[0]
+
+    assert "CREATE TABLE IF NOT EXISTS CDRTablaValoracionDeportiva" in sql
+    assert "INFORMATION_SCHEMA.COLUMNS" in sql
+    assert "CHARACTER_SET_NAME" in sql
+    assert "COLLATION_NAME" in sql
+    assert "MODIFY `IDENTI_DEPORTISTA`" in sql
+    assert "ADD CONSTRAINT fk_valoracion_deportiva_deportista" in sql
+    assert "FOREIGN KEY (IDENTI_DEPORTISTA)" not in create_table_sql

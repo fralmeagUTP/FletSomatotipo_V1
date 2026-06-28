@@ -161,4 +161,4 @@ def show_asignaciones(page):
 def show_acerca(page):
     from views.acerca import AcercaView
 
-    show_view(page, AcercaView, active_key="acerca", title="Acerca del proyecto", route="/acerca")
+    show_view(page, AcercaView, active_key="acerca", title="Acerca del proyecto", show_search=False, route="/acerca")

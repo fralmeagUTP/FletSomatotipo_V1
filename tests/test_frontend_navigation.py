@@ -207,10 +207,11 @@ class NavigationTests(unittest.TestCase):
         with patch("views.acerca.AcercaView", return_value={"acerca": True}), patch(
             "src.frontend.app_shell.build_app_shell",
             return_value={"shell": "acerca"},
-        ):
+        ) as shell:
             show_acerca(page)
 
         self.assertEqual(page.controls, [{"shell": "acerca"}])
+        self.assertFalse(shell.call_args.kwargs["show_search"])
 
     def test_android_back_route_restores_previous_screen(self):
         page = RoutePage()

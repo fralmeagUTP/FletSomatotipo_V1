@@ -305,21 +305,11 @@ def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", 
         col={"xs": 2, "sm": 1, "md": 1},
         alignment=ft.alignment.center_left,
     )
-    title_container = ft.Container(
-        content=ft.Column(
-            [
-                ft.Text(title, size=22, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                ft.Text("Panel operativo de Somatocarta", size=12, color=theme.SUBTITLE_COLOR),
-            ],
-            spacing=2,
-        ),
-        col={"xs": 10, "sm": 5, "md": 4, "lg": 3},
-    )
     search_container = None
     if show_search:
         search_container = ft.Container(
             content=build_global_search(page),
-            col={"xs": 12, "sm": 6, "md": 5, "lg": 6},
+            col={"xs": 12, "sm": 11, "md": 8, "lg": 9},
         )
     actions_container = ft.Container(
         content=ft.Row(
@@ -331,7 +321,7 @@ def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", 
         col={"xs": 12, "sm": 12, "md": 3, "lg": 3},
         visible=bool(actions),
     )
-    top_bar_controls = [mobile_menu_container, title_container]
+    top_bar_controls = [mobile_menu_container]
     if search_container is not None:
         top_bar_controls.append(search_container)
     top_bar_controls.append(actions_container)
@@ -359,12 +349,13 @@ def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", 
 
     def update_shell_layout(event=None, refresh=True):
         is_mobile = page_width(page) < SHELL_MOBILE_BREAKPOINT
+        has_top_bar_content = is_mobile or search_container is not None or bool(actions)
         sidebar.visible = not is_mobile
         mobile_menu_container.visible = is_mobile
         mobile_navigation_panel.visible = mobile_navigation_panel.visible if is_mobile else False
-        title_container.col = {"xs": 10, "sm": 5, "md": 4, "lg": 3} if is_mobile else {"md": 4, "lg": 3}
+        top_bar.visible = has_top_bar_content
         if search_container is not None:
-            search_container.col = {"xs": 12, "sm": 6, "md": 5, "lg": 6} if is_mobile else {"md": 5, "lg": 6}
+            search_container.col = {"xs": 12, "sm": 11, "md": 8, "lg": 9} if is_mobile else {"md": 8, "lg": 9}
         if refresh:
             page.update()
 

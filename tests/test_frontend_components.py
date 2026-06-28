@@ -19,6 +19,18 @@ from src.frontend import theme
 
 
 class ComponentsTests(unittest.TestCase):
+    def _collect_text_values(self, control):
+        values = []
+        value = getattr(control, "value", None)
+        if isinstance(value, str):
+            values.append(value)
+        content = getattr(control, "content", None)
+        if content is not None:
+            values.extend(self._collect_text_values(content))
+        for child in getattr(control, "controls", []) or []:
+            values.extend(self._collect_text_values(child))
+        return values
+
     def test_page_header_adds_back_button_when_callback_exists(self):
         header = page_header("Deportistas", on_back=lambda event: None)
 
@@ -101,6 +113,17 @@ class ComponentsTests(unittest.TestCase):
         self.assertFalse(mobile_menu.visible)
         self.assertEqual(previous_resize_calls, [resize_event])
         self.assertEqual(page.update_count, 1)
+
+    def test_app_shell_hides_text_header_when_no_search_or_actions(self):
+        page = SimpleNamespace(width=1280, session={}, overlay=[], update=lambda: None)
+
+        shell = build_app_shell(page, ft.Text("Contenido"), title="Dashboard", show_search=False)
+        body = shell.content.controls[1]
+        top_bar = body.controls[0]
+
+        self.assertFalse(top_bar.visible)
+        self.assertNotIn("Dashboard", self._collect_text_values(top_bar))
+        self.assertNotIn("Panel operativo de Somatocarta", self._collect_text_values(top_bar))
 
 
 if __name__ == "__main__":
