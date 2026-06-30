@@ -5,6 +5,8 @@ from src.frontend.components import (
     confirm_delete_dialog,
     danger_icon_button,
     edit_icon_button,
+    is_mobile,
+    mobile_search_field,
     page_header,
     responsive_padding,
     set_busy,
@@ -137,13 +139,21 @@ def ValoracionView(page: ft.Page, initial_query=None):
 
     observaciones = ft.TextField(label="Observaciones", multiline=True, min_lines=2, max_lines=4)
 
-    athlete_search_button = ft.IconButton(ft.Icons.SEARCH)
-    athlete_search = ft.TextField(
-        label="Buscar Deportista (ID o Nombre) *",
-        value=initial_query or "",
-        suffix=athlete_search_button,
-        on_submit=lambda e: search_athlete(e.control.value),
-    )
+    if is_mobile(page):
+        athlete_search = mobile_search_field(
+            "Buscar deportista por nombre o ID",
+            value=initial_query or "",
+            on_search=lambda query: search_athlete(query),
+        )
+        athlete_search_button = athlete_search.suffix
+    else:
+        athlete_search_button = ft.IconButton(ft.Icons.SEARCH)
+        athlete_search = ft.TextField(
+            label="Buscar Deportista (ID o Nombre) *",
+            value=initial_query or "",
+            suffix=athlete_search_button,
+            on_submit=lambda e: search_athlete(e.control.value),
+        )
 
     athlete_info_text = ft.Text("Ningún deportista seleccionado", color="red", size=13)
 

@@ -1,6 +1,6 @@
-# Arquitectura de Somatocarta v1.2.5
+# Arquitectura de Somatocarta v1.2.11
 
-**Fecha de actualización:** 22 de junio de 2026
+**Fecha de actualización:** 30 de junio de 2026
 
 ---
 
@@ -8,11 +8,12 @@
 
 Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, registrar valoraciones antropométricas, consultar historial de somatotipo, generar análisis individuales y longitudinales, y producir informes PDF. Forma parte de SINVADE (Sistema Integral de Valoración Deportiva).
 
-## Cambios arquitectónicos v1.2.5
+## Cambios arquitectónicos v1.2.11
 
 - `main.py` sigue siendo la entrada compartida, pero las vistas seleccionan composiciones específicas mediante `is_mobile`; Android no renderiza forzosamente los paneles Web.
 - `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
-- `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio/Android y compartir Android mediante `ACTION_SEND` + `FileProvider`.
+- `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio y compartir Android mediante `ft.Share` con bytes y MIME `application/pdf`.
+- `navigation.py` mantiene una pila de `ft.View`: Atrás restaura la vista anterior, los flujos internos registran manejadores locales y la vista raíz cierra la actividad.
 - Deportistas usa un formulario móvil de cuatro pasos. Deportes, entidades y asignaciones usan listas compactas y formularios exclusivos para móvil.
 - El listado de asignaciones incorpora nombres descriptivos de deportista, deporte y entidad sin eliminar sus identificadores contractuales.
 - La indisponibilidad SQL durante login se traduce a HTTP 503 con mensaje controlado.
@@ -20,7 +21,7 @@ Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, regist
 ## Estructura principal
 
 ```text
-main.py                         # Entrada del frontend Flet (v1.2.5)
+main.py                         # Entrada del frontend Flet (v1.2.11)
 web_main.py                     # Entrada y fábrica ASGI de Flet Web
 app_config.py                   # Configuración compartida del frontend
 views/                          # Pantallas Flet (9 vistas)
@@ -75,7 +76,7 @@ src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 227 pruebas en 35 archivos
+tests/                          # 236 pruebas en 36 archivos
 scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
@@ -196,7 +197,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-227 tests y 7 subpruebas en 35 archivos. Comando:
+236 tests y 7 subpruebas en 36 archivos, con cobertura global medida del 74%. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v
@@ -211,7 +212,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 - Los schemas Pydantic viven fuera de routers para mantener separación de capas.
 - Los cálculos clínicos viven en la vista SQL.
 - Las relaciones críticas usan política `RESTRICT`; la API responde HTTP 409 cuando existen dependencias.
-- Las contraseñas están en texto plano por compatibilidad con base de datos heredada.
+- Las contraseñas siguen en texto plano por compatibilidad heredada; es un bloqueante de publicación, no una decisión objetivo.
 - El despliegue en cPanel usa `passenger_wsgi.py` con `a2wsgi`.
 
 ## Pendientes recomendados
@@ -219,8 +220,10 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 - Validar clínicamente la definición SQL de `CDRVistaValoracionCorporal`.
 - Aplicar las migraciones `002`, `003` y `004` únicamente en bases adicionales o restauradas; la base activa ya está migrada y verificada.
 - Migrar contraseñas a hash seguro.
-- Añadir control de roles y permisos y definir CORS por ambiente.
-- Completar pruebas E2E visuales responsive.
+- Eliminar la clave JWT por defecto, exigir `SECRET_KEY` fuerte y limitar intentos de login.
+- Añadir control de roles/permisos, cabeceras HTTP defensivas y CORS por ambiente.
+- Firmar con keystore de release y reducir el APK de aproximadamente 330 MB.
+- Elevar cobertura de Historial (6%) y Dashboard (18%); completar pruebas visuales tablet/escritorio.
 - Añadir migraciones de base de datos con Alembic.
 - Limpiar binarios/backups antes de publicar.
 

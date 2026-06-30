@@ -14,6 +14,7 @@ from src.frontend.navigation import (
     show_deportistas,
     show_entidades,
     show_historial,
+    show_login_view,
     show_analisis_longitudinal,
     show_valoracion,
     show_view,
@@ -61,6 +62,23 @@ class AsyncRoutePage(RoutePage):
 
     def run_task(self, handler, *args):
         asyncio.run(handler(*args))
+
+
+class ViewStackPage(AsyncRoutePage):
+    def __init__(self):
+        super().__init__()
+        self.views = []
+        self.on_view_pop = None
+        self.update_count = 0
+        self.bgcolor = None
+        self.window = SimpleNamespace(close=self._close_window)
+        self.window_closed = False
+
+    async def _close_window(self):
+        self.window_closed = True
+
+    def update(self):
+        self.update_count += 1
 
 
 class NavigationTests(unittest.TestCase):
@@ -244,6 +262,70 @@ class NavigationTests(unittest.TestCase):
 
         self.assertEqual(page.controls, [{"shell": "dashboard"}])
         self.assertEqual(page.pushed_routes, ["/dashboard"])
+
+    def test_android_system_back_pops_native_view_stack(self):
+        page = ViewStackPage()
+
+        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}), patch(
+            "views.deportes.DeportesView", return_value={"deportes": True}
+        ), patch(
+            "src.frontend.app_shell.build_app_shell",
+            side_effect=lambda page, content, **kwargs: {"shell": kwargs["active_key"]},
+        ):
+            show_dashboard(page)
+            show_deportes(page)
+
+            self.assertEqual([view.route for view in page.views], ["/dashboard", "/deportes"])
+            asyncio.run(page.on_view_pop(SimpleNamespace(view=page.views[-1], route="/deportes")))
+
+        self.assertEqual([view.route for view in page.views], ["/dashboard"])
+        self.assertEqual(page.route, "/dashboard")
+
+    def test_android_system_back_prefers_local_screen_handler(self):
+        page = ViewStackPage()
+        local_calls = []
+
+        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}), patch(
+            "src.frontend.app_shell.build_app_shell", return_value={"shell": "dashboard"}
+        ):
+            show_dashboard(page)
+
+        page._somatocarta_local_back_handler = lambda: local_calls.append("closed-detail") or True
+        asyncio.run(page.on_view_pop(SimpleNamespace(view=page.views[-1], route="/dashboard")))
+
+        self.assertEqual(local_calls, ["closed-detail"])
+        self.assertEqual([view.route for view in page.views], ["/dashboard"])
+        self.assertFalse(page.window_closed)
+
+    def test_android_system_back_closes_app_from_root_screen(self):
+        page = ViewStackPage()
+
+        with patch("views.dashboard.DashboardView", return_value={"dashboard": True}), patch(
+            "src.frontend.app_shell.build_app_shell", return_value={"shell": "dashboard"}
+        ):
+            show_dashboard(page)
+
+        asyncio.run(page.on_view_pop(SimpleNamespace(view=page.views[-1], route="/dashboard")))
+
+        self.assertTrue(page.window_closed)
+        self.assertEqual([view.route for view in page.views], ["/dashboard"])
+
+    def test_logout_replaces_protected_view_stack_with_login_root(self):
+        page = ViewStackPage()
+        page._somatocarta_route_renderers = {"/dashboard": object(), "/deportes": object()}
+        page.views.extend(
+            [
+                __import__("flet").View(route="/dashboard"),
+                __import__("flet").View(route="/deportes"),
+            ]
+        )
+
+        show_login_view(page, {"login": True})
+
+        self.assertEqual([view.route for view in page.views], ["/login"])
+        self.assertEqual(page.views[0].controls, [{"login": True}])
+        self.assertEqual(page._somatocarta_route_renderers, {})
+        self.assertEqual(page._somatocarta_active_route, "/login")
 
 
 

@@ -16,7 +16,7 @@ android_log("module import start")
 # Ensure the current directory is in the path for module resolution
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-APP_VERSION = "v1.2.5"
+APP_VERSION = "v1.2.11"
 
 def main(page):
     android_log("main(page) entered")
@@ -57,7 +57,7 @@ def main(page):
             asset_path,
             asset_src,
         )
-        from src.frontend.navigation import show_dashboard
+        from src.frontend.navigation import show_dashboard, show_login_view
         android_log("app imports loaded")
     except Exception as ex:
         android_log(f"app import failed: {ex}")
@@ -237,12 +237,10 @@ def main(page):
         """Muestra la pantalla de login"""
         nonlocal login_in_progress
         login_in_progress = False
-        page.clean()
         page.vertical_alignment = ft.MainAxisAlignment.CENTER
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         page.bgcolor = ft.Colors.WHITE
-        page.add(build_login_ui())
-        page.update()
+        show_login_view(page, build_login_ui())
 
     def handle_logout():
         """Cierra la sesión y vuelve al login"""

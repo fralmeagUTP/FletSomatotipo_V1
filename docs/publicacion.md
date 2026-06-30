@@ -81,6 +81,14 @@ Antes de exponer la interfaz web:
 - probar login, CRUD móviles, cierre de sesión, visor PDF y selector de aplicaciones;
 - calcular SHA-256 y registrar nombre, tamaño y hash del artefacto en el changelog.
 
+Bloqueantes vigentes para publicación pública:
+
+- migrar `PSW_USER` de texto plano a bcrypt/Argon2;
+- eliminar la clave JWT predeterminada y exigir `SECRET_KEY` fuerte;
+- aplicar rate limiting al login;
+- firmar con keystore de release;
+- sustituir controles Flet obsoletos antes de actualizar a Flet 1.0.
+
 Sin VPS, use `render.yaml`, `requirements-web.txt` y la guía `docs/flet_web_no_vps.md`; el backend y los uploads permanecen en cPanel.
 
 ## Cambios que requieren decisión manual

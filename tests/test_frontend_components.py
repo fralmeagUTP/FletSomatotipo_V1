@@ -11,6 +11,7 @@ from src.frontend.components import (
     horizontal_scroll,
     info_banner,
     is_mobile,
+    mobile_search_field,
     mobile_top_bar,
     page_header,
     responsive_dialog_size,
@@ -39,6 +40,22 @@ class ComponentsTests(unittest.TestCase):
 
         self.assertEqual(len(header.controls), 2)
         self.assertEqual(header.controls[1].value, "Deportistas")
+
+    def test_mobile_search_field_uses_standard_style_and_internal_action(self):
+        queries = []
+        field = mobile_search_field("Buscar deportista...", on_search=queries.append)
+
+        self.assertEqual(field.height, 50)
+        self.assertEqual(field.text_size, 14)
+        self.assertEqual(field.border_radius, theme.MOBILE_RADIUS)
+        self.assertEqual(field.focused_border_color, theme.PRIMARY_BLUE)
+        self.assertIsInstance(field.suffix, ft.IconButton)
+
+        field.value = "10025735"
+        field.suffix.on_click(SimpleNamespace())
+        field.on_submit(SimpleNamespace(control=field))
+
+        self.assertEqual(queries, ["10025735", "10025735"])
 
     def test_page_header_without_back_button_has_only_title(self):
         header = page_header("Dashboard")

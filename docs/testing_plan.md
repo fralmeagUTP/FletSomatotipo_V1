@@ -1,6 +1,6 @@
-# Plan de pruebas — Somatocarta v1.2.5
+# Plan de pruebas — Somatocarta v1.2.11
 
-**Fecha:** 22 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ### 1.3 Resultado actual
 
-**227 tests y 7 subpruebas pasando** en 35 archivos de prueba.
+**236 tests y 7 subpruebas pasando** en 36 archivos de prueba. Cobertura global medida: **74%**.
 
 ---
 
@@ -68,7 +68,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `test_frontend_global_search.py` | Cierre del modal, navegación diferida y transmisión del deportista seleccionado |
 | `test_frontend_interpretation.py` | Notas de interpretación clínica |
 | `test_frontend_longitudinal_analysis.py` | Análisis longitudinal |
-| `test_flet_web.py` | Entrega Web, apertura externa y compartir PDF Android con `FileProvider` |
+| `test_flet_web.py` | Entrega Web, apertura externa y compartir PDF Android con `ft.Share` |
 | `test_frontend_navigation.py` | Navegación entre pantallas |
 | `test_frontend_somatocarta.py` | Calibración y render de somatocarta |
 | `test_frontend_table_builders.py` | Constructores de tablas |
@@ -179,7 +179,17 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | PDF-001 | PDF individual | Descargar PDF de valoración | Archivo PDF válido (~1.7 MB) |
 | PDF-002 | PDF longitudinal | Descargar PDF longitudinal | Archivo PDF válido (~1.7 MB) |
 | PDF-003 | Contenido PDF | Verificar datos en el PDF | Nombre, ID, métricas presentes |
-| PDF-004 | Compartir en Android | Pulsar Compartir PDF | Intent `ACTION_SEND`, MIME `application/pdf` y URI `content://` con permiso temporal |
+| PDF-004 | Compartir en Android | Pulsar Compartir PDF | Selector nativo, MIME `application/pdf` y URI temporal con permiso de lectura |
+
+### Navegación Android
+
+| ID | Caso | Acción | Resultado esperado |
+|---|---|---|---|
+| AND-NAV-001 | Atrás desde pantalla secundaria | Abrir un módulo y pulsar Atrás | Regresa a la vista anterior |
+| AND-NAV-002 | Atrás desde detalle de historial | Abrir detalle y pulsar Atrás | Regresa al listado sin salir del módulo |
+| AND-NAV-003 | Atrás en formulario de deportista | Avanzar pasos y pulsar Atrás | Retrocede un paso; desde el primero regresa al listado |
+| AND-NAV-004 | Atrás desde Dashboard/Login | Pulsar Atrás con una sola vista | Cierra la actividad sin pantalla blanca |
+| AND-NAV-005 | Logout | Cerrar sesión desde una vista autenticada | Login queda como única vista y Atrás no restaura contenido protegido |
 
 ---
 
@@ -242,7 +252,7 @@ La entrada Web debe probarse adicionalmente mediante `web_main:create_web_app`, 
 
 ## 7. Criterios de aceptación de pruebas
 
-- Todos los tests automatizados deben pasar (227/227 y 7 subpruebas).
+- Todos los tests automatizados deben pasar (236/236 y 7 subpruebas).
 - Los flujos funcionales críticos deben operar sin errores.
 - Los PDFs generados deben ser válidos y contener los datos correctos.
 - La interfaz debe ser usable en las 5 resoluciones objetivo.

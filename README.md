@@ -1,7 +1,7 @@
 # Somatocarta
 
-**Versión:** v1.2.5
-**Estado:** 95% funcional; Android y Flet Web comparten frontend responsive, E2E crítico y PDFs optimizados
+**Versión:** v1.2.11
+**Estado:** 95% funcional y aprobado para pruebas internas; la publicación requiere cerrar hallazgos de seguridad y firma
 
 Aplicación Flet + FastAPI para gestión de deportistas, valoración corporal antropométrica, análisis de composición corporal, somatotipo (Heath-Carter), análisis longitudinal e informes PDF.
 
@@ -23,8 +23,9 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 - **Diseño responsive** para escritorio, tablet y móvil (incluye Android).
 - **Experiencias separadas Web/Android:** la Web conserva paneles amplios y el APK usa listados compactos, formularios móviles y navegación inferior.
 - **CRUD móvil especializado:** deportistas en cuatro pasos; deportes, entidades y asignaciones con tarjetas y formularios dedicados.
-- **PDF en Android:** apertura en visor externo y uso compartido mediante el selector nativo (`ACTION_SEND`) con `FileProvider`.
+- **PDF en Android:** uso compartido mediante `ft.Share`, MIME `application/pdf` y el selector nativo.
 - **Accesibilidad operativa:** revelado de contraseña y cierre de sesión funcional desde el encabezado móvil.
+- **Navegación Android:** Atrás restaura la vista anterior, retrocede en flujos internos y cierra la app desde Dashboard o Login.
 
 ## Tecnologías
 
@@ -37,7 +38,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 | Validación | Pydantic + email-validator |
 | Autenticación | JWT (python-jose) |
 | PDF | Generación manual PDF 1.4 + Pillow para imágenes |
-| Testing | pytest (227 tests y 7 subpruebas) |
+| Testing | pytest (236 tests y 7 subpruebas) |
 | Despliegue | cPanel/Passenger (a2wsgi) |
 
 ## Instalación y ejecución
@@ -186,7 +187,7 @@ SomatoCarta_V1.0/
 │       ├── schemas/            # Schemas Pydantic
 │       ├── services/           # Lógica de negocio y PDFs
 │       └── domain/             # Calculadora antropométrica de referencia
-├── tests/                      # 227 tests en 35 archivos
+├── tests/                      # 236 tests en 36 archivos
 ├── scripts/                    # Migraciones y utilidades
 ├── assets/                     # Imágenes, íconos, logotipos
 └── docs/                       # Documentación
@@ -228,7 +229,7 @@ SomatoCarta_V1.0/
 | Acerca | Información institucional |
 | Gestión de usuarios | *(Pendiente)* Actualmente en BD sin interfaz |
 | Menú principal | Navegación responsive entre módulos |
-| Pruebas / QA | 227 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
+| Pruebas / QA | 236 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
 
 ## Pruebas
 
@@ -236,7 +237,7 @@ SomatoCarta_V1.0/
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Resultado actual: **227 tests y 7 subpruebas pasando**.
+Resultado actual: **236 tests y 7 subpruebas pasando**.
 
 Preflight de publicación:
 
@@ -279,10 +280,10 @@ Somatocarta es desarrollada en el marco de:
 
 ## Estado actual
 
-- **Versión:** v1.2.5
-- **Tests:** 227 y 7 subpruebas pasando
+- **Versión:** v1.2.11
+- **Tests:** 236 y 7 subpruebas pasando; cobertura global 74%
 - **Estabilidad:** 95% funcional; flujos principales, Web inicial y E2E crítico operativos
-- **Última evaluación QA:** 22 de junio de 2026
+- **Última evaluación QA:** 30 de junio de 2026 ([informe integral](docs/qa/informe_pruebas_integrales_2026-06-30.md))
 - **MySQL:** 76 valoraciones verificadas, 0 diferencias de cálculo
 
 ## Advertencias importantes
@@ -293,6 +294,7 @@ Somatocarta es desarrollada en el marco de:
 4. **Duplicados:** La API y la migración MySQL impiden deportes y asignaciones duplicadas.
 5. **Flet Web:** Antes de publicar, configure `WEB_ALLOWED_ORIGINS`, HTTPS y un proxy con soporte WebSocket.
 6. **Protección del hosting:** Imunify360 Bot Protection debe excluir la ruta de la API (`/somatocarta/*`) o responderá 415/Access denied a Android, Python y Flet Web.
+7. **Publicación:** El APK vigente usa firma debug. Antes de distribuirlo se debe migrar contraseñas a hash, exigir una clave JWT fuerte, limitar intentos de login y firmar con un keystore de release.
 
 ## Notas de mantenimiento
 

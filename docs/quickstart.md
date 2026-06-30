@@ -1,7 +1,7 @@
-# Guía rápida de inicio — Somatocarta v1.2.5
+# Guía rápida de inicio — Somatocarta v1.2.11
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
-**Fecha:** 29 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
@@ -100,7 +100,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **227 tests y 7 subpruebas pasando**.
+Estado esperado: **236 tests y 7 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -113,7 +113,7 @@ Estado esperado: **227 tests y 7 subpruebas pasando**.
 ## 6. Build APK (Android)
 
 ```powershell
-.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.5 --build-number 12
+.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.11 --build-number 22
 ```
 
 El archivo queda en: `build\apk\Somatocarta.apk`
@@ -125,11 +125,11 @@ El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En 
 El build optimizado usa `requirements-apk.txt` para evitar empaquetar dependencias exclusivas del backend. Artefacto verificado:
 
 ```text
-build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.5.apk
+build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.11.apk
 ```
 
 - Paquete: `com.nyquist.somatocarta`
-- Versión: `1.2.5` (`versionCode=12`)
+- Versión: `1.2.11` (`versionCode=22`)
 - Android mínimo: API 24 (Android 7.0)
 - Arquitecturas: `arm64-v8a`, `armeabi-v7a` y `x86_64`
 - Runtime: Flet `0.85.3` y `flet-charts 0.85.3`
@@ -138,14 +138,14 @@ build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.5.apk
 Instalación mediante USB con depuración habilitada:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.5.apk
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.11.apk
 ```
 
 La estructura, firma, manifiesto, versión y arquitecturas del APK fueron verificadas con Android Build Tools 35.0.0.
 
-SHA-256: `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+SHA-256: `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
 
-La entrega móvil permite compartir PDF individuales y longitudinales con aplicaciones instaladas mediante `ACTION_SEND` y el `FileProvider` del paquete.
+La entrega móvil permite compartir PDF individuales y longitudinales mediante `ft.Share`; Android entrega una URI temporal con MIME `application/pdf` al selector nativo.
 
 Para publicación se debe generar y proteger un keystore de release propio; no distribuir públicamente el APK firmado con certificado debug.
 

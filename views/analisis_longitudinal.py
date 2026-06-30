@@ -3,7 +3,7 @@ import flet as ft
 from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.components import is_mobile, mobile_screen, mobile_search_field, page_header, responsive_padding, set_busy
+from src.frontend.components import is_mobile, mobile_screen, mobile_search_field, page_header, pdf_action_button, responsive_padding, set_busy
 from src.frontend.longitudinal_analysis import (
     build_longitudinal_panel,
     build_mobile_longitudinal_panel,
@@ -77,12 +77,7 @@ def AnalisisLongitudinalView(page: ft.Page):
         except Exception as error:
             show_snack(page, f"No se pudo generar el PDF: {error}")
 
-    download_button = ft.Button(
-        "Compartir PDF" if mobile_mode else "Descargar PDF",
-        icon=ft.Icons.PICTURE_AS_PDF,
-        disabled=True,
-        on_click=download_pdf,
-    )
+    download_button = pdf_action_button(download_pdf, mobile=mobile_mode, disabled=True)
 
     athlete_banner = ft.Container(visible=False)
 
@@ -114,12 +109,7 @@ def AnalisisLongitudinalView(page: ft.Page):
                             spacing=2,
                             expand=True,
                         ),
-                        ft.IconButton(
-                            ft.Icons.PICTURE_AS_PDF,
-                            tooltip="Compartir PDF longitudinal",
-                            icon_color=primary_color,
-                            on_click=download_pdf,
-                        ),
+                        pdf_action_button(download_pdf, mobile=True),
                     ],
                     spacing=10,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -300,19 +290,13 @@ def AnalisisLongitudinalView(page: ft.Page):
     if mobile_mode:
         mobile_search = mobile_search_field(
             "Buscar deportista por nombre o ID",
-            on_submit=lambda e: search_analysis(e.control.value),
-        )
-        mobile_search.value = search_field.value
-        mobile_search_button = ft.IconButton(
-            ft.Icons.SEARCH,
-            icon_color=primary_color,
-            tooltip="Buscar",
-            on_click=lambda _: search_analysis(mobile_search.value),
+            on_search=search_analysis,
+            value=search_field.value,
         )
         return mobile_screen(
             ft.Column(
                 [
-                    ft.Row([mobile_search, mobile_search_button], spacing=6),
+                    mobile_search,
                     status_text,
                     athlete_banner,
                     content_area,

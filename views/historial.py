@@ -4,7 +4,7 @@ from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.assets import REFERENCE_IMAGES
-from src.frontend.components import page_header, page_width, responsive_padding, set_busy
+from src.frontend.components import mobile_search_field, page_header, page_width, pdf_action_button, responsive_padding, set_busy
 from src.frontend.composition_analysis import build_composition_panel, mass_balance_message, mass_balance_summary
 from src.frontend.interpretation import bmi_methodology_note, parse_float
 from src.frontend.navigation import show_dashboard
@@ -70,6 +70,7 @@ def HistorialView(page: ft.Page, initial_query=None):
 
     def close_details(_=None):
         current_details_view.controls.clear()
+        page._somatocarta_local_back_handler = None
         update_layout()
 
     def display(value, fallback="---"):
@@ -401,12 +402,7 @@ def HistorialView(page: ft.Page, initial_query=None):
                 pdf_button.text = "Compartir PDF" if mobile_mode else "Descargar PDF"
                 page.update()
 
-        pdf_button = ft.Button(
-            "Compartir PDF" if mobile_mode else "Descargar PDF",
-            icon=ft.Icons.PICTURE_AS_PDF,
-            on_click=download_pdf,
-            style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=12, vertical=8)),
-        )
+        pdf_button = pdf_action_button(download_pdf, mobile=mobile_mode)
         close_button = ft.IconButton(ft.Icons.ARROW_BACK, tooltip="Volver al listado", on_click=close_details, icon_color=primary_color)
 
         header = ft.Container(
@@ -488,6 +484,8 @@ def HistorialView(page: ft.Page, initial_query=None):
 
     def load_details(somatotipo):
         current_details_view.controls.clear()
+        if mobile_mode:
+            page._somatocarta_local_back_handler = lambda: (close_details(), True)[1]
         detalles = somatotipo.get("detalles", [])
         if not detalles:
             current_details_view.controls.append(ft.Text("No hay detalles registrados."))
@@ -602,22 +600,29 @@ def HistorialView(page: ft.Page, initial_query=None):
         controls=[ft.Text("Sin búsqueda activa.")],
     )
 
-    search_field = ft.TextField(
-        label="Buscar deportista por nombre o ID",
-        value=initial_query or "",
-        suffix_icon=ft.Icons.SEARCH,
-        on_submit=lambda event: run_search_historial(event.control.value, 1),
-        expand=True,
-        text_size=14,
-    )
-
-    search_row = ft.ResponsiveRow(
-        [
-            ft.Container(search_field, col={"xs": 10, "sm": 11}),
-            ft.Container(search_button, col={"xs": 2, "sm": 1}),
-        ],
-        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-    )
+    if mobile_mode:
+        search_field = mobile_search_field(
+            "Buscar deportista por nombre o ID",
+            value=initial_query or "",
+            on_search=lambda query: run_search_historial(query, 1),
+        )
+        search_row = ft.Container(search_field)
+    else:
+        search_field = ft.TextField(
+            label="Buscar deportista por nombre o ID",
+            value=initial_query or "",
+            suffix_icon=ft.Icons.SEARCH,
+            on_submit=lambda event: run_search_historial(event.control.value, 1),
+            expand=True,
+            text_size=14,
+        )
+        search_row = ft.ResponsiveRow(
+            [
+                ft.Container(search_field, col={"xs": 10, "sm": 11}),
+                ft.Container(search_button, col={"xs": 2, "sm": 1}),
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
 
     master_container.content = ft.Column(
         [

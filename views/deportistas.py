@@ -7,6 +7,7 @@ from src.frontend.components import (
     is_mobile,
     mobile_list_card,
     mobile_primary_button,
+    mobile_search_field,
     mobile_screen,
     page_header,
     responsive_dialog_size,
@@ -648,6 +649,14 @@ def DeportistasView(page: ft.Page):
             return
         mobile_step = max(0, min(step, 3))
         set_mobile_shell_visible(False)
+        def handle_system_back():
+            if mobile_step == 0:
+                show_mobile_list()
+            else:
+                show_mobile_form(mobile_step - 1)
+            return True
+
+        page._somatocarta_local_back_handler = handle_system_back
         section, fields = mobile_step_body(mobile_step)
 
         def go_previous(_):
@@ -728,11 +737,13 @@ def DeportistasView(page: ft.Page):
 
     def show_mobile_list():
         set_mobile_shell_visible(True)
-        search_field.label = None
-        search_field.hint_text = "Buscar deportista..."
-        search_field.height = 50
-        search_field.dense = True
-        search_field.expand = True
+        page._somatocarta_local_back_handler = None
+        mobile_search = mobile_search_field(
+            "Buscar deportista...",
+            value=search_field.value,
+            on_search=lambda query: load_deportistas(query, 1),
+        )
+        mobile_search.expand = True
         pagination = ft.Row(
             [prev_button, pagination_text, next_button],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -742,7 +753,7 @@ def DeportistasView(page: ft.Page):
         mobile_root.content = mobile_screen(
             ft.Column(
                 [
-                    ft.Row([search_field, search_button], spacing=8),
+                    mobile_search,
                     mobile_primary_button("Nuevo deportista", on_click=open_add_modal),
                     mobile_rows,
                     empty_state,

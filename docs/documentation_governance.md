@@ -1,7 +1,7 @@
-# Gobernanza documental — Somatocarta v1.2.5
+# Gobernanza documental — Somatocarta v1.2.11
 
 **Origen:** consolidación de inventario, reporte de obsolescencia y changelog histórico.
-**Fecha de actualización:** 22 de junio de 2026
+**Fecha de actualización:** 30 de junio de 2026
 
 ---
 
@@ -180,7 +180,14 @@ Los informes dentro de `docs/qa/` son evidencia histórica y no representan el e
 - Documentada entrega PDF por plataforma y compartir Android mediante `ACTION_SEND`/`FileProvider`.
 - Registrada la exclusión requerida de Imunify360 Bot Protection para la API pública.
 - Generado build Android universal `1.2.5` con `versionCode=12`, firma de pruebas v2 verificada y SHA-256 `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
-- Suite final verificada: 227 pruebas y 7 subpruebas aprobadas.
+- Suite final verificada en esa entrega: 227 pruebas y 7 subpruebas aprobadas.
+
+### 2026-06-30 — Release interna v1.2.11 y evaluación integral
+
+- Documentadas la pila Atrás de Android, cierre desde raíz, logout seguro, búsqueda unificada y acciones CRUD móviles.
+- Registrado APK `v1.2.11`, `versionCode=22`, SHA-256 `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
+- Suite vigente: 236 pruebas, 7 subpruebas y cobertura global del 74%.
+- Creado `docs/qa/informe_pruebas_integrales_2026-06-30.md` con dictamen: apto para pruebas internas, no aprobado para publicación hasta corregir seguridad y firma.
 
 ---
 

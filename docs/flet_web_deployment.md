@@ -95,7 +95,7 @@ La aplicación no debe exponerse por HTTP cuando se utilicen credenciales reales
 
 - El selector de archivos Flet envía la fotografía al proceso Flet y `ApiClient` la carga en `/files/upload` con su MIME.
 - Las fotografías se visualizan desde la URL devuelta por FastAPI.
-- Los PDF se solicitan con JWT desde el proceso Flet; en web se entregan al navegador, en escritorio se abren externamente y en Android pueden compartirse mediante `ACTION_SEND` y `FileProvider`.
+- Los PDF se solicitan con JWT desde el proceso Flet; en web se entregan al navegador, en escritorio se abren externamente y en Android se comparten mediante `ft.Share`.
 - Los recursos visuales empaquetados usan nombres lógicos en Web y rutas locales en nativo mediante `asset_src`, conservando el mismo inventario visual.
 
 ## Comprobación

@@ -1,10 +1,10 @@
-# Módulos funcionales — Somatocarta v1.2.5
+# Módulos funcionales — Somatocarta v1.2.11
 
-**Fecha:** 22 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
-> Actualizado el 29 de junio de 2026. La interfaz móvil y la interfaz Web comparten reglas de negocio y API, pero mantienen composiciones visuales independientes.
+> Actualizado el 30 de junio de 2026. La interfaz móvil y la interfaz Web comparten reglas de negocio y API, pero mantienen composiciones visuales independientes.
 
 ## 1. Autenticación (Login)
 
@@ -330,7 +330,7 @@ En móvil, las tarjetas muestran nombre del deportista, deporte y entidad. La ed
 | **Rutas/Carpetas** | `tests/`, `scripts/`. |
 | **Entradas** | Scripts de Python (pytest), scripts de PowerShell. |
 | **Procesos** | Ejecución de pruebas unitarias, de integración y endpoints. Migración y mantenimiento mediante scripts auxiliares. |
-| **Salidas** | Reportes de cobertura (227 tests y 7 subpruebas), E2E crítico y estado del preflight. |
+| **Salidas** | Reportes de cobertura (236 tests, 7 subpruebas y 74% global), E2E crítico y estado del preflight. |
 | **Dependencias** | `pytest`, base de datos SQLite temporal en entorno de pruebas. |
 | **Estado** | Implementado y funcional. |
 | **Pendientes** | Ampliar cobertura de pruebas E2E visuales para UI responsive. |

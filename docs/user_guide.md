@@ -1,6 +1,6 @@
-# Guía de usuario — Somatocarta v1.2.5
+# Guía de usuario — Somatocarta v1.2.11
 
-**Fecha:** 22 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
@@ -64,7 +64,7 @@ En móviles, use **Menú** para desplegar la navegación. También puede cerrar 
 
 - **Escritorio:** Use el menú lateral izquierdo para navegar entre módulos.
 - **Móvil/Tablet:** Use el botón de menú (☰) para acceder a los módulos.
-- **Atrás:** En Android y navegador puede regresar usando el historial de rutas cuando la plataforma lo permita.
+- **Atrás:** En Android regresa a la pantalla anterior; en el detalle de historial vuelve al listado y en el registro de deportistas retrocede un paso. Desde Dashboard o Login cierra la aplicación.
 
 ---
 
@@ -252,7 +252,7 @@ Seleccione una valoración para ver:
 
 El informe incluye identidad, mediciones, composición corporal, somatotipo, somatocarta y referencias metodológicas. Su generación normal debe tardar menos de 10 segundos.
 
-En Android el botón se presenta como **Compartir PDF** y abre el selector del sistema para enviarlo a WhatsApp, correo, Drive, Acrobat u otra aplicación instalada. Si no existe receptor compatible, se intenta abrir el visor PDF externo.
+En Android el botón se presenta como **Compartir PDF** y abre el selector del sistema para enviarlo a WhatsApp, correo, Drive, Acrobat u otra aplicación instalada.
 
 ### 9.4 Eliminar una valoración
 

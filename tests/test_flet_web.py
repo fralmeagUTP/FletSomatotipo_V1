@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 import web_main
 from src.frontend.assets import ASSETS_DIR
-from src.frontend.runtime import _open_file_external, _save_web_pdf, _share_android_pdf, deliver_pdf, share_pdf
+from src.frontend.runtime import _open_file_external, _save_web_pdf, _share_native_pdf, deliver_pdf, share_pdf
 
 
 class FakePage:
@@ -125,37 +125,33 @@ class FletWebTests(unittest.TestCase):
             self.assertIn(path.as_uri(), command)
             self.assertEqual(page.launched_urls, [])
 
-    def test_android_pdf_share_uses_send_intent_and_file_provider(self):
-        path = Path("/storage/emulated/0/Download/informe.pdf")
+    def test_native_share_service_receives_pdf_bytes_and_metadata(self):
+        share_service = AsyncMock()
 
-        with patch("src.frontend.runtime.subprocess.Popen") as popen:
-            self.assertTrue(_share_android_pdf(path))
+        asyncio.run(_share_native_pdf(share_service, b"%PDF-1.4", "informe.pdf"))
 
-        command = popen.call_args.args[0]
-        self.assertIn("android.intent.action.SEND", command)
-        self.assertIn("application/pdf", command)
-        self.assertIn("android.intent.extra.STREAM", command)
-        self.assertIn(
-            "content://com.nyquist.somatocarta.provider/external_files/Download/informe.pdf",
-            command,
-        )
-        self.assertIn("0x00000001", command)
+        share_service.share_files.assert_awaited_once()
+        files = share_service.share_files.await_args.args[0]
+        self.assertEqual(len(files), 1)
+        self.assertEqual(files[0].data, b"%PDF-1.4")
+        self.assertEqual(files[0].mime_type, "application/pdf")
+        self.assertEqual(files[0].name, "informe.pdf")
 
-    def test_share_pdf_saves_android_file_and_opens_share_sheet(self):
+    def test_share_pdf_registers_native_service_and_schedules_share_sheet(self):
         page = FakePage(web=False)
         payload = b"%PDF-1.4\nandroid"
+        share_service = object()
 
-        with tempfile.TemporaryDirectory() as directory, patch.dict(
+        with patch.dict(
             "os.environ",
             {"ANDROID_ROOT": "/system"},
-        ), patch("src.frontend.runtime._share_android_pdf", return_value=True) as share, patch(
-            "src.frontend.runtime._open_file_external"
-        ) as opener:
-            result = share_pdf(page, payload, "informe.pdf", directory)
+        ), patch("src.frontend.runtime.ft.Share", return_value=share_service):
+            result = share_pdf(page, payload, "informe.pdf")
 
-        share.assert_called_once_with(result)
-        opener.assert_not_called()
-        self.assertEqual(result.name, "informe.pdf")
+        self.assertEqual(result, "informe.pdf")
+        self.assertEqual(page.services, [share_service])
+        self.assertEqual(page.updated, 1)
+        self.assertEqual(page.tasks, [(_share_native_pdf, (share_service, payload, "informe.pdf"))])
 
     def test_native_pdf_falls_back_to_launch_url_when_no_system_opener_exists(self):
         page = FakePage(web=False)

@@ -1,5 +1,53 @@
 # Changelog documental
 
+## 30 de junio de 2026 - Cierre con Atrás desde pantalla raiz v1.2.11
+
+- Corregida la pantalla blanca al pulsar Atrás desde Dashboard o Login.
+- Cuando existe una sola vista, Android cierra explicitamente la ventana de la aplicacion.
+- APK generado e instalado: `v1.2.11`, `versionCode=22`.
+- SHA-256: `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
+- Sincronizados README, arquitectura, módulos, guías, planes, checklist, especificación y publicación con el informe integral: 236 pruebas, 74% de cobertura y dictamen para uso interno.
+
+## 30 de junio de 2026 - Correccion de cierre de sesion v1.2.10
+
+- Corregido el logout despues de habilitar la pila nativa de vistas.
+- El cierre de sesion elimina rutas protegidas y reemplaza la pila completa por la vista raiz `/login`.
+- APK generado e instalado: `v1.2.10`, `versionCode=21`.
+- SHA-256: `9D8B325807BA4D4663D86A153875AA838FC746ACBCCA9716BEAE668B7AD78974`.
+
+## 30 de junio de 2026 - Navegacion Atrás Android v1.2.9
+
+- Implementada una pila nativa de vistas Flet para todas las rutas principales.
+- El boton Atrás de Android restaura la pantalla anterior y su comportamiento responsive.
+- En historial, Atrás cierra primero el detalle; en el formulario movil de deportistas retrocede paso a paso.
+- APK final generado e instalado: `v1.2.9`, `versionCode=20`.
+- SHA-256: `A1B805425BAC461B71640835C7D35979A3623BD7244111E6B2376970FE273FA5`.
+- La pila se verifico con pruebas automatizadas; MIUI bloqueo la inyeccion USB de `KEYCODE_BACK` al no estar habilitada Depuracion USB (ajustes de seguridad).
+
+## 30 de junio de 2026 - Acciones CRUD moviles v1.2.8
+
+- Ubicado el boton de creacion inmediatamente despues de la busqueda en deportistas, deportes, entidades y asignaciones.
+- Eliminada la accion fija inferior de deportes, entidades y asignaciones.
+- APK generado e instalado: `v1.2.8`, `versionCode=17`.
+- SHA-256: `7A143204B1C33E891EA2A8FBEC6DE4361B6ED018352B654DC86DBDC2409112F5`.
+
+## 30 de junio de 2026 - Busqueda movil unificada v1.2.7
+
+- Unificado el campo de busqueda movil en deportistas, deportes, entidades, asignaciones, historial, analisis longitudinal y valoracion corporal.
+- Estandarizados altura, borde, radio, tipografia, foco azul y lupa interna accionable.
+- Eliminados los botones de busqueda externos duplicados; Enter y la lupa ejecutan el mismo flujo.
+- APK generado e instalado: `v1.2.7`, `versionCode=16`.
+- SHA-256: `B0D542A214255E8DBE27323668A52EE7608AF8AB61CFF7E2084D39B1FBCB1522`.
+
+## 30 de junio de 2026 - Correccion de compartir PDF v1.2.6
+
+- Estandarizado el boton PDF de historial corporal y analisis longitudinal mediante un componente compartido.
+- Sustituido el comando Android `am` por el servicio nativo `ft.Share` y `ShareFile.from_bytes` con MIME `application/pdf`.
+- Eliminada la dependencia de permisos de almacenamiento para compartir reportes desde Android.
+- Flujo verificado por USB en un Xiaomi `22101316UG`: Android recibio `ACTION_SEND`, MIME `application/pdf`, URI temporal y mostro WhatsApp, Acrobat e impresion.
+- APK final: `v1.2.6`, `versionCode=15`.
+- SHA-256 del APK final: `37FE3317D10F41D114362DAE9FFBAE07E6DE6CD446E35B813A0D4C5F4C80074C`.
+
 ## 29 de junio de 2026 — Release v1.2.5
 
 - Separadas las composiciones visuales Web y Android sin duplicar reglas de negocio.

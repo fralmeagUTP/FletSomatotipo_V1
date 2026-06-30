@@ -2,7 +2,6 @@ import os
 import platform
 import subprocess
 from pathlib import Path
-from urllib.parse import quote
 
 import flet as ft
 
@@ -78,41 +77,18 @@ def _open_android_pdf(path: Path) -> bool:
     return False
 
 
-def _android_content_uri(path: Path) -> str:
-    authority = os.getenv("SOMATOCARTA_ANDROID_FILE_PROVIDER", "com.nyquist.somatocarta.provider")
-    normalized = str(path).replace("\\", "/")
-    for root in ("/storage/emulated/0/", "/sdcard/"):
-        if normalized.startswith(root):
-            relative_path = normalized[len(root):]
-            return f"content://{authority}/external_files/{quote(relative_path, safe='/')}"
-    return path.as_uri()
-
-
-def _share_android_pdf(path: Path) -> bool:
-    uri = _android_content_uri(path)
-    commands = [
+async def _share_native_pdf(share_service, pdf_bytes: bytes, filename: str):
+    return await share_service.share_files(
         [
-            executable,
-            "start",
-            "-a",
-            "android.intent.action.SEND",
-            "-t",
-            "application/pdf",
-            "--eu",
-            "android.intent.extra.STREAM",
-            uri,
-            "-f",
-            "0x00000001",
-        ]
-        for executable in ("/system/bin/am", "am")
-    ]
-    for command in commands:
-        try:
-            subprocess.Popen(command)
-            return True
-        except Exception:
-            continue
-    return False
+            ft.ShareFile.from_bytes(
+                pdf_bytes,
+                mime_type="application/pdf",
+                name=filename,
+            )
+        ],
+        title="Compartir PDF",
+        subject=filename,
+    )
 
 
 def _open_file_external(path: Path, page=None) -> bool:
@@ -165,10 +141,11 @@ def share_pdf(page, pdf_bytes: bytes, filename: str, output_dir: str | Path | No
     if not pdf_bytes.startswith(b"%PDF"):
         raise ValueError("El servidor no devolvió un PDF válido.")
 
-    target_dir = Path(output_dir) if output_dir else _default_pdf_dir()
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target_path = target_dir / filename
-    target_path.write_bytes(pdf_bytes)
-    if not _share_android_pdf(target_path):
-        _open_file_external(target_path, page)
-    return target_path
+    share_service = getattr(page, "_somatocarta_share_service", None)
+    if share_service is None:
+        share_service = ft.Share()
+        page.services.append(share_service)
+        page._somatocarta_share_service = share_service
+        page.update()
+    page.run_task(_share_native_pdf, share_service, pdf_bytes, filename)
+    return filename

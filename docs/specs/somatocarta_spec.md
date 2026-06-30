@@ -1,7 +1,7 @@
 # Somatocarta — Software Specification (Spec Kit)
 
 **Versión:** 1.0
-**Fecha:** 22 de junio de 2026
+**Fecha:** 30 de junio de 2026
 **Estado:** Vigente
 
 ---
@@ -40,7 +40,7 @@ Instituciones vinculadas:
 
 ### 1.5 Alcance actual
 
-Versión **v1.2.5**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
+Versión **v1.2.11**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
 
 ---
 
@@ -346,8 +346,11 @@ NFR-011: El layout master-detail debe alternar a modo toggle en móvil/tablet.
 ```text
 NFR-012: Todas las rutas privadas deben requerir token JWT válido.
 NFR-013: Los tokens deben expirar después de un tiempo definido.
-NFR-014: Las contraseñas no deben transmitirse en texto plano en la red (solo dentro de la BD por compatibilidad heredada).
+NFR-014: Las contraseñas deben transmitirse solo por HTTPS y almacenarse con bcrypt o Argon2; el texto plano heredado debe migrarse.
 NFR-015: El sistema debe registrar intentos de login fallidos.
+NFR-026: El backend debe rechazar el inicio si `SECRET_KEY` falta o conserva un valor inseguro.
+NFR-027: El login debe aplicar rate limiting por IP y usuario.
+NFR-028: La distribución Android pública debe usar un keystore de release, nunca el certificado debug.
 ```
 
 ### Rendimiento
@@ -636,7 +639,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 - Los PDFs se generan íntegramente en el backend sin dependencias externas de PDF.
 - El PDF debe ser válido (iniciar con firma `%PDF`).
 - Las imágenes PNG se decodifican internamente con soporte para filtro Paeth.
-- En Web, el PDF se entrega al navegador; en escritorio se abre externamente; en Android se puede compartir mediante `ACTION_SEND` con URI `content://` proporcionado por `FileProvider`.
+- En Web, el PDF se entrega al navegador; en escritorio se abre externamente; en Android se comparte mediante `ft.Share` y `ShareFile.from_bytes` con MIME `application/pdf`.
 
 ---
 
@@ -656,7 +659,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 227 tests y 7 subpruebas pasando.
+**Resultado actual:** 236 tests y 7 subpruebas pasando.
 
 ---
 
@@ -1080,7 +1083,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - El token incluye `sub` y `id`.
 - El frontend envía token mediante `Authorization: Bearer`.
 - La carga de imágenes valida extensión, tipo MIME y tamaño máximo.
-- Android comparte PDF mediante `FileProvider`, permiso temporal de lectura y MIME `application/pdf`; no expone rutas privadas directas.
+- Android comparte PDF mediante el proveedor interno de `share_plus`, permiso temporal de lectura y MIME `application/pdf`; no expone rutas privadas directas.
 
 ### D.2 Riesgos detectados
 
@@ -1107,7 +1110,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (227 tests y 7 subpruebas).
+- Suite de pruebas amplia para el tamaño actual de la app (236 tests y 7 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.

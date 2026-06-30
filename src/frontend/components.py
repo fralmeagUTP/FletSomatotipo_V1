@@ -80,9 +80,10 @@ def mobile_top_bar(title: str, on_back=None, on_menu=None, trailing_icon=ft.Icon
     )
 
 
-def mobile_search_field(hint: str, on_submit=None):
-    return ft.TextField(
+def mobile_search_field(hint: str, on_submit=None, on_search=None, value=None):
+    field = ft.TextField(
         hint_text=hint,
+        value=value,
         border_radius=theme.MOBILE_RADIUS,
         border_color=theme.SURFACE_BORDER,
         focused_border_color=theme.PRIMARY_BLUE,
@@ -91,8 +92,20 @@ def mobile_search_field(hint: str, on_submit=None):
         text_size=14,
         dense=True,
         content_padding=ft.padding.symmetric(horizontal=12, vertical=10),
-        on_submit=on_submit,
     )
+    if on_search is not None:
+        field.suffix = ft.IconButton(
+            ft.Icons.SEARCH,
+            icon_color=theme.PRIMARY_BLUE,
+            icon_size=20,
+            tooltip="Buscar",
+            on_click=lambda _: on_search(field.value or ""),
+        )
+        field.on_submit = lambda event: on_search(event.control.value or "")
+    else:
+        field.suffix_icon = ft.Icons.SEARCH
+        field.on_submit = on_submit
+    return field
 
 
 def mobile_primary_button(text: str, icon=ft.Icons.ADD, on_click=None, color=None):
@@ -252,6 +265,19 @@ def secondary_button(text: str, icon=None, on_click=None, visible=True):
 
 ACTION_ICON_SIZE = 22
 ACTION_BUTTON_SIZE = 40
+
+
+def pdf_action_button(on_click=None, *, mobile=False, disabled=False):
+    return ft.Button(
+        "Compartir PDF" if mobile else "Descargar PDF",
+        icon=ft.Icons.PICTURE_AS_PDF,
+        tooltip="Compartir PDF" if mobile else "Descargar PDF",
+        disabled=disabled,
+        on_click=on_click,
+        style=ft.ButtonStyle(
+            padding=ft.padding.symmetric(horizontal=12, vertical=8),
+        ),
+    )
 
 
 def danger_icon_button(icon=ft.Icons.DELETE, on_click=None, tooltip="Eliminar"):

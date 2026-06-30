@@ -246,15 +246,16 @@ def EntidadesView(page: ft.Page):
     load_entidades()
 
     if is_mobile(page):
-        def search_mobile(event):
-            search_field.value = event.control.value
-            load_entidades(event.control.value, 1)
+        def search_mobile(query):
+            search_field.value = query
+            load_entidades(query, 1)
 
-        mobile_search = mobile_search_field("Buscar entidades...", on_submit=search_mobile)
+        mobile_search = mobile_search_field("Buscar entidades...", on_search=search_mobile)
         return mobile_screen(
             ft.Column(
                 [
                     mobile_search,
+                    mobile_primary_button("Agregar entidad", on_click=lambda _: open_mobile_form()),
                     status_text,
                     mobile_rows,
                     ft.Row(
@@ -269,7 +270,6 @@ def EntidadesView(page: ft.Page):
                 spacing=12,
                 scroll=ft.ScrollMode.AUTO,
             ),
-            bottom_action=mobile_primary_button("Agregar entidad", on_click=lambda _: open_mobile_form()),
         )
 
     form_panel = ft.Container(
