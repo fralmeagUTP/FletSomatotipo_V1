@@ -10,6 +10,7 @@ Flet Web y FastAPI son procesos separados:
 - `ApiClient` realiza las solicitudes autenticadas a FastAPI usando `API_URL`.
 - FastAPI mantiene JWT, reglas de negocio, cálculos antropométricos, archivos y MySQL.
 - Android continúa iniciando desde `main.py`; web inicia desde `web_main.py`.
+- Las reglas de negocio son compartidas, pero los layouts Web y móvil son independientes cuando la densidad o el flujo lo requieren.
 
 ## Requisitos
 
@@ -94,7 +95,7 @@ La aplicación no debe exponerse por HTTP cuando se utilicen credenciales reales
 
 - El selector de archivos Flet envía la fotografía al proceso Flet y `ApiClient` la carga en `/files/upload` con su MIME.
 - Las fotografías se visualizan desde la URL devuelta por FastAPI.
-- Los PDF se solicitan con JWT desde el proceso Flet; en web se entregan al navegador como contenido PDF y en Android/escritorio se guardan en Descargas.
+- Los PDF se solicitan con JWT desde el proceso Flet; en web se entregan al navegador, en escritorio se abren externamente y en Android pueden compartirse mediante `ACTION_SEND` y `FileProvider`.
 - Los recursos visuales empaquetados usan nombres lógicos en Web y rutas locales en nativo mediante `asset_src`, conservando el mismo inventario visual.
 
 ## Comprobación
@@ -105,3 +106,5 @@ La aplicación no debe exponerse por HTTP cuando se utilicen credenciales reales
 ```
 
 Antes de publicar, complete `docs/flet_web_qa_checklist.md` en los navegadores y tamaños objetivo.
+
+El hosting no debe aplicar desafíos JavaScript de Imunify360 Bot Protection a la ruta de API. Excluya `/somatocarta/*` (o el subdominio API completo), porque los clientes Android/Python no pueden resolver un challenge de navegador.

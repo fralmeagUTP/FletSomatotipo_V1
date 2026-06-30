@@ -3,7 +3,7 @@
 **Version:** 0.1
 **Fecha:** 27 de junio de 2026
 **Estado:** Propuesta tecnica
-**Proyecto base:** Somatocarta v1.2.1 / SINVADE
+**Proyecto base:** Somatocarta v1.2.5 / SINVADE
 
 ---
 

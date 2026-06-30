@@ -1,4 +1,4 @@
-# Checklist de evaluación QA — Somatocarta v1.2.1
+# Checklist de evaluación QA — Somatocarta v1.2.5
 
 **Fecha:** 22 de junio de 2026
 
@@ -22,6 +22,8 @@ Marque cada ítem con:
 | 1.2 | Login con usuario incorrecto retorna 401 | ✅ | |
 | 1.3 | Login con contraseña incorrecta retorna 401 | ✅ | |
 | 1.4 | Login con campos vacíos retorna error | ✅ | |
+| 1.5 | El icono de ojo alterna visibilidad de contraseña | ✅ | Cubierto por prueba de configuración Flet |
+| 1.6 | El icono superior móvil cierra sesión | ✅ | Callback conectado al flujo central de logout |
 | 1.5 | Endpoints protegidos sin token retornan 401 | ✅ | |
 | 1.6 | Token inválido retorna 401 | ✅ | |
 | 1.7 | Cerrar sesión limpia el token | ✅ | |
@@ -148,6 +150,7 @@ Marque cada ítem con:
 | 10.6 | PDF longitudinal es válido | ✅ | |
 | 10.7 | PDF longitudinal contiene datos correctos | ✅ | |
 | 10.8 | PDFs varían entre deportistas | ✅ | Identidad, métricas y bytes comparados automáticamente |
+| 10.9 | Android comparte PDF con aplicaciones instaladas | ✅ | `ACTION_SEND`, `FileProvider` y fallback al visor cubiertos |
 
 ## 11. Responsive
 
@@ -157,6 +160,8 @@ Marque cada ítem con:
 | 11.2 | Dashboard en móvil | 🔲 | No evaluado visualmente |
 | 11.3 | Historial master-detail en escritorio | 🔲 | No evaluado visualmente |
 | 11.4 | Historial toggle en móvil | 🔲 | No evaluado visualmente |
+| 11.5 | CRUD móvil usa layouts independientes de Web | ✅ | Deportistas, deportes, entidades y asignaciones cubiertos |
+| 11.6 | Longitudinal móvil conserva todos los bloques del análisis | ✅ | Prueba estructural específica |
 | 11.5 | Sin scroll horizontal no deseado | 🔲 | No evaluado visualmente |
 
 ## 12. Seguridad

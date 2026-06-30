@@ -25,7 +25,7 @@ def test_dashboard_uses_consistent_material_icons_instead_of_raster_thumbnails()
 
     assert "MODULE_IMAGES" not in source
     assert "ft.Image(" not in source
-    assert "content=ft.Icon(icon, size=28" in source
+    assert source.count("content=ft.Icon(icon") >= 3
     assert "bgcolor=theme.INFO_BACKGROUND" in source
 
 

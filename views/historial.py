@@ -8,7 +8,7 @@ from src.frontend.components import page_header, page_width, responsive_padding,
 from src.frontend.composition_analysis import build_composition_panel, mass_balance_message, mass_balance_summary
 from src.frontend.interpretation import bmi_methodology_note, parse_float
 from src.frontend.navigation import show_dashboard
-from src.frontend.runtime import deliver_pdf
+from src.frontend.runtime import deliver_pdf, share_pdf
 from src.frontend.somatocarta import build_somatocarta_card
 from src.frontend.table_builders import build_historial_item, group_historial_rows
 
@@ -19,6 +19,7 @@ def HistorialView(page: ft.Page, initial_query=None):
     card_background = theme.CARD_BACKGROUND
     text_color = theme.TEXT_COLOR
     api = ApiClient(page)
+    mobile_mode = page_width(page) < 700
 
     current_details_view = ft.ListView(spacing=14, expand=True)
     search_status = ft.Text("Busca por nombre o ID para ver el historial corporal.", color=theme.SUBTITLE_COLOR, size=12)
@@ -384,7 +385,8 @@ def HistorialView(page: ft.Page, initial_query=None):
             pdf_button.text = "Generando PDF..."
             page.update()
             try:
-                target = deliver_pdf(
+                delivery = share_pdf if mobile_mode else deliver_pdf
+                target = delivery(
                     page,
                     api.get_somatotipo_pdf_bytes(somatotipo_id),
                     f"valoracion_{somatotipo_id}.pdf",
@@ -396,11 +398,11 @@ def HistorialView(page: ft.Page, initial_query=None):
                 show_snack(page, f"No se pudo descargar el PDF: {error}")
             finally:
                 pdf_button.disabled = False
-                pdf_button.text = "Descargar PDF"
+                pdf_button.text = "Compartir PDF" if mobile_mode else "Descargar PDF"
                 page.update()
 
         pdf_button = ft.Button(
-            "Descargar PDF",
+            "Compartir PDF" if mobile_mode else "Descargar PDF",
             icon=ft.Icons.PICTURE_AS_PDF,
             on_click=download_pdf,
             style=ft.ButtonStyle(padding=ft.padding.symmetric(horizontal=12, vertical=8)),

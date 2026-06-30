@@ -66,6 +66,18 @@ def controls_in(root):
     return list(walk(root))
 
 
+def button_with_text(root, text):
+    for control in controls_in(root):
+        if not isinstance(control, (ft.ElevatedButton, ft.OutlinedButton, ft.TextButton)):
+            continue
+        content = getattr(control, "content", None)
+        if content == text:
+            return control
+        if any(isinstance(child, ft.Text) and child.value == text for child in controls_in(content)):
+            return control
+    raise AssertionError(f"No se encontró el botón {text}")
+
+
 def test_deportistas_view_builds_with_current_flet_api(monkeypatch):
     monkeypatch.setattr(deportistas_module, "ApiClient", FakeApiClient)
     page = FakePage()
@@ -171,3 +183,39 @@ def test_add_edit_and_delete_buttons_open_their_dialogs(monkeypatch):
     )
     confirm_delete.on_click(None)
     assert FakeApiClient.deleted == ["1001"]
+
+
+def test_mobile_crud_uses_four_step_athlete_form(monkeypatch):
+    monkeypatch.setattr(deportistas_module, "ApiClient", FakeApiClient)
+    page = FakePage()
+    page.width = 390
+    page.height = 844
+
+    view = deportistas_module.DeportistasView(page)
+    button_with_text(view, "Nuevo deportista").on_click(None)
+
+    fields = {control.label: control for control in controls_in(view) if isinstance(control, (ft.TextField, ft.Dropdown))}
+    assert "Tipo Documento" in fields
+    assert "Identificación" in fields
+    assert "Nombre Completo" in fields
+    assert "Sexo" in fields
+
+    fields["Tipo Documento"].value = "1"
+    fields["Identificación"].value = "1001"
+    fields["Nombre Completo"].value = "Deportista móvil"
+    fields["Sexo"].value = "F"
+    button_with_text(view, "Siguiente").on_click(None)
+
+    labels = {control.label for control in controls_in(view) if isinstance(control, (ft.TextField, ft.Dropdown))}
+    assert {"Teléfono", "Email", "País Nacimiento", "Depto Residencia", "Dirección"} <= labels
+    button_with_text(view, "Siguiente").on_click(None)
+
+    labels = {control.label for control in controls_in(view) if isinstance(control, (ft.TextField, ft.Dropdown))}
+    assert {"Estrato", "Nivel Educativo", "Institución", "Observaciones"} <= labels
+    button_with_text(view, "Siguiente").on_click(None)
+
+    assert button_with_text(view, "Guardar")
+    assert any(
+        isinstance(control, ft.IconButton) and control.tooltip == "Seleccionar foto"
+        for control in controls_in(view)
+    )

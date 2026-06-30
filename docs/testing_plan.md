@@ -1,4 +1,4 @@
-# Plan de pruebas — Somatocarta v1.2.1
+# Plan de pruebas — Somatocarta v1.2.5
 
 **Fecha:** 22 de junio de 2026
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ### 1.3 Resultado actual
 
-**206 tests y 7 subpruebas pasando** en 30 archivos de prueba.
+**227 tests y 7 subpruebas pasando** en 35 archivos de prueba.
 
 ---
 
@@ -68,6 +68,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `test_frontend_global_search.py` | Cierre del modal, navegación diferida y transmisión del deportista seleccionado |
 | `test_frontend_interpretation.py` | Notas de interpretación clínica |
 | `test_frontend_longitudinal_analysis.py` | Análisis longitudinal |
+| `test_flet_web.py` | Entrega Web, apertura externa y compartir PDF Android con `FileProvider` |
 | `test_frontend_navigation.py` | Navegación entre pantallas |
 | `test_frontend_somatocarta.py` | Calibración y render de somatocarta |
 | `test_frontend_table_builders.py` | Constructores de tablas |
@@ -78,6 +79,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 |---------|-----------|
 | `test_valoracion_view.py` | Vista de valoración corporal |
 | `test_historial_layout.py` | Layout de historial |
+| `test_deportistas_view.py` | CRUD y formulario móvil de cuatro pasos |
+| `test_deportes_view.py` | Listado y CRUD móvil de deportes |
+| `test_entidades_view.py` | Listado y CRUD móvil de entidades |
+| `test_asignaciones_view.py` | Nombres, datos completos y CRUD móvil de asignaciones |
+| `test_analisis_longitudinal_view.py` | Separación Web/móvil y conservación de todos los bloques longitudinales |
+| `test_pdf_delivery_views.py` | Selección de descarga o compartir según plataforma |
 
 ### 2.4 Infraestructura
 
@@ -172,6 +179,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | PDF-001 | PDF individual | Descargar PDF de valoración | Archivo PDF válido (~1.7 MB) |
 | PDF-002 | PDF longitudinal | Descargar PDF longitudinal | Archivo PDF válido (~1.7 MB) |
 | PDF-003 | Contenido PDF | Verificar datos en el PDF | Nombre, ID, métricas presentes |
+| PDF-004 | Compartir en Android | Pulsar Compartir PDF | Intent `ACTION_SEND`, MIME `application/pdf` y URI `content://` con permiso temporal |
 
 ---
 
@@ -234,7 +242,7 @@ La entrada Web debe probarse adicionalmente mediante `web_main:create_web_app`, 
 
 ## 7. Criterios de aceptación de pruebas
 
-- Todos los tests automatizados deben pasar (206/206 y 7 subpruebas).
+- Todos los tests automatizados deben pasar (227/227 y 7 subpruebas).
 - Los flujos funcionales críticos deben operar sin errores.
 - Los PDFs generados deben ser válidos y contener los datos correctos.
 - La interfaz debe ser usable en las 5 resoluciones objetivo.

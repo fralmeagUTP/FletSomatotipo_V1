@@ -2,6 +2,7 @@ from pathlib import Path
 
 from src.frontend.assets import (
     APP_ICON,
+    INSTITUTIONAL_LOGOS,
     LOGO_CDR,
     LOGO_ISC,
     LOGO_NYQUIST,
@@ -23,6 +24,10 @@ class FakePage:
 def test_brand_assets_exist():
     for filename in [LOGO_SOMATOCARTA, LOGO_CDR, LOGO_ISC, LOGO_UTP, LOGO_NYQUIST]:
         assert Path(asset_path(filename)).exists()
+
+
+def test_institutional_logos_use_required_order():
+    assert INSTITUTIONAL_LOGOS == (LOGO_UTP, LOGO_ISC, LOGO_CDR, LOGO_NYQUIST)
 
 
 def test_flet_launcher_icon_uses_somatocarta_logo():
@@ -78,3 +83,10 @@ def test_main_blocks_reentrant_login_submits():
     assert "login_in_progress = False" in source
     assert "if login_in_progress:" in source
     assert "login_button_control.disabled = True" in source
+
+
+def test_password_field_can_toggle_visibility():
+    source = Path("main.py").read_text(encoding="utf-8")
+
+    assert "can_reveal_password=True" in source
+    assert "suffix_icon=ft.Icons.VISIBILITY_OUTLINED" not in source

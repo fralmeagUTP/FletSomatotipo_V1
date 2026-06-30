@@ -3,16 +3,20 @@ import flet as ft
 from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.components import page_header, responsive_padding, set_busy
-from src.frontend.longitudinal_analysis import build_longitudinal_panel
+from src.frontend.components import is_mobile, mobile_screen, mobile_search_field, page_header, responsive_padding, set_busy
+from src.frontend.longitudinal_analysis import (
+    build_longitudinal_panel,
+    build_mobile_longitudinal_panel,
+)
 from src.frontend.navigation import show_dashboard
-from src.frontend.runtime import deliver_pdf
+from src.frontend.runtime import deliver_pdf, share_pdf
 
 
 def AnalisisLongitudinalView(page: ft.Page):
     primary_color = theme.PRIMARY_COLOR
     text_color = theme.TEXT_COLOR
     api = ApiClient(page)
+    mobile_mode = is_mobile(page)
 
     current_rows = []
     current_athlete = None
@@ -24,8 +28,8 @@ def AnalisisLongitudinalView(page: ft.Page):
     )
     content_area = ft.Column(
         spacing=16,
-        scroll=ft.ScrollMode.AUTO,
-        expand=True,
+        scroll=None if mobile_mode else ft.ScrollMode.AUTO,
+        expand=not mobile_mode,
         horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
     )
 
@@ -61,7 +65,8 @@ def AnalisisLongitudinalView(page: ft.Page):
             show_snack(page, "No se encontró la identificación del deportista.")
             return
         try:
-            target = deliver_pdf(
+            delivery = share_pdf if mobile_mode else deliver_pdf
+            target = delivery(
                 page,
                 api.get_longitudinal_pdf_bytes(identi),
                 f"analisis_longitudinal_{identi}.pdf",
@@ -73,7 +78,7 @@ def AnalisisLongitudinalView(page: ft.Page):
             show_snack(page, f"No se pudo generar el PDF: {error}")
 
     download_button = ft.Button(
-        "Descargar PDF",
+        "Compartir PDF" if mobile_mode else "Descargar PDF",
         icon=ft.Icons.PICTURE_AS_PDF,
         disabled=True,
         on_click=download_pdf,
@@ -85,6 +90,46 @@ def AnalisisLongitudinalView(page: ft.Page):
         athlete_name = current_athlete.get("NOMBRE_DEPORTISTA", "Deportista") if current_athlete else "Deportista"
         athlete_id = current_athlete.get("IDENTI_DEPORTISTA", "") if current_athlete else ""
         athlete_banner.visible = True
+        if mobile_mode:
+            athlete_banner.content = ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Container(
+                            content=ft.Text(
+                                "".join(part[:1] for part in athlete_name.split()[:2]).upper(),
+                                size=11,
+                                color=theme.INK_COLOR,
+                            ),
+                            width=40,
+                            height=40,
+                            bgcolor="#dbeafe",
+                            border_radius=20,
+                            alignment=ft.alignment.center,
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text(athlete_name, size=14, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                                ft.Text(f"ID: {athlete_id}", size=11, color=theme.MUTED_TEXT_COLOR),
+                            ],
+                            spacing=2,
+                            expand=True,
+                        ),
+                        ft.IconButton(
+                            ft.Icons.PICTURE_AS_PDF,
+                            tooltip="Compartir PDF longitudinal",
+                            icon_color=primary_color,
+                            on_click=download_pdf,
+                        ),
+                    ],
+                    spacing=10,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                bgcolor=theme.INFO_BACKGROUND,
+                border=ft.border.all(1, theme.SURFACE_BORDER),
+                border_radius=theme.MOBILE_RADIUS,
+                padding=12,
+            )
+            return
         athlete_banner.content = ft.Container(
             content=ft.ResponsiveRow(
                 [
@@ -157,8 +202,14 @@ def AnalisisLongitudinalView(page: ft.Page):
     def render_analysis():
         content_area.controls.clear()
         render_athlete_banner()
-        content_area.controls.append(build_longitudinal_panel(current_rows))
+        if mobile_mode:
+            content_area.controls.append(build_mobile_analysis())
+        else:
+            content_area.controls.append(build_longitudinal_panel(current_rows))
         download_button.disabled = False
+
+    def build_mobile_analysis():
+        return build_mobile_longitudinal_panel(current_rows)
 
     def search_analysis(query):
         nonlocal current_rows, current_athlete
@@ -245,6 +296,32 @@ def AnalisisLongitudinalView(page: ft.Page):
         padding=16,
         shadow=theme.card_shadow(),
     )
+
+    if mobile_mode:
+        mobile_search = mobile_search_field(
+            "Buscar deportista por nombre o ID",
+            on_submit=lambda e: search_analysis(e.control.value),
+        )
+        mobile_search.value = search_field.value
+        mobile_search_button = ft.IconButton(
+            ft.Icons.SEARCH,
+            icon_color=primary_color,
+            tooltip="Buscar",
+            on_click=lambda _: search_analysis(mobile_search.value),
+        )
+        return mobile_screen(
+            ft.Column(
+                [
+                    ft.Row([mobile_search, mobile_search_button], spacing=6),
+                    status_text,
+                    athlete_banner,
+                    content_area,
+                ],
+                spacing=12,
+                scroll=ft.ScrollMode.AUTO,
+                expand=True,
+            )
+        )
 
     return ft.Container(
         content=ft.Column(

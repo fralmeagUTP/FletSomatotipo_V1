@@ -1,4 +1,4 @@
-# Guía de usuario — Somatocarta v1.2.1
+# Guía de usuario — Somatocarta v1.2.5
 
 **Fecha:** 22 de junio de 2026
 
@@ -38,6 +38,8 @@ Somatocarta es una aplicación para registrar deportistas, realizar valoraciones
 4. Si las credenciales son correctas, accederá al Dashboard.
 5. Si son incorrectas, verá un mensaje de error en rojo.
 
+El ícono de ojo permite mostrar u ocultar la contraseña sin modificarla.
+
 La sesión dura 30 minutos por defecto. El administrador puede modificar este valor mediante la configuración del backend.
 Al expirar o cerrar sesión manualmente, la aplicación elimina token, usuario e identificadores almacenados en la sesión local.
 
@@ -56,7 +58,7 @@ El Dashboard es la pantalla principal. Muestra:
 - **Iconos Material vectoriales:** accesos legibles y consistentes en Web y Android.
 - **Cerrar sesión** al final del menú principal.
 
-En móviles, use **Menú** para desplegar la navegación. El panel puede desplazarse e incluye **Cerrar sesión**.
+En móviles, use **Menú** para desplegar la navegación. También puede cerrar sesión con el ícono de salida del encabezado superior.
 
 ### Navegación
 
@@ -71,14 +73,14 @@ En móviles, use **Menú** para desplegar la navegación. El panel puede desplaz
 ### 4.1 Listar deportistas
 
 1. Desde el menú, seleccione **Deportistas**.
-2. Verá una tabla con todos los deportistas registrados.
+2. En Web/escritorio verá una tabla; en móvil verá tarjetas compactas con nombre e identificación.
 3. Use la barra de búsqueda para filtrar por nombre o identificación.
 4. Use los botones de paginación para navegar entre páginas.
 
 ### 4.2 Crear un deportista
 
-1. Pulse el botón **Agregar Deportista**.
-2. Complete el formulario único desplazable:
+1. Pulse **Agregar Deportista** en Web o **Nuevo deportista** en móvil.
+2. En Web complete el formulario desplazable. En móvil avance por cuatro pasos:
    - **Datos básicos:** identificación, tipo de documento, nombre, sexo, fecha de nacimiento y fotografía.
    - **Ubicación y contacto:** país, departamento, ciudad, dirección, teléfono y email.
    - **Información adicional:** estrato, nivel educativo, institución y observaciones.
@@ -118,7 +120,7 @@ En móviles, use **Menú** para desplegar la navegación. El panel puede desplaz
 
 ### 5.3 Editar / Eliminar
 
-Use los íconos de editar o eliminar junto a cada entidad.
+En Web use los íconos de editar o eliminar. En móvil toque la tarjeta para abrir edición y eliminación.
 
 > Una entidad con asignaciones activas no puede eliminarse hasta retirar esas asignaciones.
 
@@ -138,6 +140,8 @@ Use los íconos de editar o eliminar junto a cada entidad.
 
 Los nombres de deporte no pueden duplicarse. Un deporte con asignaciones activas no puede eliminarse.
 
+En móvil, toque una tarjeta para editar/eliminar; **Agregar deporte** abre un formulario separado.
+
 ---
 
 ## 7. Asignaciones
@@ -153,7 +157,7 @@ Las asignaciones relacionan un deportista con una entidad y un deporte.
 
 ### 7.2 Editar / Eliminar
 
-Use los íconos correspondientes en la lista de asignaciones.
+En Web use los íconos correspondientes. En móvil toque la tarjeta; el formulario presenta los datos completos del deportista y permite guardar o eliminar.
 
 Toda eliminación solicita confirmación antes de modificar los datos.
 
@@ -248,6 +252,8 @@ Seleccione una valoración para ver:
 
 El informe incluye identidad, mediciones, composición corporal, somatotipo, somatocarta y referencias metodológicas. Su generación normal debe tardar menos de 10 segundos.
 
+En Android el botón se presenta como **Compartir PDF** y abre el selector del sistema para enviarlo a WhatsApp, correo, Drive, Acrobat u otra aplicación instalada. Si no existe receptor compatible, se intenta abrir el visor PDF externo.
+
 ### 9.4 Eliminar una valoración
 
 1. En el detalle, pulse **Eliminar valoración**.
@@ -266,7 +272,7 @@ El informe incluye identidad, mediciones, composición corporal, somatotipo, som
 ### 10.2 Contenido del análisis
 
 - **Tarjetas KPI:** Valor inicial, valor final, cambio absoluto y porcentaje de cambio.
-- **Gráficos de línea:** Evolución temporal de 11 variables.
+- **Gráficos de línea:** Evolución temporal seleccionable de 10 variables.
 - **Comparación de métodos de grasa:** Yuhasz vs Faulkner.
 - **Somatocarta longitudinal:** Todos los puntos X, Y con trayectoria cronológica.
 - **Peso vs masa muscular:** Gráfico comparativo.
@@ -274,7 +280,9 @@ El informe incluye identidad, mediciones, composición corporal, somatotipo, som
 
 ### 10.3 Descargar PDF longitudinal
 
-Pulse **Descargar PDF longitudinal** para obtener el informe completo.
+En Web pulse **Descargar PDF longitudinal**. En Android use el ícono **Compartir PDF longitudinal** para abrir el selector de aplicaciones.
+
+La versión móvil conserva resumen, indicadores, selector de variables, comparación de grasa, somatocarta, peso frente a masa muscular, tabla histórica y confiabilidad, organizados en secciones verticales distintas al panel Web.
 
 ---
 
@@ -290,7 +298,7 @@ Desde el menú, seleccione **Acerca del Proyecto** para ver:
 
 ## 12. Cerrar sesión
 
-1. Pulse el botón **Cerrar sesión** en la esquina superior derecha del Dashboard.
+1. En móvil pulse el ícono de salida del encabezado superior.
 2. O pulse el ícono de salir (🚪) en el menú lateral.
 3. Será redirigido a la pantalla de inicio de sesión.
 
@@ -304,6 +312,7 @@ Desde el menú, seleccione **Acerca del Proyecto** para ver:
 | "Credenciales incorrectas" | Usuario o contraseña erróneos | Verifique sus credenciales |
 | "Sesión expirada" | Token JWT vencido | Inicie sesión nuevamente |
 | PDF no se descarga | Problema de red o permisos | Verifique conexión y carpeta de descargas |
+| La API responde 415 o Access denied | Imunify360 Bot Protection intercepta clientes no navegador | Excluir `/somatocarta/*` de Bot Protection en el hosting |
 | Pantalla en blanco | Error de carga | Cierre y reabra la aplicación |
 
 ---

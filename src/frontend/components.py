@@ -1,9 +1,13 @@
+import os
+
 import flet as ft
 
 from src.frontend import theme
 
 
 def page_width(page, default=1024):
+    if os.getenv("SOMATOCARTA_FORCE_MOBILE", "").strip().lower() in {"1", "true", "yes"}:
+        return 390
     width = getattr(page, "width", None)
     return width or default
 
@@ -12,7 +16,11 @@ def is_compact(page):
     return page_width(page) < 600
 
 
-def responsive_padding(page, desktop=40, tablet=24, mobile=12):
+def is_mobile(page):
+    return page_width(page, default=390) < 700
+
+
+def responsive_padding(page, desktop=24, tablet=24, mobile=12):
     width = page_width(page)
     if width < 600:
         return mobile
@@ -37,9 +45,130 @@ def horizontal_scroll(content):
 def page_header(title: str, on_back=None, color: str = theme.TEXT_COLOR):
     controls = []
     if on_back:
-        controls.append(ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back, icon_color=color))
+        controls.append(ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back, icon_color=color, icon_size=20))
     controls.append(ft.Text(title, size=theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=color, expand=True))
-    return ft.Row(controls, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+    return ft.Row(controls, vertical_alignment=ft.CrossAxisAlignment.CENTER, height=38)
+
+
+def mobile_top_bar(title: str, on_back=None, on_menu=None, trailing_icon=ft.Icons.LOGOUT, on_trailing=None):
+    leading = ft.IconButton(
+        ft.Icons.ARROW_BACK if on_back else ft.Icons.MENU,
+        icon_color=theme.INK_COLOR,
+        icon_size=22,
+        on_click=on_back or on_menu,
+    )
+    return ft.Container(
+        content=ft.Row(
+            [
+                leading,
+                ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
+                ft.IconButton(
+                    trailing_icon,
+                    icon_color=theme.INK_COLOR,
+                    icon_size=18,
+                    tooltip="Cerrar sesión",
+                    on_click=on_trailing,
+                    disabled=on_trailing is None,
+                ),
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        height=64,
+        bgcolor=ft.Colors.WHITE,
+        padding=ft.padding.only(left=4, right=8),
+        border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
+    )
+
+
+def mobile_search_field(hint: str, on_submit=None):
+    return ft.TextField(
+        hint_text=hint,
+        border_radius=theme.MOBILE_RADIUS,
+        border_color=theme.SURFACE_BORDER,
+        focused_border_color=theme.PRIMARY_BLUE,
+        bgcolor=ft.Colors.WHITE,
+        height=50,
+        text_size=14,
+        dense=True,
+        content_padding=ft.padding.symmetric(horizontal=12, vertical=10),
+        on_submit=on_submit,
+    )
+
+
+def mobile_primary_button(text: str, icon=ft.Icons.ADD, on_click=None, color=None):
+    return ft.ElevatedButton(
+        content=ft.Row(
+            [
+                ft.Icon(icon, color=ft.Colors.WHITE, size=18),
+                ft.Text(text, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=14),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=8,
+        ),
+        on_click=on_click,
+        height=44,
+        bgcolor=color or theme.PRIMARY_BLUE,
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12), elevation=0),
+    )
+
+
+def mobile_avatar(label: str, color="#dbeafe"):
+    initials = "".join([part[:1] for part in (label or "-").split()[:2]]).upper() or "-"
+    return ft.Container(
+        content=ft.Text(initials, size=11, color=theme.INK_COLOR),
+        width=34,
+        height=34,
+        bgcolor=color,
+        border_radius=17,
+        alignment=ft.alignment.center,
+    )
+
+
+def mobile_list_card(title: str, subtitle: str, avatar_text="", avatar_color="#dbeafe", on_click=None, trailing=True):
+    controls = [
+        mobile_avatar(avatar_text or title, avatar_color),
+        ft.Column(
+            [
+                ft.Text(title, size=14, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
+                ft.Text(subtitle, size=11, color=theme.MUTED_TEXT_COLOR, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
+            ],
+            spacing=2,
+            expand=True,
+        ),
+    ]
+    if trailing:
+        controls.append(ft.Icon(ft.Icons.CHEVRON_RIGHT, size=20, color=theme.MUTED_TEXT_COLOR))
+    return ft.Container(
+        content=ft.Row(controls, spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
+        border_radius=theme.MOBILE_RADIUS,
+        padding=ft.padding.symmetric(horizontal=12, vertical=10),
+        ink=on_click is not None,
+        on_click=on_click,
+    )
+
+
+def mobile_screen(content, bottom_action=None):
+    controls = [
+        ft.Container(
+            content=content,
+            padding=ft.padding.only(left=22, right=22, top=18, bottom=18),
+            expand=True,
+        )
+    ]
+    if bottom_action is not None:
+        controls.append(
+            ft.Container(
+                content=bottom_action,
+                padding=ft.padding.only(left=22, right=22, bottom=22, top=8),
+            )
+        )
+    return ft.Container(
+        content=ft.Column(controls, spacing=0, expand=True),
+        bgcolor=theme.MOBILE_BACKGROUND,
+        expand=True,
+    )
 
 
 def info_banner(text: str, icon=ft.Icons.INFO_OUTLINE):
@@ -83,6 +212,7 @@ def content_card(content, padding=10, radius=theme.RADIUS_MEDIUM):
         bgcolor=theme.CARD_BACKGROUND,
         border_radius=radius,
         padding=padding,
+        border=ft.border.all(1, theme.SURFACE_BORDER),
         shadow=theme.card_shadow(),
         content=content,
     )
@@ -102,9 +232,10 @@ def primary_button(text: str, icon=None, on_click=None):
         text,
         icon=icon,
         on_click=on_click,
+        height=38,
         bgcolor=theme.PRIMARY_COLOR,
         color=ft.Colors.WHITE,
-        style=ft.ButtonStyle(shape=theme.button_shape()),
+        style=ft.ButtonStyle(shape=theme.button_shape(), elevation=0),
     )
 
 
@@ -114,6 +245,7 @@ def secondary_button(text: str, icon=None, on_click=None, visible=True):
         icon=icon,
         on_click=on_click,
         visible=visible,
+        height=38,
         style=ft.ButtonStyle(shape=theme.button_shape()),
     )
 

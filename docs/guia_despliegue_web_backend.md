@@ -598,6 +598,12 @@ git push
 
 ## 14. Decisión técnica final
 
+### Diagnóstico de bloqueos por Imunify360
+
+La ruta pública `/somatocarta` debe excluirse de **Bot Protection/Proactive Defense** en Imunify360. Un cliente Flet o Android no puede completar desafíos HTML y recibiría respuestas 415/503 aunque el navegador muestre correctamente el mensaje de estado de la API.
+
+Verificar después del cambio que `POST /somatocarta/auth/login` acepte `application/json` desde una red externa. No se debe desactivar el firewall completo: la exclusión se limita a la ruta de la API.
+
 Para un hosting sin VPS, la mejor opción es:
 
 ```text

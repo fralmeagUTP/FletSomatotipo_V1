@@ -1,5 +1,20 @@
 # Changelog documental
 
+## 29 de junio de 2026 — Release v1.2.5
+
+- Separadas las composiciones visuales Web y Android sin duplicar reglas de negocio.
+- Rediseñado CRUD móvil de deportistas (cuatro pasos), deportes, entidades y asignaciones.
+- Corregidos nombres y datos completos del deportista en asignaciones.
+- Restaurado todo el contenido longitudinal en móvil con secciones adaptadas.
+- Habilitados mostrar/ocultar contraseña y cierre de sesión desde el encabezado móvil.
+- Normalizado el orden de logotipos: UTP, ISC, Programa de Deportes y Nyquist.
+- Añadido compartir PDF individual y longitudinal mediante selector Android, `ACTION_SEND` y `FileProvider`.
+- Mejorado login backend con respuesta 503 controlada ante indisponibilidad SQL.
+- Documentada la incompatibilidad de Imunify360 Bot Protection con clientes API nativos.
+- APK generado: `INSTALAR_Somatocarta_MOVIL_v1.2.5.apk`, `versionCode=12`, API 24+, arquitecturas `arm64-v8a`, `armeabi-v7a` y `x86_64`.
+- Firma de pruebas Android v2 verificada y SHA-256 `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+- Suite final: 227 pruebas y 7 subpruebas aprobadas.
+
 Este archivo registra cambios que afectan el estado, alcance o interpretación de la documentación de Somatocarta.
 
 ## 22 de junio de 2026 — Primera versión Flet Web

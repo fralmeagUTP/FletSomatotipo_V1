@@ -70,6 +70,16 @@ Antes de exponer la interfaz web:
 - configurar el proxy inverso para conservar WebSocket;
 - completar `docs/flet_web_qa_checklist.md` en escritorio, tablet y móvil;
 - confirmar que fotografías y PDF funcionan desde el dominio final.
+- excluir la ruta pública de API de desafíos Imunify360 Bot Protection; Android/Python no pueden resolver challenges JavaScript.
+
+## Publicación Android
+
+- incrementar `build-version` y `build-number` respecto del APK instalado;
+- compilar con `requirements-apk.txt`; el APK interno universal incluye `arm64-v8a`, `armeabi-v7a` y `x86_64`;
+- verificar firma, `versionName`, `versionCode`, paquete `com.nyquist.somatocarta` y ABI;
+- comprobar que el manifiesto conserva `FileProvider` y permisos temporales para compartir PDF;
+- probar login, CRUD móviles, cierre de sesión, visor PDF y selector de aplicaciones;
+- calcular SHA-256 y registrar nombre, tamaño y hash del artefacto en el changelog.
 
 Sin VPS, use `render.yaml`, `requirements-web.txt` y la guía `docs/flet_web_no_vps.md`; el backend y los uploads permanecen en cPanel.
 

@@ -93,6 +93,9 @@ class DeporteDeportistaResponse(DeporteDeportistaBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    NOMBRE_DEPORTISTA: Optional[str] = None
+    DEPORTE: Optional[str] = None
+    RAZON_SOCIAL: Optional[str] = None
 
 
 class DeporteDeportistaPage(BaseModel):

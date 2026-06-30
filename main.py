@@ -16,7 +16,7 @@ android_log("module import start")
 # Ensure the current directory is in the path for module resolution
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-APP_VERSION = "v1.2.1"
+APP_VERSION = "v1.2.5"
 
 def main(page):
     android_log("main(page) entered")
@@ -52,6 +52,7 @@ def main(page):
             LOGO_NYQUIST,
             LOGO_SOMATOCARTA,
             LOGO_UTP,
+            INSTITUTIONAL_LOGOS,
             WINDOW_ICON,
             asset_path,
             asset_src,
@@ -87,6 +88,10 @@ def main(page):
     if hasattr(page, "window"):
         try:
             page.window.icon = asset_path(WINDOW_ICON)
+            if os.getenv("SOMATOCARTA_FORCE_MOBILE", "").strip().lower() in {"1", "true", "yes"}:
+                page.window.width = 390
+                page.window.height = 844
+                page.window.resizable = True
         except Exception:
             pass
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
@@ -109,12 +114,7 @@ def main(page):
     )
 
     institutional_logos = ft.Row(
-        [
-            ft.Image(src=asset_src(page, LOGO_CDR), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_src(page, LOGO_ISC), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_src(page, LOGO_UTP), height=32, fit=ft.ImageFit.CONTAIN),
-            ft.Image(src=asset_src(page, LOGO_NYQUIST), height=32, fit=ft.ImageFit.CONTAIN),
-        ],
+        [ft.Image(src=asset_src(page, logo), height=32, fit=ft.ImageFit.CONTAIN) for logo in INSTITUTIONAL_LOGOS],
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=12,
     )
@@ -122,12 +122,13 @@ def main(page):
 
     username_field = ft.TextField(
         hint_text="Usuario",
-        height=50,
-        border_radius=8,
-        border_color="#cccccc",
+        prefix_icon=ft.Icons.PERSON_OUTLINE,
+        height=54,
+        border_radius=10,
+        border_color=theme.SURFACE_BORDER,
         focused_border_color=PRIMARY_COLOR,
-        text_size=16,
-        content_padding=ft.padding.only(left=15, right=15, top=5, bottom=5),
+        text_size=14,
+        content_padding=ft.padding.only(left=12, right=12, top=6, bottom=6),
         bgcolor=ft.Colors.WHITE,
         color=TEXT_COLOR
     )
@@ -135,13 +136,14 @@ def main(page):
     password_field = ft.TextField(
         hint_text="Contraseña",
         password=True,
-        height=50,
-        border_radius=8,
-        border_color="#cccccc",
+        prefix_icon=ft.Icons.LOCK_OUTLINE,
+        height=54,
+        border_radius=10,
+        border_color=theme.SURFACE_BORDER,
         focused_border_color=PRIMARY_COLOR,
-        can_reveal_password=False, 
-        text_size=16,
-        content_padding=ft.padding.only(left=15, right=15, top=5, bottom=5),
+        can_reveal_password=True,
+        text_size=14,
+        content_padding=ft.padding.only(left=12, right=12, top=6, bottom=6),
         bgcolor=ft.Colors.WHITE,
         color=TEXT_COLOR
     )
@@ -177,14 +179,16 @@ def main(page):
     def build_login_ui():
         """Construye y retorna la UI de login"""
         nonlocal login_button_control
+        is_mobile_layout = (getattr(page, "width", None) or 390) < 700
         login_button = ft.ElevatedButton(
             content=ft.Text("Iniciar sesión", size=16, weight="bold"),
             on_click=login_click,
-            height=50,
+            height=44 if is_mobile_layout else 50,
             style=ft.ButtonStyle(
                 color=ft.Colors.WHITE,
                 bgcolor=PRIMARY_COLOR,
-                shape=ft.RoundedRectangleBorder(radius=8),
+                shape=ft.RoundedRectangleBorder(radius=12 if is_mobile_layout else 8),
+                elevation=0,
             )
         )
         login_button_control = login_button

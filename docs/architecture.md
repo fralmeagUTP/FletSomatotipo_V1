@@ -1,4 +1,4 @@
-# Arquitectura de Somatocarta v1.2.1
+# Arquitectura de Somatocarta v1.2.5
 
 **Fecha de actualización:** 22 de junio de 2026
 
@@ -8,10 +8,19 @@
 
 Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, registrar valoraciones antropométricas, consultar historial de somatotipo, generar análisis individuales y longitudinales, y producir informes PDF. Forma parte de SINVADE (Sistema Integral de Valoración Deportiva).
 
+## Cambios arquitectónicos v1.2.5
+
+- `main.py` sigue siendo la entrada compartida, pero las vistas seleccionan composiciones específicas mediante `is_mobile`; Android no renderiza forzosamente los paneles Web.
+- `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
+- `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio/Android y compartir Android mediante `ACTION_SEND` + `FileProvider`.
+- Deportistas usa un formulario móvil de cuatro pasos. Deportes, entidades y asignaciones usan listas compactas y formularios exclusivos para móvil.
+- El listado de asignaciones incorpora nombres descriptivos de deportista, deporte y entidad sin eliminar sus identificadores contractuales.
+- La indisponibilidad SQL durante login se traduce a HTTP 503 con mensaje controlado.
+
 ## Estructura principal
 
 ```text
-main.py                         # Entrada del frontend Flet (v1.2.1)
+main.py                         # Entrada del frontend Flet (v1.2.5)
 web_main.py                     # Entrada y fábrica ASGI de Flet Web
 app_config.py                   # Configuración compartida del frontend
 views/                          # Pantallas Flet (9 vistas)
@@ -66,7 +75,7 @@ src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 206 pruebas en 30 archivos
+tests/                          # 227 pruebas en 35 archivos
 scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
@@ -187,7 +196,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-206 tests y 7 subpruebas en 30 archivos. Comando:
+227 tests y 7 subpruebas en 35 archivos. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v

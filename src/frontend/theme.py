@@ -57,23 +57,29 @@ if flet_charts is not None:
             setattr(ft, chart_control, getattr(flet_charts, chart_control))
 
 
-PRIMARY_COLOR = "#2e5cb8"
-BACKGROUND_COLOR = "#f5f7fb"
+PRIMARY_COLOR = "#1f5fca"
+PRIMARY_BLUE = "#2f66c9"
+BACKGROUND_COLOR = "#f6f8fc"
+MOBILE_BACKGROUND = "#f4f7fc"
 CARD_BACKGROUND = ft.Colors.WHITE
-TEXT_COLOR = "#333333"
-HEADING_COLOR = "#1a1a1a"
+TEXT_COLOR = "#243044"
+HEADING_COLOR = "#172033"
+INK_COLOR = "#202938"
 APP_TITLE_COLOR = "#2c3e50"
-SUBTITLE_COLOR = "#666666"
-INFO_BACKGROUND = "#e8f0fe"
-SURFACE_MUTED = "#f0f2f5"
-SURFACE_BORDER = "#e3e8f0"
+SUBTITLE_COLOR = "#667085"
+MUTED_TEXT_COLOR = "#6b7280"
+INFO_BACKGROUND = "#edf4ff"
+SURFACE_MUTED = "#f1f5fb"
+SURFACE_BORDER = "#dbe5f2"
 SUCCESS_COLOR = "#2e7d32"
+SUCCESS_GREEN = "#34a853"
 ERROR_COLOR = "#c62828"
 WARNING_COLOR = "#f59e0b"
 
 RADIUS_SMALL = 8
-RADIUS_MEDIUM = 10
-RADIUS_LARGE = 12
+RADIUS_MEDIUM = 8
+RADIUS_LARGE = 10
+MOBILE_RADIUS = 12
 
 SPACE_XS = 6
 SPACE_SM = 10
@@ -81,7 +87,7 @@ SPACE_MD = 14
 SPACE_LG = 18
 SPACE_XL = 24
 
-TITLE_SIZE = 28
+TITLE_SIZE = 24
 SECTION_TITLE_SIZE = 18
 BODY_SIZE = 14
 CAPTION_SIZE = 12
@@ -89,10 +95,10 @@ CAPTION_SIZE = 12
 
 def card_shadow():
     return ft.BoxShadow(
-        spread_radius=1,
-        blur_radius=5,
-        color=ft.Colors.BLUE_GREY_50,
-        offset=ft.Offset(0, 5),
+        spread_radius=0,
+        blur_radius=10,
+        color="#140f2a4414",
+        offset=ft.Offset(0, 4),
     )
 
 

@@ -8,6 +8,7 @@
 - [ ] `WEB_ALLOWED_ORIGINS` contiene solo dominios autorizados.
 - [ ] El proxy conserva WebSocket y redirige HTTP a HTTPS.
 - [ ] El JWT expira según `ACCESS_TOKEN_EXPIRE_MINUTES`.
+- [ ] Imunify360 no intercepta `/somatocarta/*` con 415 o `Access denied by bot-protection`.
 - [ ] Cerrar sesión elimina el token y vuelve al login.
 
 ## Navegadores y responsive
@@ -40,6 +41,7 @@
 - [ ] Análisis longitudinal muestra tendencias, trayectoria y somatocarta.
 - [ ] El PDF longitudinal se abre o descarga en el navegador.
 - [ ] Acerca del proyecto muestra textos y logotipos institucionales.
+- [ ] El orden institucional es UTP, ISC, Programa de Deportes y Nyquist.
 
 ## Accesibilidad y errores
 
@@ -54,4 +56,6 @@
 
 - [ ] `main.py` continúa iniciando la aplicación nativa.
 - [ ] Login, navegación atrás, fotografías y PDF siguen funcionando en APK.
+- [ ] El ojo del login muestra/oculta contraseña y el icono superior cierra sesión.
+- [ ] PDF individual y longitudinal abren el selector Android para compartir.
 - [ ] No se añadieron dependencias web a `requirements-apk.txt`.

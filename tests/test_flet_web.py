@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 import web_main
 from src.frontend.assets import ASSETS_DIR
-from src.frontend.runtime import _save_web_pdf, deliver_pdf
+from src.frontend.runtime import _open_file_external, _save_web_pdf, _share_android_pdf, deliver_pdf, share_pdf
 
 
 class FakePage:
@@ -86,12 +86,86 @@ class FletWebTests(unittest.TestCase):
         page = FakePage(web=False)
         payload = b"%PDF-1.4\nnative"
 
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, patch("src.frontend.runtime._open_file_external") as opener:
             result = deliver_pdf(page, payload, "informe.pdf", directory)
 
             self.assertEqual(result, Path(directory) / "informe.pdf")
             self.assertEqual(result.read_bytes(), payload)
-            self.assertEqual(page.launched_urls, [result.as_uri()])
+            opener.assert_called_once_with(result, page)
+
+    def test_android_pdf_is_saved_in_public_downloads(self):
+        page = FakePage(web=False)
+        payload = b"%PDF-1.4\nandroid"
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            "os.environ",
+            {"ANDROID_ROOT": "/system", "SOMATOCARTA_ANDROID_DOWNLOADS": directory},
+        ), patch("src.frontend.runtime._open_file_external") as opener:
+            result = deliver_pdf(page, payload, "informe.pdf")
+
+            self.assertEqual(result, Path(directory) / "informe.pdf")
+            self.assertEqual(result.read_bytes(), payload)
+            opener.assert_called_once_with(result, page)
+
+    def test_android_pdf_uses_external_pdf_intent(self):
+        page = FakePage(web=False)
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            "os.environ",
+            {"ANDROID_ROOT": "/system"},
+        ), patch("src.frontend.runtime.subprocess.Popen") as popen:
+            path = Path(directory) / "informe.pdf"
+            path.write_bytes(b"%PDF-1.4")
+
+            self.assertTrue(_open_file_external(path, page))
+
+            command = popen.call_args.args[0]
+            self.assertIn("android.intent.action.VIEW", command)
+            self.assertIn("application/pdf", command)
+            self.assertIn(path.as_uri(), command)
+            self.assertEqual(page.launched_urls, [])
+
+    def test_android_pdf_share_uses_send_intent_and_file_provider(self):
+        path = Path("/storage/emulated/0/Download/informe.pdf")
+
+        with patch("src.frontend.runtime.subprocess.Popen") as popen:
+            self.assertTrue(_share_android_pdf(path))
+
+        command = popen.call_args.args[0]
+        self.assertIn("android.intent.action.SEND", command)
+        self.assertIn("application/pdf", command)
+        self.assertIn("android.intent.extra.STREAM", command)
+        self.assertIn(
+            "content://com.nyquist.somatocarta.provider/external_files/Download/informe.pdf",
+            command,
+        )
+        self.assertIn("0x00000001", command)
+
+    def test_share_pdf_saves_android_file_and_opens_share_sheet(self):
+        page = FakePage(web=False)
+        payload = b"%PDF-1.4\nandroid"
+
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            "os.environ",
+            {"ANDROID_ROOT": "/system"},
+        ), patch("src.frontend.runtime._share_android_pdf", return_value=True) as share, patch(
+            "src.frontend.runtime._open_file_external"
+        ) as opener:
+            result = share_pdf(page, payload, "informe.pdf", directory)
+
+        share.assert_called_once_with(result)
+        opener.assert_not_called()
+        self.assertEqual(result.name, "informe.pdf")
+
+    def test_native_pdf_falls_back_to_launch_url_when_no_system_opener_exists(self):
+        page = FakePage(web=False)
+
+        with tempfile.TemporaryDirectory() as directory, patch("src.frontend.runtime.platform.system", return_value="Linux"), patch.dict("os.environ", {"ANDROID_ROOT": "/system"}), patch("src.frontend.runtime._open_android_pdf", return_value=False):
+            path = Path(directory) / "informe.pdf"
+            path.write_bytes(b"%PDF-1.4")
+
+            self.assertTrue(_open_file_external(path, page))
+            self.assertEqual(page.launched_urls, [path.as_uri()])
 
     def test_invalid_pdf_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "PDF válido"):

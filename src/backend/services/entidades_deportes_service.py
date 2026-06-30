@@ -184,24 +184,44 @@ def validate_assignment_refs(db: Session, data: dict):
 
 
 def list_asignaciones_page(db: Session, search: str | None = None, page: int = 1, page_size: int = 50):
-    query = db.query(DeporteDeportista)
+    query = (
+        db.query(
+            DeporteDeportista,
+            Deportista.NOMBRE_DEPORTISTA,
+            Deporte.DEPORTE,
+            Entidad.RAZON_SOCIAL,
+        )
+        .outerjoin(Deporte, Deporte.ID_DEPORTE == DeporteDeportista.ID_DEPORTE)
+        .outerjoin(Deportista, Deportista.IDENTI_DEPORTISTA == DeporteDeportista.IDENTI_DEPORTISTA)
+        .outerjoin(Entidad, Entidad.NIT_ENTIDAD == DeporteDeportista.NIT_ENTIDAD)
+    )
     if search:
         search_filter = f"%{search}%"
-        query = (
-            query.outerjoin(Deporte, Deporte.ID_DEPORTE == DeporteDeportista.ID_DEPORTE)
-            .outerjoin(Deportista, Deportista.IDENTI_DEPORTISTA == DeporteDeportista.IDENTI_DEPORTISTA)
-            .outerjoin(Entidad, Entidad.NIT_ENTIDAD == DeporteDeportista.NIT_ENTIDAD)
-            .filter(
-                or_(
-                    Deporte.DEPORTE.ilike(search_filter),
-                    Deportista.NOMBRE_DEPORTISTA.ilike(search_filter),
-                    DeporteDeportista.IDENTI_DEPORTISTA.ilike(search_filter),
-                    Entidad.RAZON_SOCIAL.ilike(search_filter),
-                    DeporteDeportista.NIT_ENTIDAD.ilike(search_filter),
-                )
+        query = query.filter(
+            or_(
+                Deporte.DEPORTE.ilike(search_filter),
+                Deportista.NOMBRE_DEPORTISTA.ilike(search_filter),
+                DeporteDeportista.IDENTI_DEPORTISTA.ilike(search_filter),
+                Entidad.RAZON_SOCIAL.ilike(search_filter),
+                DeporteDeportista.NIT_ENTIDAD.ilike(search_filter),
             )
         )
-    return page_response(query.order_by(DeporteDeportista.id.desc()), page, page_size)
+    total = query.count()
+    rows = query.order_by(DeporteDeportista.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    items = []
+    for assignment, athlete_name, sport_name, organization_name in rows:
+        items.append(
+            {
+                "id": assignment.id,
+                "ID_DEPORTE": assignment.ID_DEPORTE,
+                "IDENTI_DEPORTISTA": assignment.IDENTI_DEPORTISTA,
+                "NIT_ENTIDAD": assignment.NIT_ENTIDAD,
+                "NOMBRE_DEPORTISTA": athlete_name,
+                "DEPORTE": sport_name,
+                "RAZON_SOCIAL": organization_name,
+            }
+        )
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 def get_asignacion_or_404(db: Session, assignment_id: int):

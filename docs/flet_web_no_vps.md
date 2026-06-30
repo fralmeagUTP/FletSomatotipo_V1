@@ -66,6 +66,8 @@ WEB_ALLOWED_ORIGINS=https://somatocarta.nyquist.app
 
 Reinicie la aplicación Passenger después de modificar el entorno. No cambie `API_URL` del APK ni mueva el backend existente.
 
+En Imunify360/ModSecurity, excluya `/somatocarta/*` de Bot Protection. Mantenga las demás protecciones activas; la exclusión es necesaria porque FastAPI recibe clientes nativos que no ejecutan desafíos JavaScript.
+
 ## Actualizaciones posteriores
 
 1. Fusionar los cambios a `main` en GitHub.
@@ -81,6 +83,7 @@ Reinicie la aplicación Passenger después de modificar el entorno. No cambie `A
 - Crear o editar un deportista y probar fotografía.
 - Abrir análisis individual y longitudinal.
 - Descargar ambos PDF.
+- Confirmar que Android ofrece **Compartir PDF** y Web conserva la descarga del navegador.
 - Cerrar sesión y confirmar que solicita autenticación nuevamente.
 
 Complete también `docs/flet_web_qa_checklist.md`.

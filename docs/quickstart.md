@@ -1,7 +1,7 @@
-# Guía rápida de inicio — Somatocarta v1.2.1
+# Guía rápida de inicio — Somatocarta v1.2.5
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
-**Fecha:** 22 de junio de 2026
+**Fecha:** 29 de junio de 2026
 
 ---
 
@@ -100,7 +100,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **206 tests y 7 subpruebas pasando**.
+Estado esperado: **227 tests y 7 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -113,10 +113,10 @@ Estado esperado: **206 tests y 7 subpruebas pasando**.
 ## 6. Build APK (Android)
 
 ```powershell
-.\.venv\Scripts\flet.exe build apk
+.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.5 --build-number 12
 ```
 
-El archivo queda en: `build\apk\app-release.apk`
+El archivo queda en: `build\apk\Somatocarta.apk`
 
 El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En escritorio, `API_URL` definido en `.env` sigue teniendo prioridad.
 
@@ -125,23 +125,27 @@ El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En 
 El build optimizado usa `requirements-apk.txt` para evitar empaquetar dependencias exclusivas del backend. Artefacto verificado:
 
 ```text
-build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.5.apk
 ```
 
 - Paquete: `com.nyquist.somatocarta`
-- Versión: `1.2.1` (`versionCode=8`)
+- Versión: `1.2.5` (`versionCode=12`)
 - Android mínimo: API 24 (Android 7.0)
-- Arquitectura: ARM64
+- Arquitecturas: `arm64-v8a`, `armeabi-v7a` y `x86_64`
 - Runtime: Flet `0.85.3` y `flet-charts 0.85.3`
 - Firma: debug, válida únicamente para instalación y pruebas internas
 
 Instalación mediante USB con depuración habilitada:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.5.apk
 ```
 
-Este APK fue validado directamente en un dispositivo Android 16 con ABI `arm64-v8a`.
+La estructura, firma, manifiesto, versión y arquitecturas del APK fueron verificadas con Android Build Tools 35.0.0.
+
+SHA-256: `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+
+La entrega móvil permite compartir PDF individuales y longitudinales con aplicaciones instaladas mediante `ACTION_SEND` y el `FileProvider` del paquete.
 
 Para publicación se debe generar y proteger un keystore de release propio; no distribuir públicamente el APK firmado con certificado debug.
 

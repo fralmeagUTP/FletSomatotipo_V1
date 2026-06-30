@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel
 from ..database import get_db
 from ..models import Usuario
@@ -40,7 +41,14 @@ def login(request: LoginRequest, db: Session = Depends(get_db), req: Request = N
     client_ip = get_client_ip(req) if req else 'unknown'
     user_agent = req.headers.get('User-Agent', '') if req else ''
     
-    user = db.query(Usuario).filter(Usuario.LOGIN_USER == request.username).first()
+    try:
+        user = db.query(Usuario).filter(Usuario.LOGIN_USER == request.username).first()
+    except SQLAlchemyError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo conectar con la base de datos. Verifica el acceso al servidor MySQL.",
+        ) from error
     
     if not user:
         # Log login fallido - usuario no encontrado

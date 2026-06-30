@@ -1,4 +1,4 @@
-# Gobernanza documental — Somatocarta v1.2.1
+# Gobernanza documental — Somatocarta v1.2.5
 
 **Origen:** consolidación de inventario, reporte de obsolescencia y changelog histórico.
 **Fecha de actualización:** 22 de junio de 2026
@@ -171,6 +171,16 @@ Los informes dentro de `docs/qa/` son evidencia histórica y no representan el e
 - Incorporados checklist QA Web y validación de assets compartidos Android/Web.
 - Dashboard documentado con iconografía Material vectorial en lugar de miniaturas raster.
 - Estado ponderado actualizado a 95% y suite vigente a 206 pruebas y 7 subpruebas.
+
+### 2026-06-29 — Release v1.2.5 y separación Web/Android
+
+- Actualizadas versión, arquitectura, módulos, guía de usuario, pruebas, QA, despliegue y publicación.
+- Documentados CRUD móviles específicos, análisis longitudinal móvil completo y layouts Web independientes.
+- Documentados revelado de contraseña, logout superior y orden institucional de logotipos.
+- Documentada entrega PDF por plataforma y compartir Android mediante `ACTION_SEND`/`FileProvider`.
+- Registrada la exclusión requerida de Imunify360 Bot Protection para la API pública.
+- Generado build Android universal `1.2.5` con `versionCode=12`, firma de pruebas v2 verificada y SHA-256 `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+- Suite final verificada: 227 pruebas y 7 subpruebas aprobadas.
 
 ---
 

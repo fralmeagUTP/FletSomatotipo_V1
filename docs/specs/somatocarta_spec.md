@@ -40,7 +40,7 @@ Instituciones vinculadas:
 
 ### 1.5 Alcance actual
 
-Versión **v1.2.1**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
+Versión **v1.2.5**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
 
 ---
 
@@ -285,7 +285,7 @@ El sistema debe renderizar la carta de Heath-Carter con calibración por interpo
 
 ### FR-014: Análisis longitudinal
 
-El sistema debe permitir comparar valoraciones temporales de un deportista, graficar 11 variables, mostrar tarjetas de cambio, y renderizar somatocarta longitudinal con trayectoria.
+El sistema debe permitir comparar valoraciones temporales de un deportista, graficar 10 variables, mostrar tarjetas de cambio, y renderizar somatocarta longitudinal con trayectoria.
 
 ### FR-015: Informes PDF
 
@@ -597,6 +597,10 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | UX-010 | Diferenciación visual clara entre análisis individual y longitudinal. |
 | UX-011 | Unidades de medida visibles en todos los campos y reportes. |
 | UX-012 | Diseño responsive sin scroll horizontal no deseado. |
+| UX-013 | Web y Android pueden compartir lógica y datos, pero deben usar composiciones visuales independientes cuando el flujo móvil lo requiera. |
+| UX-014 | Deportistas móvil usa un flujo de cuatro pasos; deportes, entidades y asignaciones usan tarjetas y formularios separados. |
+| UX-015 | El login permite mostrar/ocultar contraseña y el encabezado móvil permite cerrar sesión. |
+| UX-016 | El análisis longitudinal móvil conserva todos los datos funcionales del panel Web en secciones adaptadas. |
 
 ---
 
@@ -632,6 +636,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 - Los PDFs se generan íntegramente en el backend sin dependencias externas de PDF.
 - El PDF debe ser válido (iniciar con firma `%PDF`).
 - Las imágenes PNG se decodifican internamente con soporte para filtro Paeth.
+- En Web, el PDF se entrega al navegador; en escritorio se abre externamente; en Android se puede compartir mediante `ACTION_SEND` con URI `content://` proporcionado por `FileProvider`.
 
 ---
 
@@ -651,7 +656,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 206 tests y 7 subpruebas pasando.
+**Resultado actual:** 227 tests y 7 subpruebas pasando.
 
 ---
 
@@ -857,6 +862,8 @@ Elimina un deporte.
 
 Parámetros: `search`, `page`, `page_size`
 
+Cada elemento conserva `id`, `ID_DEPORTE`, `IDENTI_DEPORTISTA` y `NIT_ENTIDAD`, y puede incluir `NOMBRE_DEPORTISTA`, `DEPORTE` y `RAZON_SOCIAL` para presentación.
+
 #### `POST /asignaciones/`
 
 Crea una asignación. Payload: ID_DEPORTE, IDENTI_DEPORTISTA, NIT_ENTIDAD.
@@ -1058,7 +1065,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 
 ### C.3 Diseño adaptativo
 
-- **Celular:** navegación por pantalla única; lista o detalle, no ambos al mismo tiempo; tablas e imágenes con scroll horizontal cuando no quepan.
+- **Celular:** navegación por pantalla única; lista o detalle, no ambos al mismo tiempo; CRUD mediante tarjetas/formularios móviles; análisis longitudinal completo en secciones verticales; tablas e imágenes con scroll horizontal cuando no quepan.
 - **Tableta:** grillas de dos columnas cuando el ancho lo permita; tarjetas apilables.
 - **Laptop/escritorio:** layout master-detail; mayor densidad de información; tablas y gráficos visibles simultáneamente.
 
@@ -1073,6 +1080,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - El token incluye `sub` y `id`.
 - El frontend envía token mediante `Authorization: Bearer`.
 - La carga de imágenes valida extensión, tipo MIME y tamaño máximo.
+- Android comparte PDF mediante `FileProvider`, permiso temporal de lectura y MIME `application/pdf`; no expone rutas privadas directas.
 
 ### D.2 Riesgos detectados
 
@@ -1099,7 +1107,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (206 tests y 7 subpruebas).
+- Suite de pruebas amplia para el tamaño actual de la app (227 tests y 7 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.

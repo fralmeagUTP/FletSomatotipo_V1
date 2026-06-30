@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from types import SimpleNamespace
 
@@ -9,6 +10,8 @@ from src.frontend.components import (
     content_card,
     horizontal_scroll,
     info_banner,
+    is_mobile,
+    mobile_top_bar,
     page_header,
     responsive_dialog_size,
     responsive_padding,
@@ -43,6 +46,26 @@ class ComponentsTests(unittest.TestCase):
         self.assertEqual(len(header.controls), 1)
         self.assertEqual(header.controls[0].value, "Dashboard")
 
+    def test_mobile_top_bar_logout_button_runs_callback(self):
+        calls = []
+        header = mobile_top_bar("Dashboard", on_menu=lambda _: None, on_trailing=lambda _: calls.append("logout"))
+        logout_button = header.content.controls[-1]
+
+        self.assertFalse(logout_button.disabled)
+        logout_button.on_click(None)
+        self.assertEqual(calls, ["logout"])
+
+    def test_unknown_width_defaults_to_mobile_layout(self):
+        page = SimpleNamespace(width=None)
+
+        self.assertTrue(is_mobile(page))
+
+    def test_force_mobile_env_overrides_desktop_width(self):
+        page = SimpleNamespace(width=1280)
+
+        with patch.dict("os.environ", {"SOMATOCARTA_FORCE_MOBILE": "1"}):
+            self.assertTrue(is_mobile(page))
+
     def test_info_banner_uses_theme_background(self):
         banner = info_banner("Mensaje")
 
@@ -76,7 +99,7 @@ class ComponentsTests(unittest.TestCase):
     def test_responsive_padding_uses_mobile_tablet_and_desktop_values(self):
         self.assertEqual(responsive_padding(SimpleNamespace(width=390)), 12)
         self.assertEqual(responsive_padding(SimpleNamespace(width=800)), 24)
-        self.assertEqual(responsive_padding(SimpleNamespace(width=1280)), 40)
+        self.assertEqual(responsive_padding(SimpleNamespace(width=1280)), 24)
 
     def test_responsive_dialog_size_never_exceeds_viewport(self):
         size = responsive_dialog_size(SimpleNamespace(width=390, height=700))
@@ -124,6 +147,20 @@ class ComponentsTests(unittest.TestCase):
         self.assertFalse(top_bar.visible)
         self.assertNotIn("Dashboard", self._collect_text_values(top_bar))
         self.assertNotIn("Panel operativo de Somatocarta", self._collect_text_values(top_bar))
+
+    def test_app_shell_uses_mobile_layout_when_width_is_unknown(self):
+        page = SimpleNamespace(width=None, session={}, overlay=[], update=lambda: None)
+
+        shell = build_app_shell(page, ft.Text("Contenido"), title="Dashboard", show_search=False)
+        sidebar, body = shell.content.controls
+        top_bar = body.controls[0]
+        mobile_header = body.controls[1]
+        bottom_navigation = body.controls[4]
+
+        self.assertFalse(sidebar.visible)
+        self.assertFalse(top_bar.visible)
+        self.assertTrue(mobile_header.visible)
+        self.assertTrue(bottom_navigation.visible)
 
 
 if __name__ == "__main__":

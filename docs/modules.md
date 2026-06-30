@@ -1,8 +1,10 @@
-# Módulos funcionales — Somatocarta v1.2.1
+# Módulos funcionales — Somatocarta v1.2.5
 
 **Fecha:** 22 de junio de 2026
 
 ---
+
+> Actualizado el 29 de junio de 2026. La interfaz móvil y la interfaz Web comparten reglas de negocio y API, pero mantienen composiciones visuales independientes.
 
 ## 1. Autenticación (Login)
 
@@ -69,9 +71,13 @@
 | **Estado** | Funcional. |
 | **Pendientes** | Sin pendientes funcionales. La API y MySQL bloquean eliminaciones con dependencias mediante `RESTRICT` y HTTP 409. |
 
+En móvil, el alta y la edición se distribuyen en cuatro pasos: datos básicos, contacto/ubicación, información socioeconómica y fotografía.
+
 ---
 
 ## 5. Entidades (CRUD)
+
+En móvil, las entidades se presentan como tarjetas por razón social/NIT y el formulario separado conserva NIT, razón social, teléfono, contacto y correo.
 
 | Campo | Detalle |
 |-------|---------|
@@ -89,6 +95,8 @@
 
 ## 6. Deportes (CRUD)
 
+En móvil, cada tarjeta muestra nombre e ID y abre el formulario de edición/eliminación; el botón inferior abre un alta nueva.
+
 | Campo | Detalle |
 |-------|---------|
 | **Propósito** | Gestionar el catálogo de deportes. |
@@ -104,6 +112,8 @@
 ---
 
 ## 7. Asignaciones (CRUD)
+
+En móvil, las tarjetas muestran nombre del deportista, deporte y entidad. La edición recupera el registro completo del deportista para presentar fecha, correo y ubicación.
 
 | Campo | Detalle |
 |-------|---------|
@@ -161,7 +171,8 @@
 | **Usuarios involucrados** | Entrenadores, investigadores. |
 | **Pantallas/rutas** | `views/analisis_longitudinal.py`, `GET /somatotipo/vista/deportista/{identi}/longitudinal/pdf` |
 | **Entradas** | Deportista (búsqueda) con mínimo 2 valoraciones. |
-| **Procesos** | Tarjetas KPI (valor inicial, final, delta, % cambio). Gráficos de línea para 11 variables. Comparación de métodos de grasa. Somatocarta longitudinal con trayectoria cronológica. Gráfico peso vs masa muscular. Tabla histórica. Descarga de PDF longitudinal. |
+| **Procesos** | Tarjetas KPI (valor inicial, final, delta, % cambio). Gráficos de línea para 10 variables. Comparación de métodos de grasa. Somatocarta longitudinal con trayectoria cronológica. Gráfico peso vs masa muscular. Tabla histórica. PDF longitudinal. |
+| **Diseño por plataforma** | Web presenta el panel analítico amplio; móvil conserva todos los datos en secciones compactas con selector de variable y desplazamiento vertical. |
 | **Variables graficables** | Peso, IMC, % graso Yuhasz, % graso Faulkner, masa muscular, endomorfismo, mesomorfismo, ectomorfismo, masa ósea y masa residual. |
 | **Salidas** | Panel de análisis longitudinal interactivo con gráficos y PDF. |
 | **Validaciones** | Requiere mínimo 2 valoraciones. |
@@ -180,7 +191,7 @@
 | **Pantallas/rutas** | `GET /somatotipo/{id}/pdf`, `GET /somatotipo/vista/deportista/{identi}/longitudinal/pdf` |
 | **Entradas** | ID de somatotipo (individual) o identificación de deportista (longitudinal). |
 | **Procesos** | Generación manual de PDF 1.4. Pillow optimiza imágenes y el decodificador PNG interno queda como fallback. Inclusión de datos del deportista, métricas, mediciones, composición corporal, somatotipo, somatocarta y gráficos. |
-| **Salidas** | Archivo PDF descargable (~1.7 MB). |
+| **Salidas** | Web descarga el archivo; escritorio lo abre externamente; Android puede abrirlo o compartirlo con aplicaciones instaladas mediante el selector del sistema. |
 | **Dependencias** | `src/backend/services/pdf_service.py`, Pillow para imágenes y fallback PNG interno. |
 | **Estado** | Funcional. Los PDFs contienen los datos correctos del deportista. |
 | **Pendientes** | Sin pendientes funcionales. Mantener pruebas de variabilidad y rendimiento. |
@@ -287,7 +298,7 @@
 |-------|---------|
 | **Propósito** | Adaptar la interfaz a diferentes tamaños de pantalla. |
 | **Usuarios involucrados** | Todos los usuarios. |
-| **Implementación** | `src/frontend/components.py` (helpers responsive), `src/frontend/app_shell.py` (sidebar vs menú hamburguesa), `ResponsiveRow` de Flet en todas las vistas. |
+| **Implementación** | `src/frontend/components.py` (helpers responsive), `src/frontend/app_shell.py` (sidebar vs menú/navegación inferior) y ramas móviles explícitas en vistas con flujos distintos a Web. |
 | **Breakpoints** | xs (móvil pequeño), sm (móvil grande), md (tablet), lg (escritorio). |
 | **Comportamiento** | Escritorio: sidebar + master-detail simultáneo. Móvil/tablet: menú hamburguesa + toggle entre lista y detalle. |
 | **Estado** | Implementado con cambio dinámico entre sidebar y menú móvil, compartido por Android, escritorio y Flet Web. Assets y login Web fueron verificados en Chrome móvil. |
@@ -319,7 +330,7 @@
 | **Rutas/Carpetas** | `tests/`, `scripts/`. |
 | **Entradas** | Scripts de Python (pytest), scripts de PowerShell. |
 | **Procesos** | Ejecución de pruebas unitarias, de integración y endpoints. Migración y mantenimiento mediante scripts auxiliares. |
-| **Salidas** | Reportes de cobertura (206 tests y 7 subpruebas), E2E crítico y estado del preflight. |
+| **Salidas** | Reportes de cobertura (227 tests y 7 subpruebas), E2E crítico y estado del preflight. |
 | **Dependencias** | `pytest`, base de datos SQLite temporal en entorno de pruebas. |
 | **Estado** | Implementado y funcional. |
 | **Pendientes** | Ampliar cobertura de pruebas E2E visuales para UI responsive. |

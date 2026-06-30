@@ -15,7 +15,7 @@
 - [x] Añadir pruebas automatizadas de entrada y configuración web.
 - [x] Ejecutar pruebas específicas de frontend y navegación.
 - [x] Iniciar la aplicación ASGI y comprobar respuesta HTTP local.
-- [x] Ejecutar la suite completa de regresión (206 pruebas y 7 subpruebas).
+- [x] Ejecutar la suite completa de regresión (227 pruebas y 7 subpruebas).
 - [x] Documentar ejecución, despliegue y variables de entorno.
 - [x] Crear checklist QA responsive y de seguridad.
 - [x] Actualizar README y registro documental.

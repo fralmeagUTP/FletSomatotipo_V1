@@ -294,7 +294,7 @@ def chart_axis_labels(series):
     ]
 
 
-def build_longitudinal_chart(rows, metric):
+def build_longitudinal_chart(rows, metric, width=620, height=260):
     series = build_metric_series(rows, metric["field"])
     if len(series) < 2:
         return ft.Container(
@@ -345,12 +345,12 @@ def build_longitudinal_chart(rows, metric):
         bottom_axis=ft.ChartAxis(show_labels=True, labels=chart_axis_labels(series), label_size=34),
         left_axis=ft.ChartAxis(show_labels=True, label_size=42),
         interactive=True,
-        width=620,
-        height=260,
+        width=width,
+        height=height,
     )
     return ft.Container(
-        content=horizontal_scroll(chart),
-        height=280,
+        content=horizontal_scroll(chart) if width > 320 else chart,
+        height=height + 20,
         padding=8,
         bgcolor=ft.Colors.WHITE,
         border_radius=8,
@@ -755,4 +755,75 @@ def build_longitudinal_panel(rows):
         padding=16,
         border=ft.border.all(1, theme.SURFACE_BORDER),
         width=float("inf"),
+    )
+
+
+def build_mobile_longitudinal_panel(rows):
+    selected_metric = metric_by_field("PorcRasoYuasz")
+    selected_metric_container = ft.Container()
+    chart_container = ft.Container()
+    summary_text = ft.Text("", color=theme.SUBTITLE_COLOR, size=12)
+
+    def render_metric(metric):
+        series = build_metric_series(rows, metric["field"])
+        selected_metric_container.content = build_selected_metric_cards(series, metric)
+        chart_container.content = build_longitudinal_chart(rows, metric, width=286, height=180)
+        summary_text.value = trend_summary(series, metric["unit"])
+
+    metric_dropdown = ft.Dropdown(
+        label="Variable a graficar",
+        value=selected_metric["field"],
+        options=[ft.dropdown.Option(metric["field"], metric["label"]) for metric in LONGITUDINAL_METRICS],
+        width=286,
+    )
+
+    def change_metric(event):
+        metric = next(item for item in LONGITUDINAL_METRICS if item["field"] == event.control.value)
+        render_metric(metric)
+        event.page.update()
+
+    metric_dropdown.on_change = change_metric
+    render_metric(selected_metric)
+
+    def mobile_section(title, controls):
+        return ft.Container(
+            content=ft.Column(
+                [ft.Text(title, size=17, weight=ft.FontWeight.BOLD, color=theme.PRIMARY_COLOR), *controls],
+                spacing=10,
+            ),
+            bgcolor=ft.Colors.WHITE,
+            border=ft.border.all(1, theme.SURFACE_BORDER),
+            border_radius=theme.MOBILE_RADIUS,
+            padding=12,
+        )
+
+    return ft.Column(
+        [
+            mobile_section(
+                "Resumen longitudinal",
+                [
+                    ft.Text(period_summary(rows), color=theme.SUBTITLE_COLOR, size=12),
+                    build_metric_cards(rows),
+                ],
+            ),
+            mobile_section(
+                "Evolución por variable",
+                [metric_dropdown, selected_metric_container, chart_container, summary_text],
+            ),
+            build_fat_method_chart(rows),
+            build_longitudinal_somatocarta(rows),
+            build_combined_chart(rows),
+            build_historical_table(rows),
+            ft.Container(
+                content=ft.Text(
+                    longitudinal_reliability_message(len(rows)),
+                    color=theme.SUBTITLE_COLOR,
+                    size=12,
+                ),
+                padding=12,
+                bgcolor=theme.INFO_BACKGROUND,
+                border_radius=theme.MOBILE_RADIUS,
+            ),
+        ],
+        spacing=12,
     )

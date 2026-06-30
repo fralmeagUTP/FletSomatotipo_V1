@@ -1,6 +1,6 @@
 # Somatocarta
 
-**Versión:** v1.2.1
+**Versión:** v1.2.5
 **Estado:** 95% funcional; Android y Flet Web comparten frontend responsive, E2E crítico y PDFs optimizados
 
 Aplicación Flet + FastAPI para gestión de deportistas, valoración corporal antropométrica, análisis de composición corporal, somatotipo (Heath-Carter), análisis longitudinal e informes PDF.
@@ -21,6 +21,10 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 - **Informes PDF** individuales y longitudinales construidos internamente, con Pillow para optimizar imágenes.
 - **Sistema de auditoría** con registro en base de datos y archivo log.
 - **Diseño responsive** para escritorio, tablet y móvil (incluye Android).
+- **Experiencias separadas Web/Android:** la Web conserva paneles amplios y el APK usa listados compactos, formularios móviles y navegación inferior.
+- **CRUD móvil especializado:** deportistas en cuatro pasos; deportes, entidades y asignaciones con tarjetas y formularios dedicados.
+- **PDF en Android:** apertura en visor externo y uso compartido mediante el selector nativo (`ACTION_SEND`) con `FileProvider`.
+- **Accesibilidad operativa:** revelado de contraseña y cierre de sesión funcional desde el encabezado móvil.
 
 ## Tecnologías
 
@@ -33,7 +37,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 | Validación | Pydantic + email-validator |
 | Autenticación | JWT (python-jose) |
 | PDF | Generación manual PDF 1.4 + Pillow para imágenes |
-| Testing | pytest (206 tests y 7 subpruebas) |
+| Testing | pytest (227 tests y 7 subpruebas) |
 | Despliegue | cPanel/Passenger (a2wsgi) |
 
 ## Instalación y ejecución
@@ -166,7 +170,7 @@ SomatoCarta_V1.0/
 │   │   ├── form_helpers.py
 │   │   ├── table_builders.py
 │   │   ├── assets.py
-│   │   ├── runtime.py          # Descargas diferenciadas Web/nativo
+│   │   ├── runtime.py          # Descarga, apertura externa y compartir PDF en Android
 │   │   ├── somatocarta.py
 │   │   ├── composition_analysis.py
 │   │   ├── longitudinal_analysis.py
@@ -182,7 +186,7 @@ SomatoCarta_V1.0/
 │       ├── schemas/            # Schemas Pydantic
 │       ├── services/           # Lógica de negocio y PDFs
 │       └── domain/             # Calculadora antropométrica de referencia
-├── tests/                      # 206 tests en 30 archivos
+├── tests/                      # 227 tests en 35 archivos
 ├── scripts/                    # Migraciones y utilidades
 ├── assets/                     # Imágenes, íconos, logotipos
 └── docs/                       # Documentación
@@ -220,10 +224,11 @@ SomatoCarta_V1.0/
 | Análisis Individual | Composición corporal, IMC, somatotipo, somatocarta |
 | Análisis Longitudinal | Evolución temporal con gráficos |
 | Informes PDF | Individual y longitudinal |
+| Interfaz Android | Diseño móvil independiente, CRUD compacto y compartir PDF |
 | Acerca | Información institucional |
 | Gestión de usuarios | *(Pendiente)* Actualmente en BD sin interfaz |
 | Menú principal | Navegación responsive entre módulos |
-| Pruebas / QA | 206 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
+| Pruebas / QA | 227 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
 
 ## Pruebas
 
@@ -231,7 +236,7 @@ SomatoCarta_V1.0/
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Resultado actual: **206 tests y 7 subpruebas pasando**.
+Resultado actual: **227 tests y 7 subpruebas pasando**.
 
 Preflight de publicación:
 
@@ -274,8 +279,8 @@ Somatocarta es desarrollada en el marco de:
 
 ## Estado actual
 
-- **Versión:** v1.2.1
-- **Tests:** 206 y 7 subpruebas pasando
+- **Versión:** v1.2.5
+- **Tests:** 227 y 7 subpruebas pasando
 - **Estabilidad:** 95% funcional; flujos principales, Web inicial y E2E crítico operativos
 - **Última evaluación QA:** 22 de junio de 2026
 - **MySQL:** 76 valoraciones verificadas, 0 diferencias de cálculo
@@ -287,6 +292,7 @@ Somatocarta es desarrollada en el marco de:
 3. **Integridad referencial:** La API y la base activa bloquean la eliminación de deportistas, entidades o deportes con dependencias. Las bases adicionales deben aplicar las migraciones `002` y `003`.
 4. **Duplicados:** La API y la migración MySQL impiden deportes y asignaciones duplicadas.
 5. **Flet Web:** Antes de publicar, configure `WEB_ALLOWED_ORIGINS`, HTTPS y un proxy con soporte WebSocket.
+6. **Protección del hosting:** Imunify360 Bot Protection debe excluir la ruta de la API (`/somatocarta/*`) o responderá 415/Access denied a Android, Python y Flet Web.
 
 ## Notas de mantenimiento
 
