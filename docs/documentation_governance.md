@@ -186,7 +186,8 @@ Los informes dentro de `docs/qa/` son evidencia histórica y no representan el e
 
 - Documentadas la pila Atrás de Android, cierre desde raíz, logout seguro, búsqueda unificada y acciones CRUD móviles.
 - Registrado APK `v1.2.11`, `versionCode=22`, SHA-256 `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
-- Suite vigente: 236 pruebas, 7 subpruebas y cobertura global del 74%.
+- Suite vigente: 244 pruebas, 7 subpruebas y cobertura global del 74%.
+- Reforzada la separación visual por plataforma: una página Web estrecha no activa las composiciones exclusivas del APK.
 - Creado `docs/qa/informe_pruebas_integrales_2026-06-30.md` con dictamen: apto para pruebas internas, no aprobado para publicación hasta corregir seguridad y firma.
 
 ---

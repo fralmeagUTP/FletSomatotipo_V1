@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 
 ### 1.3 Resultado actual
 
-**236 tests y 7 subpruebas pasando** en 36 archivos de prueba. Cobertura global medida: **74%**.
+**244 tests y 7 subpruebas pasando** en 37 archivos de prueba. Cobertura global medida: **74%**.
 
 ---
 
@@ -61,6 +61,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `test_frontend_assets.py` | Rutas de assets |
 | `test_flet_web.py` | Entrada Web, fábrica ASGI, entrega PDF y publicación de todos los assets |
 | `test_frontend_components.py` | Componentes UI y cambio responsive móvil/escritorio/Web |
+| `test_platform_layout_separation.py` | Límite de plataforma: Web estrecha conserva layout Web y Android usa layout móvil |
 | `test_frontend_composition_analysis.py` | Análisis de composición corporal |
 | `test_frontend_dashboard_redesign.py` | Dashboard y métricas |
 | `test_frontend_formatters.py` | Formateo de valores |
@@ -252,7 +253,7 @@ La entrada Web debe probarse adicionalmente mediante `web_main:create_web_app`, 
 
 ## 7. Criterios de aceptación de pruebas
 
-- Todos los tests automatizados deben pasar (236/236 y 7 subpruebas).
+- Todos los tests automatizados deben pasar (244/244 y 7 subpruebas).
 - Los flujos funcionales críticos deben operar sin errores.
 - Los PDFs generados deben ser válidos y contener los datos correctos.
 - La interfaz debe ser usable en las 5 resoluciones objetivo.

@@ -98,10 +98,19 @@ def show_login_view(page, content):
         return
 
     views.clear()
+    safe_content = ft.SafeArea(
+        content=content,
+        avoid_intrusions_top=True,
+        avoid_intrusions_left=True,
+        avoid_intrusions_right=True,
+        avoid_intrusions_bottom=True,
+        maintain_bottom_view_padding=True,
+        expand=True,
+    )
     views.append(
         ft.View(
             route="/login",
-            controls=[content],
+            controls=[safe_content],
             padding=0,
             bgcolor=ft.Colors.WHITE,
             vertical_alignment=ft.MainAxisAlignment.CENTER,

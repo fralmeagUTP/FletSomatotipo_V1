@@ -604,6 +604,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | UX-014 | Deportistas móvil usa un flujo de cuatro pasos; deportes, entidades y asignaciones usan tarjetas y formularios separados. |
 | UX-015 | El login permite mostrar/ocultar contraseña y el encabezado móvil permite cerrar sesión. |
 | UX-016 | El análisis longitudinal móvil conserva todos los datos funcionales del panel Web en secciones adaptadas. |
+| UX-017 | La detección de plataforma impide que Web cargue composiciones exclusivas del APK, incluso con ancho móvil. |
 
 ---
 
@@ -659,7 +660,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 236 tests y 7 subpruebas pasando.
+**Resultado actual:** 244 tests y 7 subpruebas pasando.
 
 ---
 
@@ -1110,7 +1111,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (236 tests y 7 subpruebas).
+- Suite de pruebas amplia para el tamaño actual de la app (244 tests y 7 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.

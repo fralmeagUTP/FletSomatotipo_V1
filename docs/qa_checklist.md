@@ -162,6 +162,7 @@ Marque cada ítem con:
 | 11.4 | Historial toggle en móvil | ✅ | Layout y retorno local cubiertos; campaña visual exhaustiva pendiente |
 | 11.5 | CRUD móvil usa layouts independientes de Web | ✅ | Deportistas, deportes, entidades y asignaciones cubiertos |
 | 11.6 | Longitudinal móvil conserva todos los bloques del análisis | ✅ | Prueba estructural específica |
+| 11.7 | Web estrecha no carga composiciones exclusivas del APK | ✅ | Selección por `page.web` y prueba automatizada |
 | 11.5 | Sin scroll horizontal no deseado | 🔲 | No evaluado visualmente |
 
 ## 12. Seguridad
@@ -184,7 +185,7 @@ Marque cada ítem con:
 
 | Evidencia | Resultado |
 |---|---|
-| Suite automatizada | 236 pruebas y 7 subpruebas aprobadas |
+| Suite automatizada | 244 pruebas y 7 subpruebas aprobadas |
 | Cobertura | 74% global; Historial 6% y Dashboard 18% requieren refuerzo |
 | API productiva | Health, autenticación, lecturas y dos PDF aprobados |
 | Android real | Instalación, arranque, login, Dashboard, logout, Atrás desde raíz y compartir PDF aprobados |

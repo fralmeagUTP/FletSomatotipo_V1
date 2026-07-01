@@ -1,6 +1,7 @@
 import os
 import platform
 import subprocess
+import tempfile
 from pathlib import Path
 
 import flet as ft
@@ -77,14 +78,10 @@ def _open_android_pdf(path: Path) -> bool:
     return False
 
 
-async def _share_native_pdf(share_service, pdf_bytes: bytes, filename: str):
+async def _share_native_pdf(share_service, pdf_path: Path, filename: str):
     return await share_service.share_files(
         [
-            ft.ShareFile.from_bytes(
-                pdf_bytes,
-                mime_type="application/pdf",
-                name=filename,
-            )
+            ft.ShareFile.from_path(str(pdf_path), name=filename)
         ],
         title="Compartir PDF",
         subject=filename,
@@ -141,11 +138,17 @@ def share_pdf(page, pdf_bytes: bytes, filename: str, output_dir: str | Path | No
     if not pdf_bytes.startswith(b"%PDF"):
         raise ValueError("El servidor no devolvió un PDF válido.")
 
+    safe_filename = Path(filename).name
+    target_dir = Path(output_dir) if output_dir else Path(tempfile.gettempdir()) / "somatocarta-share"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_path = target_dir / safe_filename
+    target_path.write_bytes(pdf_bytes)
+
     share_service = getattr(page, "_somatocarta_share_service", None)
     if share_service is None:
         share_service = ft.Share()
         page.services.append(share_service)
         page._somatocarta_share_service = share_service
         page.update()
-    page.run_task(_share_native_pdf, share_service, pdf_bytes, filename)
-    return filename
+    page.run_task(_share_native_pdf, share_service, target_path, safe_filename)
+    return target_path

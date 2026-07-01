@@ -3,7 +3,7 @@ import flet as ft
 from app_config import session_clear, show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.components import mobile_top_bar, page_width
+from src.frontend.components import mobile_top_bar, page_width, uses_mobile_app_layout
 
 
 SHELL_MOBILE_BREAKPOINT = 900
@@ -243,13 +243,21 @@ def build_bottom_navigation(page, active_key, on_more=None):
             alignment=ft.alignment.center,
         )
 
-    return ft.Container(
-        content=ft.Row([tab(*item) for item in items], spacing=0),
-        height=72,
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, theme.SURFACE_BORDER)),
-        border_radius=ft.border_radius.only(top_left=18, top_right=18),
-        padding=ft.padding.only(left=8, right=8, top=8, bottom=6),
+    return ft.SafeArea(
+        content=ft.Container(
+            content=ft.Row([tab(*item) for item in items], spacing=0),
+            height=72,
+            bgcolor=ft.Colors.WHITE,
+            border=ft.border.only(top=ft.BorderSide(1, theme.SURFACE_BORDER)),
+            border_radius=ft.border_radius.only(top_left=18, top_right=18),
+            padding=ft.padding.only(left=8, right=8, top=8, bottom=6),
+        ),
+        avoid_intrusions_top=False,
+        avoid_intrusions_left=True,
+        avoid_intrusions_right=True,
+        avoid_intrusions_bottom=True,
+        maintain_bottom_view_padding=True,
+        expand=False,
     )
 
 
@@ -413,17 +421,17 @@ def build_app_shell(page, content, active_key="dashboard", title="Somatocarta", 
     previous_resize_handler = getattr(page, "on_resized", None)
 
     def update_shell_layout(event=None, refresh=True):
-        is_mobile = page_width(page, default=390) < SHELL_MOBILE_BREAKPOINT
-        has_top_bar_content = is_mobile or search_container is not None or bool(actions)
-        sidebar.visible = not is_mobile
-        mobile_menu_container.visible = is_mobile
-        mobile_navigation_panel.visible = mobile_navigation_panel.visible if is_mobile else False
-        top_bar.visible = has_top_bar_content and not is_mobile
-        mobile_header.visible = is_mobile
-        bottom_navigation.visible = is_mobile
-        main_content.bgcolor = theme.MOBILE_BACKGROUND if is_mobile else theme.BACKGROUND_COLOR
+        mobile_layout = uses_mobile_app_layout(page, SHELL_MOBILE_BREAKPOINT)
+        has_top_bar_content = mobile_layout or search_container is not None or bool(actions)
+        sidebar.visible = not mobile_layout
+        mobile_menu_container.visible = mobile_layout
+        mobile_navigation_panel.visible = mobile_navigation_panel.visible if mobile_layout else False
+        top_bar.visible = has_top_bar_content and not mobile_layout
+        mobile_header.visible = mobile_layout
+        bottom_navigation.visible = mobile_layout
+        main_content.bgcolor = theme.MOBILE_BACKGROUND if mobile_layout else theme.BACKGROUND_COLOR
         if search_container is not None:
-            search_container.col = {"xs": 12, "sm": 11, "md": 8, "lg": 9} if is_mobile else {"md": 8, "lg": 9}
+            search_container.col = {"xs": 12, "sm": 11, "md": 8, "lg": 9} if mobile_layout else {"md": 8, "lg": 9}
         if refresh:
             page.update()
 

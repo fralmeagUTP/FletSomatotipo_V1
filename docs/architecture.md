@@ -11,7 +11,7 @@ Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, regist
 ## Cambios arquitectónicos v1.2.11
 
 - `main.py` sigue siendo la entrada compartida, pero las vistas seleccionan composiciones específicas mediante `is_mobile`; Android no renderiza forzosamente los paneles Web.
-- `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
+- `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. `uses_mobile_app_layout()` exige una página nativa y un ancho móvil: una página Web estrecha continúa usando la composición Web. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
 - `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio y compartir Android mediante `ft.Share` con bytes y MIME `application/pdf`.
 - `navigation.py` mantiene una pila de `ft.View`: Atrás restaura la vista anterior, los flujos internos registran manejadores locales y la vista raíz cierra la actividad.
 - Deportistas usa un formulario móvil de cuatro pasos. Deportes, entidades y asignaciones usan listas compactas y formularios exclusivos para móvil.
@@ -76,7 +76,7 @@ src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 236 pruebas en 36 archivos
+tests/                          # 244 pruebas en 37 archivos
 scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
@@ -86,7 +86,7 @@ scripts/                        # Migraciones, inspección y verificación MySQL
 2. `ApiClient.login()` autentica contra `/auth/login`.
 3. La sesión guarda `access_token`, `username`, `login_user` y `user_id`.
 4. `navigation.py` redirige al dashboard.
-5. `app_shell.py` alterna dinámicamente sidebar (desktop) y menú hamburguesa (móvil) al cambiar el ancho.
+5. `app_shell.py` selecciona por plataforma y ancho: Web conserva el shell Web y Android nativo usa menú hamburguesa y navegación inferior en ancho móvil.
 6. Las vistas usan `ApiClient` para consumir backend.
 7. Componentes reutilizables en `components.py`, `theme.py`, `form_helpers.py`, `table_builders.py`.
 8. `web_main.py` reutiliza la misma función `main` y expone `create_web_app()` para despliegue ASGI.
@@ -197,7 +197,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-236 tests y 7 subpruebas en 36 archivos, con cobertura global medida del 74%. Comando:
+244 tests y 7 subpruebas en 37 archivos, con cobertura global medida del 74%. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v

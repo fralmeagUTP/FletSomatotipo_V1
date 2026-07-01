@@ -323,7 +323,11 @@ class NavigationTests(unittest.TestCase):
         show_login_view(page, {"login": True})
 
         self.assertEqual([view.route for view in page.views], ["/login"])
-        self.assertEqual(page.views[0].controls, [{"login": True}])
+        safe_content = page.views[0].controls[0]
+        self.assertIsInstance(safe_content, __import__("flet").SafeArea)
+        self.assertEqual(safe_content.content, {"login": True})
+        self.assertTrue(safe_content.avoid_intrusions_top)
+        self.assertTrue(safe_content.avoid_intrusions_bottom)
         self.assertEqual(page._somatocarta_route_renderers, {})
         self.assertEqual(page._somatocarta_active_route, "/login")
 

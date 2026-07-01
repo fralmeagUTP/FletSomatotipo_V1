@@ -16,8 +16,16 @@ def is_compact(page):
     return page_width(page) < 600
 
 
+def uses_mobile_app_layout(page, breakpoint=700):
+    if os.getenv("SOMATOCARTA_FORCE_MOBILE", "").strip().lower() in {"1", "true", "yes"}:
+        return True
+    if bool(getattr(page, "web", False)):
+        return False
+    return page_width(page, default=390) < breakpoint
+
+
 def is_mobile(page):
-    return page_width(page, default=390) < 700
+    return uses_mobile_app_layout(page)
 
 
 def responsive_padding(page, desktop=24, tablet=24, mobile=12):
@@ -57,26 +65,33 @@ def mobile_top_bar(title: str, on_back=None, on_menu=None, trailing_icon=ft.Icon
         icon_size=22,
         on_click=on_back or on_menu,
     )
-    return ft.Container(
-        content=ft.Row(
-            [
-                leading,
-                ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
-                ft.IconButton(
-                    trailing_icon,
-                    icon_color=theme.INK_COLOR,
-                    icon_size=18,
-                    tooltip="Cerrar sesión",
-                    on_click=on_trailing,
-                    disabled=on_trailing is None,
-                ),
-            ],
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    return ft.SafeArea(
+        content=ft.Container(
+            content=ft.Row(
+                [
+                    leading,
+                    ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
+                    ft.IconButton(
+                        trailing_icon,
+                        icon_color=theme.INK_COLOR,
+                        icon_size=18,
+                        tooltip="Cerrar sesión",
+                        on_click=on_trailing,
+                        disabled=on_trailing is None,
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            height=64,
+            bgcolor=ft.Colors.WHITE,
+            padding=ft.padding.only(left=4, right=8),
+            border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
         ),
-        height=64,
-        bgcolor=ft.Colors.WHITE,
-        padding=ft.padding.only(left=4, right=8),
-        border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
+        avoid_intrusions_top=True,
+        avoid_intrusions_left=True,
+        avoid_intrusions_right=True,
+        avoid_intrusions_bottom=False,
+        expand=False,
     )
 
 
@@ -172,9 +187,16 @@ def mobile_screen(content, bottom_action=None):
     ]
     if bottom_action is not None:
         controls.append(
-            ft.Container(
-                content=bottom_action,
-                padding=ft.padding.only(left=22, right=22, bottom=22, top=8),
+            ft.SafeArea(
+                content=ft.Container(
+                    content=bottom_action,
+                    padding=ft.padding.only(left=22, right=22, bottom=22, top=8),
+                ),
+                avoid_intrusions_top=False,
+                avoid_intrusions_left=True,
+                avoid_intrusions_right=True,
+                avoid_intrusions_bottom=True,
+                maintain_bottom_view_padding=True,
             )
         )
     return ft.Container(

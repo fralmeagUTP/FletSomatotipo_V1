@@ -31,7 +31,7 @@ def test_android_pdf_share_uses_flet_native_share_service():
     runtime = Path("src/frontend/runtime.py").read_text(encoding="utf-8")
 
     assert "ft.Share()" in runtime
-    assert "ft.ShareFile.from_bytes" in runtime
-    assert 'mime_type="application/pdf"' in runtime
+    assert "ft.ShareFile.from_path" in runtime
+    assert 'Path(tempfile.gettempdir()) / "somatocarta-share"' in runtime
     assert "share_service.share_files" in runtime
     assert "android.intent.action.SEND" not in runtime

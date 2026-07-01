@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manual de usuario de la aplicación móvil Somatocarta para Android.">
+  <title>Manual de usuario móvil | Somatocarta</title>
+  <link rel="stylesheet" href="css/manual.css">
+  <script src="js/manual.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="topbar">
+    <button class="icon-button menu-button" type="button" aria-label="Abrir índice" aria-controls="sidebar" aria-expanded="false">☰</button>
+    <div class="brand"><img src="images/logo_somatocarta.png" alt="" width="40" height="40"><div><strong>Somatocarta</strong><span>Manual de usuario móvil</span></div></div>
+    <button class="print-button" type="button" data-print>Imprimir / PDF</button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Índice del manual">
+      <label class="search-label" for="manual-search">Buscar en el manual</label>
+      <input id="manual-search" type="search" placeholder="Ej. compartir PDF" autocomplete="off">
+      <p class="search-status" aria-live="polite"></p>
+      <nav>
+        <a href="#introduccion">1. Introducción</a><a href="#login">2. Iniciar sesión</a><a href="#navegacion">3. Navegación</a>
+        <a href="#dashboard">4. Pantalla principal</a><a href="#deportistas">5. Deportistas</a><a href="#valoracion">6. Valoración corporal</a>
+        <a href="#historial">7. Historial y PDF</a><a href="#longitudinal">8. Análisis longitudinal</a><a href="#catalogos">9. Deportes y entidades</a>
+        <a href="#asignaciones">10. Asignaciones</a><a href="#sesion">11. Sesión y salida</a><a href="#problemas">12. Problemas frecuentes</a>
+      </nav>
+    </aside>
+
+    <main id="contenido">
+      <section class="hero manual-section" id="introduccion" data-search-section>
+        <p class="eyebrow">Somatocarta para Android</p><h1>Manual de usuario móvil</h1>
+        <p class="lead">Guía operativa para administrar deportistas, registrar mediciones antropométricas, interpretar resultados y compartir informes desde un celular Android.</p>
+        <dl class="release-data"><div><dt>Versión documentada</dt><dd>v1.2.11</dd></div><div><dt>Plataforma</dt><dd>Android 7.0 o superior</dd></div><div><dt>Actualización</dt><dd>1 de julio de 2026</dd></div></dl>
+        <div class="notice info"><strong>Antes de comenzar:</strong> necesita conexión a Internet, credenciales activas y permisos para acceder a los módulos correspondientes a su perfil.</div>
+        <h2 class="subheading">Flujo de trabajo recomendado</h2>
+        <ol class="workflow"><li><strong>Prepare los catálogos</strong><span>Cree deportes y entidades.</span></li><li><strong>Registre al deportista</strong><span>Complete sus datos y fotografía.</span></li><li><strong>Asigne su contexto deportivo</strong><span>Relacione deportista, deporte y entidad.</span></li><li><strong>Realice la valoración</strong><span>Registre y revise las mediciones.</span></li><li><strong>Analice y comparta</strong><span>Consulte historial, evolución y PDF.</span></li></ol>
+      </section>
+
+      <section class="manual-section" id="login" data-search-section>
+        <div class="section-copy"><p class="step-number">02</p><h2>Iniciar sesión</h2><p class="module-summary">El acceso identifica al usuario y habilita únicamente las funciones autorizadas.</p>
+          <ol class="steps"><li><span>1</span><p>Abra <strong>Somatocarta</strong> desde el menú de aplicaciones.</p></li><li><span>2</span><p>Digite el usuario y la contraseña asignados. Respete mayúsculas y minúsculas.</p></li><li><span>3</span><p>Pulse el icono del ojo para comprobar la contraseña; vuelva a pulsarlo para ocultarla.</p></li><li><span>4</span><p>Seleccione <strong>Iniciar sesión</strong> y espere la carga del Dashboard.</p></li></ol>
+          <div class="notice warning"><strong>Seguridad:</strong> no comparta las credenciales ni deje la sesión abierta en un equipo de uso público.</div>
+        </div>
+        <figure><button class="image-button" type="button"><img src="images/01_login.png" alt="Pantalla de inicio de sesión de Somatocarta" loading="lazy"></button><figcaption>Usuario, contraseña, control de visibilidad y botón de ingreso.</figcaption></figure>
+      </section>
+
+      <section class="manual-section" id="navegacion" data-search-section>
+        <div class="section-copy"><p class="step-number">03</p><h2>Navegación móvil</h2><p class="module-summary">La aplicación combina un menú general, accesos inferiores y el botón Atrás del sistema Android.</p>
+          <ul class="feature-list"><li><strong>Menú ☰:</strong> abre el listado completo de módulos.</li><li><strong>Barra inferior:</strong> permite ir a Inicio, Valoraciones, Deportistas y Más.</li><li><strong>Flecha interna:</strong> regresa a la vista anterior del módulo.</li><li><strong>Atrás de Android:</strong> primero cierra un diálogo; después retrocede por la navegación.</li><li><strong>Icono de salida:</strong> finaliza la sesión y regresa al login.</li></ul>
+          <div class="notice info">Desde Dashboard o Login, el botón Atrás de Android cierra la aplicación. Los datos ya guardados no se pierden.</div>
+        </div>
+        <figure><button class="image-button" type="button"><img src="images/11_menu_lateral.png" alt="Menú principal de la aplicación móvil" loading="lazy"></button><figcaption>Menú completo, versión instalada y acción Cerrar sesión.</figcaption></figure>
+      </section>
+
+      <section class="manual-section wide" id="dashboard" data-search-section>
+        <div class="section-copy"><p class="step-number">04</p><h2>Pantalla principal</h2><p class="module-summary">El Dashboard ofrece una lectura rápida de la operación y concentra los accesos más utilizados.</p>
+          <div class="topic-grid"><article><h3>Indicadores</h3><p><strong>Deportistas</strong>, <strong>Valoraciones</strong> y <strong>Asignaciones</strong> muestran los registros disponibles. <strong>Sistema</strong> informa el estado general.</p></article><article><h3>Acciones rápidas</h3><p><strong>Nueva valoración</strong> inicia el registro antropométrico. <strong>Ver análisis</strong> abre la consulta histórica.</p></article><article><h3>Operación y análisis</h3><p>Acceda a valoración corporal, historial y análisis longitudinal sin recorrer el menú.</p></article><article><h3>Gestión de datos</h3><p>Administre deportistas, deportes, entidades y sus asignaciones.</p></article></div>
+        </div>
+        <div class="gallery two"><figure><button class="image-button"><img src="images/02_dashboard.png" alt="Parte superior del Dashboard con indicadores" loading="lazy"></button><figcaption>Resumen operativo y acciones rápidas.</figcaption></figure><figure><button class="image-button"><img src="images/02_dashboard2.png" alt="Parte inferior del Dashboard con módulos de gestión" loading="lazy"></button><figcaption>Accesos a análisis, gestión de datos y sistema.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section wide" id="deportistas" data-search-section>
+        <div class="section-copy"><p class="step-number">05</p><h2>Gestionar deportistas</h2><p class="module-summary">Este módulo conserva la ficha maestra de cada persona. Sus datos se reutilizan en asignaciones, valoraciones e informes.</p>
+          <h3>Buscar, consultar y editar</h3><ol><li>Abra <strong>Deportistas</strong> y escriba parte del nombre o el documento.</li><li>Toque la tarjeta correcta. Verifique el ID antes de modificarla.</li><li>Actualice los datos por etapas y pulse <strong>Guardar</strong> al finalizar.</li></ol>
+          <h3>Registrar un deportista</h3><div class="phase-list"><article><strong>1. Datos básicos</strong><p>Tipo y número de documento, nombres, apellidos, sexo y fecha de nacimiento.</p></article><article><strong>2. Contacto y ubicación</strong><p>Teléfono, correo, ciudad, dirección, entidad y deporte principal.</p></article><article><strong>3. Información socioeconómica</strong><p>Estrato, nivel educativo, institución, programa o profesión y observaciones.</p></article><article><strong>4. Fotografía</strong><p>Tome o seleccione una imagen reconocible y confirme el guardado.</p></article></div>
+          <div class="notice warning"><strong>Antes de eliminar:</strong> retire las asignaciones y valoraciones relacionadas. El documento debe ser único y los campos obligatorios deben estar completos.</div>
+        </div>
+        <div class="gallery" aria-label="Flujo de registro de deportistas"><figure><button class="image-button"><img src="images/03_lista_deportistas.png" alt="Listado móvil de deportistas" loading="lazy"></button><figcaption>Listado, búsqueda y creación.</figcaption></figure><figure><button class="image-button"><img src="images/04_registrar_deportista_1_datos_basicos.png" alt="Paso uno del registro: datos básicos" loading="lazy"></button><figcaption>1. Identificación y datos personales.</figcaption></figure><figure><button class="image-button"><img src="images/05_registrar_deportista_2_contacto.png" alt="Paso dos del registro: contacto y ubicación" loading="lazy"></button><figcaption>2. Contacto, ubicación y contexto deportivo.</figcaption></figure><figure><button class="image-button"><img src="images/06_registrar_deportista_3_academica.png" alt="Paso tres del registro: información adicional" loading="lazy"></button><figcaption>3. Información académica y observaciones.</figcaption></figure><figure><button class="image-button"><img src="images/07_registrar_deportista_4_foto.png" alt="Paso cuatro del registro: fotografía" loading="lazy"></button><figcaption>4. Fotografía y confirmación.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section wide" id="valoracion" data-search-section>
+        <div class="section-copy"><p class="step-number">06</p><h2>Nueva valoración corporal</h2><p class="module-summary">Registra una o varias tomas antropométricas y calcula indicadores de composición corporal y somatotipo.</p>
+          <h3>Preparación</h3><ul class="check-list"><li>Confirme que el deportista esté registrado.</li><li>Use instrumentos calibrados y el mismo protocolo entre sesiones.</li><li>Verifique las unidades: peso en kg, estatura en m, pliegues en mm y perímetros en cm.</li></ul>
+          <h3>Procedimiento</h3><ol class="steps"><li><span>1</span><p>Busque al deportista y confirme nombre e identificación.</p></li><li><span>2</span><p>Registre fecha, estatura, peso y observaciones.</p></li><li><span>3</span><p>Complete pliegues cutáneos, diámetros y perímetros marcados como obligatorios.</p></li><li><span>4</span><p>Pulse <strong>Agregar medición</strong>. Repita si necesita más tomas.</p></li><li><span>5</span><p>Revise la lista de tomas, avance al resumen y guarde únicamente después de comprobar los valores.</p></li></ol>
+          <div class="notice warning">No se permiten dos valoraciones del mismo deportista en la misma fecha. Un error de unidad altera todos los resultados calculados.</div>
+        </div>
+        <div class="gallery"><figure><button class="image-button"><img src="images/08_nueva_valoracion_medicion.png" alt="Selección del deportista para una nueva valoración" loading="lazy"></button><figcaption>1. Selección del deportista.</figcaption></figure><figure><button class="image-button"><img src="images/08_nueva_valoracion_medicion_2.png" alt="Datos generales, pliegues y medidas de una valoración" loading="lazy"></button><figcaption>2. Datos generales y mediciones.</figcaption></figure><figure><button class="image-button"><img src="images/08_nueva_valoracion_medicion_3.png" alt="Final del formulario y botón Agregar medición" loading="lazy"></button><figcaption>3. Agregar la toma y continuar.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section wide" id="historial" data-search-section>
+        <div class="section-copy"><p class="step-number">07</p><h2>Historial y PDF individual</h2><p class="module-summary">Permite revisar cada valoración guardada con sus datos fuente, cálculos, interpretación gráfica e informe PDF.</p>
+          <ol class="steps"><li><span>1</span><p>Abra <strong>Análisis de valoración corporal</strong> y busque por nombre o ID.</p></li><li><span>2</span><p>Seleccione una valoración por fecha. Compruebe el deportista y el ID de medición.</p></li><li><span>3</span><p>Desplácese para revisar IMC, grasa, masa muscular, medidas antropométricas, distribución del peso y somatocarta.</p></li><li><span>4</span><p>Pulse <strong>Compartir PDF</strong> y elija Acrobat, correo, Drive, WhatsApp u otra aplicación compatible.</p></li></ol>
+          <div class="interpretation"><h3>Lectura de resultados</h3><p><strong>IMC:</strong> relación entre peso y estatura.</p><p><strong>Distribución:</strong> separa masa grasa, muscular, ósea y residual.</p><p><strong>Somatocarta:</strong> representa la relación entre endomorfia, mesomorfia y ectomorfia.</p></div>
+          <div class="notice info">Android presenta el selector para compartir. Somatocarta genera el archivo, pero la aplicación receptora controla su apertura o envío.</div>
+        </div>
+        <div class="gallery"><figure><button class="image-button"><img src="images/09_resumen_valoracion.png" alt="Detalle de valoración con botón Compartir PDF" loading="lazy"></button><figcaption>Detalle individual y acción Compartir PDF.</figcaption></figure><figure><button class="image-button"><img src="images/09_resumen_valoracion_2.png" alt="Medidas antropométricas del historial corporal" loading="lazy"></button><figcaption>Datos antropométricos utilizados en los cálculos.</figcaption></figure><figure><button class="image-button"><img src="images/09_resumen_valoracion_3.png" alt="Tabla de distribución del peso corporal" loading="lazy"></button><figcaption>Distribución del peso por componente.</figcaption></figure><figure><button class="image-button"><img src="images/09_resumen_valoracion_4.png" alt="Gráfico circular de composición corporal" loading="lazy"></button><figcaption>Participación porcentual de las masas.</figcaption></figure><figure><button class="image-button"><img src="images/09_resumen_valoracion_5.png" alt="Somatocarta individual de un deportista" loading="lazy"></button><figcaption>Ubicación individual en la somatocarta.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section wide" id="longitudinal" data-search-section>
+        <div class="section-copy"><p class="step-number">08</p><h2>Análisis longitudinal</h2><p class="module-summary">Compara las valoraciones de un mismo deportista para identificar cambios y tendencias en el tiempo.</p>
+          <h3>Cómo consultarlo</h3><ol><li>Busque un deportista que tenga al menos dos valoraciones.</li><li>Confirme el número de registros y el periodo analizado.</li><li>Revise los indicadores resumen y sus diferencias respecto al inicio del periodo.</li><li>Desplácese por los gráficos de peso, IMC, grasa, masa muscular y otras variables disponibles.</li><li>Compare métodos de grasa y observe la trayectoria en la somatocarta.</li><li>Use la tabla histórica para contrastar fechas y valores exactos.</li><li>Pulse el icono PDF para compartir el informe longitudinal.</li></ol>
+          <div class="notice warning"><strong>Interpretación:</strong> una tendencia describe los registros disponibles; no sustituye la valoración profesional ni permite concluir causalidad por sí sola.</div>
+        </div>
+        <div class="gallery"><figure><button class="image-button"><img src="images/10_analisis_longitudinal.png" alt="Indicadores y gráficos iniciales del análisis longitudinal" loading="lazy"></button><figcaption>Resumen y evolución de indicadores principales.</figcaption></figure><figure><button class="image-button"><img src="images/10_analisis_longitudinal_2.png" alt="Comparación de métodos de grasa y sección de somatocarta" loading="lazy"></button><figcaption>Comparación de grasa y acceso a la trayectoria somática.</figcaption></figure><figure><button class="image-button"><img src="images/10_analisis_longitudinal_3.png" alt="Trayectoria histórica en la somatocarta" loading="lazy"></button><figcaption>Cada punto representa una valoración en el tiempo.</figcaption></figure><figure><button class="image-button"><img src="images/10_analisis_longitudinal_4.png" alt="Tabla histórica de valoraciones longitudinales" loading="lazy"></button><figcaption>Fechas y valores exactos para comparación.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section wide" id="catalogos" data-search-section>
+        <div class="section-copy"><p class="step-number">09</p><h2>Deportes y entidades</h2><p class="module-summary">Son catálogos de referencia. Deben existir antes de crear asignaciones o completar el contexto deportivo de una persona.</p>
+          <div class="topic-grid"><article><h3>Deportes</h3><p>Busque por nombre, pulse <strong>Agregar deporte</strong>, registre un nombre único y guarde. Toque una tarjeta para editar o eliminar.</p></article><article><h3>Entidades</h3><p>Registre NIT, razón social y los datos institucionales solicitados. Use la búsqueda para localizar y actualizar registros.</p></article></div>
+          <h3>Reglas de administración</h3><ul class="check-list"><li>Evite duplicados con diferencias de mayúsculas o abreviaturas.</li><li>Compruebe el NIT y la razón social antes de guardar una entidad.</li><li>Los registros relacionados con asignaciones activas no se pueden eliminar.</li></ul>
+        </div>
+        <div class="gallery two"><figure><button class="image-button"><img src="images/12_deportes.png" alt="Listado móvil de deportes" loading="lazy"></button><figcaption>Búsqueda, alta y tarjetas de deportes.</figcaption></figure><figure><button class="image-button"><img src="images/13_entidades.png" alt="Listado móvil de entidades" loading="lazy"></button><figcaption>Búsqueda, alta y tarjetas de entidades.</figcaption></figure></div>
+      </section>
+
+      <section class="manual-section" id="asignaciones" data-search-section>
+        <div class="section-copy"><p class="step-number">10</p><h2>Asignaciones deportivas</h2><p class="module-summary">Relaciona a una persona con el deporte que practica y la entidad a la que pertenece.</p>
+          <ol class="steps"><li><span>1</span><p>Pulse <strong>Nueva asignación</strong>.</p></li><li><span>2</span><p>Busque al deportista por nombre o identificación y seleccione el resultado correcto.</p></li><li><span>3</span><p>Compruebe la ficha resumida del deportista.</p></li><li><span>4</span><p>Seleccione deporte y entidad; ambos deben existir previamente.</p></li><li><span>5</span><p>Guarde y confirme que la tarjeta muestre el nombre, deporte y entidad esperados.</p></li></ol>
+          <p>Para editar o eliminar, toque la tarjeta. Una persona puede tener varias asignaciones cuando representan relaciones deportivas diferentes.</p>
+        </div>
+        <figure><button class="image-button"><img src="images/14_asignaciones.png" alt="Listado móvil de asignaciones deportivas" loading="lazy"></button><figcaption>Relaciones entre deportistas, deportes y entidades.</figcaption></figure>
+      </section>
+
+      <section class="manual-section" id="sesion" data-search-section>
+        <div class="section-copy"><p class="step-number">11</p><h2>Sesión, versión y salida</h2><h3>Cerrar sesión</h3><p>Pulse el icono de salida del encabezado o <strong>Cerrar sesión</strong> en el menú. La aplicación elimina los datos locales de autenticación y regresa al login.</p><h3>Cerrar la aplicación</h3><p>Desde Dashboard o Login, pulse Atrás en Android. En otras pantallas, Atrás primero recorre el historial de navegación.</p><h3>Consultar la versión</h3><p>Abra <strong>Acerca del proyecto</strong> para verificar la versión instalada y la información institucional. Este dato es útil al solicitar soporte.</p></div>
+        <figure><button class="image-button"><img src="images/15_acerca_del_proyecto.png" alt="Pantalla Acerca del proyecto" loading="lazy"></button><figcaption>Versión, descripción e información institucional.</figcaption></figure>
+      </section>
+
+      <section class="manual-section single" id="problemas" data-search-section>
+        <div class="section-copy"><p class="step-number">12</p><h2>Problemas frecuentes</h2>
+          <details><summary>No puedo iniciar sesión</summary><p>Compruebe Internet, usuario y contraseña. Pruebe abrir la dirección del servicio desde el navegador. Si continúa, informe al administrador con la hora y el mensaje mostrado.</p></details>
+          <details><summary>No aparecen resultados al buscar</summary><p>Elimine espacios, pruebe con una parte del nombre y confirme el número de identificación. Verifique que el registro exista y que la conexión esté activa.</p></details>
+          <details><summary>No puedo guardar una valoración</summary><p>Revise los campos obligatorios, las unidades y la fecha. Confirme que no exista otra valoración del mismo deportista en ese día.</p></details>
+          <details><summary>No aparece una aplicación para compartir PDF</summary><p>Instale o habilite una aplicación compatible, como un lector PDF, Drive, correo o mensajería. Repita la acción y elija la aplicación en el selector de Android.</p></details>
+          <details><summary>Un registro no se puede eliminar</summary><p>El sistema protege la integridad de los datos. Elimine primero las asignaciones o valoraciones dependientes y vuelva a intentar.</p></details>
+          <details><summary>Los botones quedan bajo las barras de Android</summary><p>Actualice a la versión más reciente del APK. Cierre y abra la aplicación; si persiste, registre el modelo del celular, la versión de Android y una captura completa.</p></details>
+        </div>
+      </section>
+
+      <footer><p>Somatocarta v1.2.11 · Manual para Android · Universidad Tecnológica de Pereira</p></footer>
+    </main>
+  </div>
+  <dialog class="lightbox" aria-label="Vista ampliada"><button type="button" class="lightbox-close" aria-label="Cerrar imagen">×</button><img src="" alt=""><p></p></dialog>
+</body>
+</html>

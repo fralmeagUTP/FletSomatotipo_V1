@@ -9,7 +9,7 @@ El porcentaje es una estimación de preparación operativa, no cobertura de cód
 |------|------|-----------|-----------|
 | Flujos principales | 30 | 30 | El E2E recorre login, fotografía, CRUD, asignación, valoración, edición, PDF y eliminación ordenada. |
 | Cálculos e integridad de datos | 25 | 25 | Las 76 valoraciones MySQL coinciden con la calculadora de referencia; claves foráneas y reglas `RESTRICT` verificadas. |
-| Calidad automatizada | 15 | 15 | 236 pruebas y 7 subpruebas unitarias, de integración y E2E aprobadas. |
+| Calidad automatizada | 15 | 15 | 244 pruebas y 7 subpruebas unitarias, de integración y E2E aprobadas. |
 | Interfaz e informes | 15 | 14 | Shell responsive, PDFs optimizados y flujos Android validados en dispositivo; falta campaña visual completa en tablet/escritorio. |
 | Seguridad y accesos | 10 | 6 | JWT, auditoría y CORS configurable activos; faltan hash de contraseñas, roles administrativos y fijar orígenes productivos. |
 | Operación y documentación | 5 | 5 | Backend, health check, migraciones y procedimientos documentados. |
@@ -22,7 +22,7 @@ El porcentaje es una estimación de preparación operativa, no cobertura de cód
 - Verificación MySQL: 76 valoraciones, 0 diferencias.
 - Backend: `GET /health` devuelve `status=ok` y `database=connected`.
 - Fórmulas: Yuhasz es el método principal y Faulkner la referencia comparativa.
-- Responsive: Web y Android comparten reglas de negocio, pero usan layouts separados; los CRUD móviles y el análisis longitudinal tienen composición propia.
+- Responsive: Web y Android comparten reglas de negocio, pero usan layouts separados; `page.web` impide que una ventana Web estrecha cargue pantallas propias del APK.
 - E2E: flujo crítico completo validado sobre FastAPI y SQLite aislado.
 - PDF: contenido distinto por deportista y generación principal inferior a 1 segundo en pruebas.
 - Flet Web: entrada local y fábrica ASGI funcionales; todos los assets móviles se sirven desde Web y el login fue validado en Chrome a 390 × 844 px.

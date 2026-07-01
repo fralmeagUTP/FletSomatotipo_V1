@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import flet as ft
 
@@ -186,6 +187,11 @@ def test_add_edit_and_delete_buttons_open_their_dialogs(monkeypatch):
 
 
 def test_mobile_crud_uses_four_step_athlete_form(monkeypatch):
+    source = Path("views/deportistas.py").read_text(encoding="utf-8")
+
+    assert "min_lines=4" in source
+    assert "max_lines=6" in source
+    assert "height=150" in source
     monkeypatch.setattr(deportistas_module, "ApiClient", FakeApiClient)
     page = FakePage()
     page.width = 390

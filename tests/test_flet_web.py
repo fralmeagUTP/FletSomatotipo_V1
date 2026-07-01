@@ -125,16 +125,16 @@ class FletWebTests(unittest.TestCase):
             self.assertIn(path.as_uri(), command)
             self.assertEqual(page.launched_urls, [])
 
-    def test_native_share_service_receives_pdf_bytes_and_metadata(self):
+    def test_native_share_service_receives_pdf_path_and_metadata(self):
         share_service = AsyncMock()
+        path = Path("/tmp/informe.pdf")
 
-        asyncio.run(_share_native_pdf(share_service, b"%PDF-1.4", "informe.pdf"))
+        asyncio.run(_share_native_pdf(share_service, path, "informe.pdf"))
 
         share_service.share_files.assert_awaited_once()
         files = share_service.share_files.await_args.args[0]
         self.assertEqual(len(files), 1)
-        self.assertEqual(files[0].data, b"%PDF-1.4")
-        self.assertEqual(files[0].mime_type, "application/pdf")
+        self.assertEqual(files[0].path, str(path))
         self.assertEqual(files[0].name, "informe.pdf")
 
     def test_share_pdf_registers_native_service_and_schedules_share_sheet(self):
@@ -142,16 +142,18 @@ class FletWebTests(unittest.TestCase):
         payload = b"%PDF-1.4\nandroid"
         share_service = object()
 
-        with patch.dict(
-            "os.environ",
-            {"ANDROID_ROOT": "/system"},
-        ), patch("src.frontend.runtime.ft.Share", return_value=share_service):
-            result = share_pdf(page, payload, "informe.pdf")
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(
+                "os.environ",
+                {"ANDROID_ROOT": "/system"},
+            ), patch("src.frontend.runtime.ft.Share", return_value=share_service):
+                result = share_pdf(page, payload, "informe.pdf", directory)
 
-        self.assertEqual(result, "informe.pdf")
-        self.assertEqual(page.services, [share_service])
-        self.assertEqual(page.updated, 1)
-        self.assertEqual(page.tasks, [(_share_native_pdf, (share_service, payload, "informe.pdf"))])
+            self.assertEqual(result, Path(directory) / "informe.pdf")
+            self.assertEqual(result.read_bytes(), payload)
+            self.assertEqual(page.services, [share_service])
+            self.assertEqual(page.updated, 1)
+            self.assertEqual(page.tasks, [(_share_native_pdf, (share_service, result, "informe.pdf"))])
 
     def test_native_pdf_falls_back_to_launch_url_when_no_system_opener_exists(self):
         page = FakePage(web=False)

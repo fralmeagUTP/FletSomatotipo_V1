@@ -4,7 +4,7 @@ from app_config import show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
 from src.frontend.assets import REFERENCE_IMAGES
-from src.frontend.components import mobile_search_field, page_header, page_width, pdf_action_button, responsive_padding, set_busy
+from src.frontend.components import is_mobile, mobile_search_field, page_header, page_width, pdf_action_button, responsive_padding, set_busy
 from src.frontend.composition_analysis import build_composition_panel, mass_balance_message, mass_balance_summary
 from src.frontend.interpretation import bmi_methodology_note, parse_float
 from src.frontend.navigation import show_dashboard
@@ -19,7 +19,7 @@ def HistorialView(page: ft.Page, initial_query=None):
     card_background = theme.CARD_BACKGROUND
     text_color = theme.TEXT_COLOR
     api = ApiClient(page)
-    mobile_mode = page_width(page) < 700
+    mobile_mode = is_mobile(page)
 
     current_details_view = ft.ListView(spacing=14, expand=True)
     search_status = ft.Text("Busca por nombre o ID para ver el historial corporal.", color=theme.SUBTITLE_COLOR, size=12)

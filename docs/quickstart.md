@@ -100,7 +100,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **236 tests y 7 subpruebas pasando**.
+Estado esperado: **244 tests y 7 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -143,7 +143,7 @@ Instalación mediante USB con depuración habilitada:
 
 La estructura, firma, manifiesto, versión y arquitecturas del APK fueron verificadas con Android Build Tools 35.0.0.
 
-SHA-256: `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
+SHA-256: `EEDEA4C61A194EFD28E1FCA73918BE6EDE1BA71602F534E1405D2B0C587B1341`.
 
 La entrega móvil permite compartir PDF individuales y longitudinales mediante `ft.Share`; Android entrega una URI temporal con MIME `application/pdf` al selector nativo.
 

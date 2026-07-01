@@ -181,7 +181,14 @@ def DeportistasView(page: ft.Page):
     nombre_institu = ft.TextField(label="Institución")
 
     # Extra
-    observaciones = ft.TextField(label="Observaciones", multiline=True, height=80)
+    observaciones = ft.TextField(
+        label="Observaciones",
+        multiline=True,
+        min_lines=4,
+        max_lines=6,
+        height=150,
+        text_vertical_align=ft.VerticalAlignment.START,
+    )
 
     for field in [
         identi, tipo_identi, nombre, sexo, fecha_nac, pais_nac, dep_nac,
@@ -676,19 +683,25 @@ def DeportistasView(page: ft.Page):
                     on_click=lambda _: confirm_delete(current_edit_id),
                 )
             )
-        mobile_form_header = ft.Container(
-            content=ft.Row(
-                [
-                    ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_previous, icon_color=theme.INK_COLOR),
-                    ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
-                    *trailing,
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        mobile_form_header = ft.SafeArea(
+            content=ft.Container(
+                content=ft.Row(
+                    [
+                        ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_previous, icon_color=theme.INK_COLOR),
+                        ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
+                        *trailing,
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                height=64,
+                bgcolor=ft.Colors.WHITE,
+                border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
+                padding=ft.padding.only(right=8),
             ),
-            height=64,
-            bgcolor=ft.Colors.WHITE,
-            border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
-            padding=ft.padding.only(right=8),
+            avoid_intrusions_top=True,
+            avoid_intrusions_left=True,
+            avoid_intrusions_right=True,
+            avoid_intrusions_bottom=False,
         )
         action_controls = []
         if mobile_step > 0:

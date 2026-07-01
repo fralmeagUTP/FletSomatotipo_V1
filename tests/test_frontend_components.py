@@ -12,12 +12,14 @@ from src.frontend.components import (
     info_banner,
     is_mobile,
     mobile_search_field,
+    mobile_screen,
     mobile_top_bar,
     page_header,
     responsive_dialog_size,
     responsive_padding,
     section_title,
     set_busy,
+    uses_mobile_app_layout,
 )
 from src.frontend import theme
 
@@ -66,7 +68,7 @@ class ComponentsTests(unittest.TestCase):
     def test_mobile_top_bar_logout_button_runs_callback(self):
         calls = []
         header = mobile_top_bar("Dashboard", on_menu=lambda _: None, on_trailing=lambda _: calls.append("logout"))
-        logout_button = header.content.controls[-1]
+        logout_button = header.content.content.controls[-1]
 
         self.assertFalse(logout_button.disabled)
         logout_button.on_click(None)
@@ -82,6 +84,46 @@ class ComponentsTests(unittest.TestCase):
 
         with patch.dict("os.environ", {"SOMATOCARTA_FORCE_MOBILE": "1"}):
             self.assertTrue(is_mobile(page))
+
+    def test_narrow_web_page_keeps_web_layout(self):
+        page = SimpleNamespace(width=390, web=True)
+
+        self.assertFalse(is_mobile(page))
+        self.assertFalse(uses_mobile_app_layout(page, 900))
+
+    def test_narrow_native_page_uses_mobile_app_layout(self):
+        page = SimpleNamespace(width=390, web=False)
+
+        self.assertTrue(is_mobile(page))
+        self.assertTrue(uses_mobile_app_layout(page, 900))
+
+    def test_mobile_top_bar_respects_android_status_bar_safe_area(self):
+        bar = mobile_top_bar("Dashboard", on_menu=lambda _: None, on_trailing=lambda _: None)
+
+        self.assertIsInstance(bar, ft.SafeArea)
+        self.assertTrue(bar.avoid_intrusions_top)
+        self.assertFalse(bar.avoid_intrusions_bottom)
+        self.assertEqual(bar.content.height, 64)
+
+    def test_bottom_navigation_respects_android_navigation_safe_area(self):
+        page = SimpleNamespace(width=390, session={}, overlay=[], update=lambda: None)
+        shell = build_app_shell(page, ft.Text("Contenido"), title="Dashboard", show_search=False)
+        bottom_navigation = shell.content.controls[1].controls[4]
+
+        self.assertIsInstance(bottom_navigation, ft.SafeArea)
+        self.assertFalse(bottom_navigation.avoid_intrusions_top)
+        self.assertTrue(bottom_navigation.avoid_intrusions_bottom)
+        self.assertTrue(bottom_navigation.maintain_bottom_view_padding)
+        self.assertEqual(bottom_navigation.content.height, 72)
+
+    def test_mobile_screen_bottom_action_respects_android_navigation_safe_area(self):
+        screen = mobile_screen(ft.Text("Contenido"), bottom_action=ft.Text("Guardar"))
+        bottom_action = screen.content.controls[-1]
+
+        self.assertIsInstance(bottom_action, ft.SafeArea)
+        self.assertFalse(bottom_action.avoid_intrusions_top)
+        self.assertTrue(bottom_action.avoid_intrusions_bottom)
+        self.assertTrue(bottom_action.maintain_bottom_view_padding)
 
     def test_info_banner_uses_theme_background(self):
         banner = info_banner("Mensaje")
@@ -178,6 +220,20 @@ class ComponentsTests(unittest.TestCase):
         self.assertFalse(top_bar.visible)
         self.assertTrue(mobile_header.visible)
         self.assertTrue(bottom_navigation.visible)
+
+    def test_app_shell_keeps_web_shell_on_narrow_browser(self):
+        page = SimpleNamespace(width=390, web=True, session={}, overlay=[], update=lambda: None)
+
+        shell = build_app_shell(page, ft.Text("Contenido"), title="Dashboard", show_search=False)
+        sidebar, body = shell.content.controls
+        top_bar = body.controls[0]
+        mobile_header = body.controls[1]
+        bottom_navigation = body.controls[4]
+
+        self.assertTrue(sidebar.visible)
+        self.assertFalse(top_bar.visible)
+        self.assertFalse(mobile_header.visible)
+        self.assertFalse(bottom_navigation.visible)
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 - **Informes PDF** individuales y longitudinales construidos internamente, con Pillow para optimizar imágenes.
 - **Sistema de auditoría** con registro en base de datos y archivo log.
 - **Diseño responsive** para escritorio, tablet y móvil (incluye Android).
-- **Experiencias separadas Web/Android:** la Web conserva paneles amplios y el APK usa listados compactos, formularios móviles y navegación inferior.
+- **Experiencias separadas Web/Android:** la Web conserva paneles amplios y el APK usa listados compactos, formularios móviles y navegación inferior. La plataforma, además del ancho, determina qué composición se carga.
 - **CRUD móvil especializado:** deportistas en cuatro pasos; deportes, entidades y asignaciones con tarjetas y formularios dedicados.
 - **PDF en Android:** uso compartido mediante `ft.Share`, MIME `application/pdf` y el selector nativo.
 - **Accesibilidad operativa:** revelado de contraseña y cierre de sesión funcional desde el encabezado móvil.
@@ -38,7 +38,7 @@ Somatocarta forma parte de **SINVADE — Sistema Integral de Valoración Deporti
 | Validación | Pydantic + email-validator |
 | Autenticación | JWT (python-jose) |
 | PDF | Generación manual PDF 1.4 + Pillow para imágenes |
-| Testing | pytest (236 tests y 7 subpruebas) |
+| Testing | pytest (244 tests y 7 subpruebas) |
 | Despliegue | cPanel/Passenger (a2wsgi) |
 
 ## Instalación y ejecución
@@ -187,7 +187,7 @@ SomatoCarta_V1.0/
 │       ├── schemas/            # Schemas Pydantic
 │       ├── services/           # Lógica de negocio y PDFs
 │       └── domain/             # Calculadora antropométrica de referencia
-├── tests/                      # 236 tests en 36 archivos
+├── tests/                      # 244 tests en 37 archivos
 ├── scripts/                    # Migraciones y utilidades
 ├── assets/                     # Imágenes, íconos, logotipos
 └── docs/                       # Documentación
@@ -229,7 +229,7 @@ SomatoCarta_V1.0/
 | Acerca | Información institucional |
 | Gestión de usuarios | *(Pendiente)* Actualmente en BD sin interfaz |
 | Menú principal | Navegación responsive entre módulos |
-| Pruebas / QA | 236 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
+| Pruebas / QA | 244 pruebas y 7 subpruebas unitarias, de integración y E2E (`tests/`) |
 
 ## Pruebas
 
@@ -237,7 +237,7 @@ SomatoCarta_V1.0/
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Resultado actual: **236 tests y 7 subpruebas pasando**.
+Resultado actual: **244 tests y 7 subpruebas pasando**.
 
 Preflight de publicación:
 
@@ -266,6 +266,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight_publicacion.ps1
 | `docs/flet_web_no_vps.md` | Despliegue recomendado manteniendo el backend en cPanel |
 | `docs/flet_web_qa_checklist.md` | Checklist responsive y funcional de Flet Web |
 | `docs/specs/flet_web/` | Especificación, plan y tareas de la versión web |
+| `docs/manual_usuario_movil/index.html` | Manual HTML5 interactivo de la aplicación Android |
 
 ## Contexto institucional
 
@@ -281,7 +282,7 @@ Somatocarta es desarrollada en el marco de:
 ## Estado actual
 
 - **Versión:** v1.2.11
-- **Tests:** 236 y 7 subpruebas pasando; cobertura global 74%
+- **Tests:** 244 y 7 subpruebas pasando; cobertura global 74%
 - **Estabilidad:** 95% funcional; flujos principales, Web inicial y E2E crítico operativos
 - **Última evaluación QA:** 30 de junio de 2026 ([informe integral](docs/qa/informe_pruebas_integrales_2026-06-30.md))
 - **MySQL:** 76 valoraciones verificadas, 0 diferencias de cálculo

@@ -298,7 +298,7 @@ En móvil, las tarjetas muestran nombre del deportista, deporte y entidad. La ed
 |-------|---------|
 | **Propósito** | Adaptar la interfaz a diferentes tamaños de pantalla. |
 | **Usuarios involucrados** | Todos los usuarios. |
-| **Implementación** | `src/frontend/components.py` (helpers responsive), `src/frontend/app_shell.py` (sidebar vs menú/navegación inferior) y ramas móviles explícitas en vistas con flujos distintos a Web. |
+| **Implementación** | `src/frontend/components.py` (selección por plataforma y ancho), `src/frontend/app_shell.py` (sidebar Web vs menú/navegación Android) y ramas móviles explícitas en vistas con flujos distintos a Web. |
 | **Breakpoints** | xs (móvil pequeño), sm (móvil grande), md (tablet), lg (escritorio). |
 | **Comportamiento** | Escritorio: sidebar + master-detail simultáneo. Móvil/tablet: menú hamburguesa + toggle entre lista y detalle. |
 | **Estado** | Implementado con cambio dinámico entre sidebar y menú móvil, compartido por Android, escritorio y Flet Web. Assets y login Web fueron verificados en Chrome móvil. |
@@ -330,7 +330,7 @@ En móvil, las tarjetas muestran nombre del deportista, deporte y entidad. La ed
 | **Rutas/Carpetas** | `tests/`, `scripts/`. |
 | **Entradas** | Scripts de Python (pytest), scripts de PowerShell. |
 | **Procesos** | Ejecución de pruebas unitarias, de integración y endpoints. Migración y mantenimiento mediante scripts auxiliares. |
-| **Salidas** | Reportes de cobertura (236 tests, 7 subpruebas y 74% global), E2E crítico y estado del preflight. |
+| **Salidas** | Reportes de cobertura (244 tests, 7 subpruebas y 74% global), E2E crítico y estado del preflight. |
 | **Dependencias** | `pytest`, base de datos SQLite temporal en entorno de pruebas. |
 | **Estado** | Implementado y funcional. |
 | **Pendientes** | Ampliar cobertura de pruebas E2E visuales para UI responsive. |

@@ -26,7 +26,7 @@ Resultado general: **aprobado con observaciones**.
 
 ### 2.1 Automatizacion
 
-- `236` pruebas aprobadas.
+- `244` pruebas aprobadas.
 - `7` subpruebas aprobadas.
 - `0` fallos y `0` errores.
 - Compilacion Python completa con `compileall`: aprobada.
@@ -34,7 +34,7 @@ Resultado general: **aprobado con observaciones**.
 - `pip check`: sin dependencias rotas.
 - `pip-audit`: sin vulnerabilidades conocidas en `requirements.txt`.
 
-La suite cubre autenticacion, validaciones, CRUD, integridad referencial, formulas antropometricas, PDF, API client, layouts, navegacion, busqueda movil y flujo E2E con base SQLite.
+La suite cubre autenticacion, validaciones, CRUD, integridad referencial, formulas antropometricas, PDF, API client, layouts, navegacion, busqueda movil, separacion Web/Android y flujo E2E con base SQLite.
 
 ### 2.2 Cobertura
 
@@ -107,6 +107,7 @@ La prueba manual Atras desde una pantalla secundaria no se completo durante esta
 7. PDF individual y longitudinal validos y descargables.
 8. Compartir PDF usa el servicio nativo Android.
 9. Busquedas y CRUD moviles mantienen componentes compartidos.
+10. Una ventana Web estrecha conserva la composicion Web; solo la aplicacion nativa Android activa las pantallas especificas del APK.
 10. Logout elimina la pila protegida.
 11. El APK inicia rapidamente y no produjo crashes o ANR.
 12. No se detectaron CVE conocidas ni dependencias rotas.
