@@ -31,7 +31,7 @@ def AcercaView(page: ft.Page):
                     ft.Text("Somatocarta", size=32, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, text_align=ft.TextAlign.CENTER),
                     ft.Text("Aplicacion de somatotipo", size=14, color=theme.MUTED_TEXT_COLOR, text_align=ft.TextAlign.CENTER),
                     ft.Container(
-                        content=ft.Text("Version v1.2.11", size=11, color=theme.PRIMARY_BLUE),
+                        content=ft.Text("Version v1.2.12", size=11, color=theme.PRIMARY_BLUE),
                         bgcolor=theme.INFO_BACKGROUND,
                         border_radius=10,
                         padding=ft.padding.symmetric(horizontal=18, vertical=8),

@@ -169,3 +169,9 @@ Los archivos de `docs/qa/` conservan resultados de sesiones anteriores. Se etiqu
 - Consolidación inicial de documentos redundantes.
 - Organización de especificaciones en `docs/specs/` e informes en `docs/qa/`.
 - Creación de la arquitectura, guía rápida y gobernanza documental iniciales.
+# 1 de julio de 2026 - Layout Android independiente v1.2.12
+
+- El APK conserva el diseño móvil en celulares y tabletas, sin activar componentes de la versión web por el ancho de pantalla.
+- El ancho disponible se usa solamente para adaptar espaciados y distribución interna.
+- Se unificó la detección de layout en login, shell y módulos funcionales.
+- Validación automatizada: `249 passed`.

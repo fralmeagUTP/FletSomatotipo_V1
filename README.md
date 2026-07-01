@@ -1,6 +1,6 @@
 # Somatocarta
 
-**Versión:** v1.2.11
+**Versión:** v1.2.12
 **Estado:** 95% funcional y aprobado para pruebas internas; la publicación requiere cerrar hallazgos de seguridad y firma
 
 Aplicación Flet + FastAPI para gestión de deportistas, valoración corporal antropométrica, análisis de composición corporal, somatotipo (Heath-Carter), análisis longitudinal e informes PDF.
@@ -281,7 +281,7 @@ Somatocarta es desarrollada en el marco de:
 
 ## Estado actual
 
-- **Versión:** v1.2.11
+- **Versión:** v1.2.12
 - **Tests:** 244 y 7 subpruebas pasando; cobertura global 74%
 - **Estabilidad:** 95% funcional; flujos principales, Web inicial y E2E crítico operativos
 - **Última evaluación QA:** 30 de junio de 2026 ([informe integral](docs/qa/informe_pruebas_integrales_2026-06-30.md))

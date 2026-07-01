@@ -10,6 +10,8 @@ Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, regist
 
 ## Cambios arquitectónicos v1.2.11
 
+- El APK Android selecciona siempre el layout móvil, independientemente del ancho lógico del celular o la tableta. Los breakpoints se reservan para ajustar espaciado y distribución interna; la versión web conserva su layout independiente.
+
 - `main.py` sigue siendo la entrada compartida, pero las vistas seleccionan composiciones específicas mediante `is_mobile`; Android no renderiza forzosamente los paneles Web.
 - `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. `uses_mobile_app_layout()` exige una página nativa y un ancho móvil: una página Web estrecha continúa usando la composición Web. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
 - `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio y compartir Android mediante `ft.Share` con bytes y MIME `application/pdf`.

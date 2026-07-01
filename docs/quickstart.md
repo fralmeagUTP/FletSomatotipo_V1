@@ -1,4 +1,4 @@
-# Guía rápida de inicio — Somatocarta v1.2.11
+# Guía rápida de inicio — Somatocarta v1.2.12
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
 **Fecha:** 30 de junio de 2026
@@ -113,7 +113,7 @@ Estado esperado: **244 tests y 7 subpruebas pasando**.
 ## 6. Build APK (Android)
 
 ```powershell
-.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.11 --build-number 22
+.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.12 --build-number 23
 ```
 
 El archivo queda en: `build\apk\Somatocarta.apk`
@@ -125,11 +125,11 @@ El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En 
 El build optimizado usa `requirements-apk.txt` para evitar empaquetar dependencias exclusivas del backend. Artefacto verificado:
 
 ```text
-build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.11.apk
+build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.12.apk
 ```
 
 - Paquete: `com.nyquist.somatocarta`
-- Versión: `1.2.11` (`versionCode=22`)
+- Versión: `1.2.12` (`versionCode=23`)
 - Android mínimo: API 24 (Android 7.0)
 - Arquitecturas: `arm64-v8a`, `armeabi-v7a` y `x86_64`
 - Runtime: Flet `0.85.3` y `flet-charts 0.85.3`
@@ -138,7 +138,7 @@ build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.11.apk
 Instalación mediante USB con depuración habilitada:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.11.apk
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.12.apk
 ```
 
 La estructura, firma, manifiesto, versión y arquitecturas del APK fueron verificadas con Android Build Tools 35.0.0.

@@ -16,7 +16,7 @@ android_log("module import start")
 # Ensure the current directory is in the path for module resolution
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-APP_VERSION = "v1.2.11"
+APP_VERSION = "v1.2.12"
 
 def main(page):
     android_log("main(page) entered")
@@ -46,6 +46,7 @@ def main(page):
         from app_config import API_URL, session_clear, session_set
         from src.frontend import theme
         from src.frontend.api_client import ApiClient, ApiError
+        from src.frontend.components import uses_mobile_app_layout
         from src.frontend.assets import (
             LOGO_CDR,
             LOGO_ISC,
@@ -179,7 +180,7 @@ def main(page):
     def build_login_ui():
         """Construye y retorna la UI de login"""
         nonlocal login_button_control
-        is_mobile_layout = (getattr(page, "width", None) or 390) < 700
+        is_mobile_layout = uses_mobile_app_layout(page)
         login_button = ft.ElevatedButton(
             content=ft.Text("Iniciar sesión", size=16, weight="bold"),
             on_click=login_click,

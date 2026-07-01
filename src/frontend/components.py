@@ -16,11 +16,24 @@ def is_compact(page):
     return page_width(page) < 600
 
 
+def is_android_app(page):
+    """Return True for the native Android runtime, regardless of screen width."""
+    if bool(getattr(page, "web", False)):
+        return False
+    if os.getenv("ANDROID_ROOT") or os.getenv("ANDROID_DATA"):
+        return True
+    platform_value = getattr(page, "platform", None)
+    platform_name = getattr(platform_value, "value", platform_value)
+    return str(platform_name or "").strip().lower().endswith("android")
+
+
 def uses_mobile_app_layout(page, breakpoint=700):
     if os.getenv("SOMATOCARTA_FORCE_MOBILE", "").strip().lower() in {"1", "true", "yes"}:
         return True
     if bool(getattr(page, "web", False)):
         return False
+    if is_android_app(page):
+        return True
     return page_width(page, default=390) < breakpoint
 
 

@@ -10,6 +10,7 @@ from src.frontend.components import (
     content_card,
     horizontal_scroll,
     info_banner,
+    is_android_app,
     is_mobile,
     mobile_search_field,
     mobile_screen,
@@ -96,6 +97,33 @@ class ComponentsTests(unittest.TestCase):
 
         self.assertTrue(is_mobile(page))
         self.assertTrue(uses_mobile_app_layout(page, 900))
+
+    def test_android_tablet_keeps_mobile_app_layout_at_desktop_width(self):
+        page = SimpleNamespace(width=1280, web=False, platform="android")
+
+        self.assertTrue(is_android_app(page))
+        self.assertTrue(is_mobile(page))
+        self.assertTrue(uses_mobile_app_layout(page, 900))
+
+    def test_android_environment_keeps_mobile_layout_without_platform_metadata(self):
+        page = SimpleNamespace(width=1280, web=False, platform=None)
+
+        with patch.dict("os.environ", {"ANDROID_ROOT": "/system"}):
+            self.assertTrue(is_android_app(page))
+            self.assertTrue(is_mobile(page))
+
+    def test_wide_native_desktop_still_uses_desktop_layout(self):
+        page = SimpleNamespace(width=1280, web=False, platform="windows")
+
+        self.assertFalse(is_android_app(page))
+        self.assertFalse(is_mobile(page))
+
+    def test_web_runtime_wins_over_android_environment(self):
+        page = SimpleNamespace(width=390, web=True, platform="android")
+
+        with patch.dict("os.environ", {"ANDROID_ROOT": "/system", "APP_RUNTIME": "web"}):
+            self.assertFalse(is_android_app(page))
+            self.assertFalse(is_mobile(page))
 
     def test_mobile_top_bar_respects_android_status_bar_safe_area(self):
         bar = mobile_top_bar("Dashboard", on_menu=lambda _: None, on_trailing=lambda _: None)
