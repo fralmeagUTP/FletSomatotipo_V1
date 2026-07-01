@@ -1,7 +1,7 @@
 # Somatocarta — Software Specification (Spec Kit)
 
 **Versión:** 1.0
-**Fecha:** 21 de junio de 2026
+**Fecha:** 30 de junio de 2026
 **Estado:** Vigente
 
 ---
@@ -40,7 +40,7 @@ Instituciones vinculadas:
 
 ### 1.5 Alcance actual
 
-Versión **v1.2.1**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
+Versión **v1.2.11**. Aplicación funcional con frontend Flet (multiplataforma, incluyendo Android) y backend FastAPI con base de datos MySQL.
 
 ---
 
@@ -158,7 +158,7 @@ US-003: Como usuario, quiero cerrar sesión explícitamente cuando termine mi se
 
 ```text
 US-004: Como usuario, quiero ver un resumen del sistema al iniciar sesión para conocer el estado general.
-US-005: Como usuario, quiero ver la actividad reciente para saber qué operaciones se realizaron.
+US-005: Como usuario, quiero identificar rápidamente el estado del sistema y sus módulos principales.
 US-006: Como usuario, quiero acceder rápidamente a los módulos principales desde el dashboard.
 ```
 
@@ -231,7 +231,7 @@ El sistema debe permitir inicio de sesión con usuario y contraseña, generar to
 
 ### FR-002: Dashboard
 
-El sistema debe mostrar métricas operativas (totales de deportistas, valoraciones, deportes, entidades, asignaciones), actividad reciente y estado de salud de la vista SQL.
+El sistema debe mostrar métricas operativas, estado de salud de la vista SQL y accesos rápidos a los módulos principales.
 
 ### FR-003: CRUD de deportistas
 
@@ -285,7 +285,7 @@ El sistema debe renderizar la carta de Heath-Carter con calibración por interpo
 
 ### FR-014: Análisis longitudinal
 
-El sistema debe permitir comparar valoraciones temporales de un deportista, graficar 11 variables, mostrar tarjetas de cambio, y renderizar somatocarta longitudinal con trayectoria.
+El sistema debe permitir comparar valoraciones temporales de un deportista, graficar 10 variables, mostrar tarjetas de cambio, y renderizar somatocarta longitudinal con trayectoria.
 
 ### FR-015: Informes PDF
 
@@ -346,8 +346,11 @@ NFR-011: El layout master-detail debe alternar a modo toggle en móvil/tablet.
 ```text
 NFR-012: Todas las rutas privadas deben requerir token JWT válido.
 NFR-013: Los tokens deben expirar después de un tiempo definido.
-NFR-014: Las contraseñas no deben transmitirse en texto plano en la red (solo dentro de la BD por compatibilidad heredada).
+NFR-014: Las contraseñas deben transmitirse solo por HTTPS y almacenarse con bcrypt o Argon2; el texto plano heredado debe migrarse.
 NFR-015: El sistema debe registrar intentos de login fallidos.
+NFR-026: El backend debe rechazar el inicio si `SECRET_KEY` falta o conserva un valor inseguro.
+NFR-027: El login debe aplicar rate limiting por IP y usuario.
+NFR-028: La distribución Android pública debe usar un keystore de release, nunca el certificado debug.
 ```
 
 ### Rendimiento
@@ -587,8 +590,8 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 |----|-----------|
 | UX-001 | Dashboard con saludo personalizado y métricas clave. |
 | UX-002 | Navegación lateral (sidebar) en escritorio, menú hamburguesa en móvil. |
-| UX-003 | Búsqueda global de deportistas desde la barra de navegación. |
-| UX-004 | Tarjetas de módulo con imágenes representativas. |
+| UX-003 | Historial de rutas compatible con navegación atrás en Android y navegador. |
+| UX-004 | Tarjetas de módulo con iconos Material vectoriales uniformes. |
 | UX-005 | Estados vacíos con mensajes informativos y acción sugerida. |
 | UX-006 | Formularios con validación en tiempo real. |
 | UX-007 | Confirmación modal antes de operaciones destructivas. |
@@ -597,6 +600,11 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | UX-010 | Diferenciación visual clara entre análisis individual y longitudinal. |
 | UX-011 | Unidades de medida visibles en todos los campos y reportes. |
 | UX-012 | Diseño responsive sin scroll horizontal no deseado. |
+| UX-013 | Web y Android pueden compartir lógica y datos, pero deben usar composiciones visuales independientes cuando el flujo móvil lo requiera. |
+| UX-014 | Deportistas móvil usa un flujo de cuatro pasos; deportes, entidades y asignaciones usan tarjetas y formularios separados. |
+| UX-015 | El login permite mostrar/ocultar contraseña y el encabezado móvil permite cerrar sesión. |
+| UX-016 | El análisis longitudinal móvil conserva todos los datos funcionales del panel Web en secciones adaptadas. |
+| UX-017 | La detección de plataforma impide que Web cargue composiciones exclusivas del APK, incluso con ancho móvil. |
 
 ---
 
@@ -632,6 +640,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 - Los PDFs se generan íntegramente en el backend sin dependencias externas de PDF.
 - El PDF debe ser válido (iniciar con firma `%PDF`).
 - Las imágenes PNG se decodifican internamente con soporte para filtro Paeth.
+- En Web, el PDF se entrega al navegador; en escritorio se abre externamente; en Android se comparte mediante `ft.Share` y `ShareFile.from_bytes` con MIME `application/pdf`.
 
 ---
 
@@ -651,7 +660,7 @@ NFR-025: El backend debe ser compatible con MySQL 5.7+ y 8.0+.
 | Valoración | Vista de captura de mediciones. |
 | Negativas | Credenciales inválidas, campos vacíos, rangos fuera, duplicados. |
 
-**Resultado actual:** 183 tests y 3 subpruebas pasando.
+**Resultado actual:** 244 tests y 7 subpruebas pasando.
 
 ---
 
@@ -857,6 +866,8 @@ Elimina un deporte.
 
 Parámetros: `search`, `page`, `page_size`
 
+Cada elemento conserva `id`, `ID_DEPORTE`, `IDENTI_DEPORTISTA` y `NIT_ENTIDAD`, y puede incluir `NOMBRE_DEPORTISTA`, `DEPORTE` y `RAZON_SOCIAL` para presentación.
+
 #### `POST /asignaciones/`
 
 Crea una asignación. Payload: ID_DEPORTE, IDENTI_DEPORTISTA, NIT_ENTIDAD.
@@ -1058,7 +1069,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 
 ### C.3 Diseño adaptativo
 
-- **Celular:** navegación por pantalla única; lista o detalle, no ambos al mismo tiempo; tablas e imágenes con scroll horizontal cuando no quepan.
+- **Celular:** navegación por pantalla única; lista o detalle, no ambos al mismo tiempo; CRUD mediante tarjetas/formularios móviles; análisis longitudinal completo en secciones verticales; tablas e imágenes con scroll horizontal cuando no quepan.
 - **Tableta:** grillas de dos columnas cuando el ancho lo permita; tarjetas apilables.
 - **Laptop/escritorio:** layout master-detail; mayor densidad de información; tablas y gráficos visibles simultáneamente.
 
@@ -1073,6 +1084,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - El token incluye `sub` y `id`.
 - El frontend envía token mediante `Authorization: Bearer`.
 - La carga de imágenes valida extensión, tipo MIME y tamaño máximo.
+- Android comparte PDF mediante el proveedor interno de `share_plus`, permiso temporal de lectura y MIME `application/pdf`; no expone rutas privadas directas.
 
 ### D.2 Riesgos detectados
 
@@ -1099,7 +1111,7 @@ Devuelve métricas operativas y contrato de vista SQL.
 - `ApiClient` centraliza comunicación HTTP.
 - Routers delegan lógica transaccional a servicios.
 - Uso de schemas Pydantic para validar entradas.
-- Suite de pruebas amplia para el tamaño actual de la app (183 tests y 3 subpruebas).
+- Suite de pruebas amplia para el tamaño actual de la app (244 tests y 7 subpruebas).
 - Diseño visual más coherente y adaptativo que versiones previas.
 - Cálculos derivados desacoplados del frontend.
 - PDFs integrados sin dependencia externa pesada.

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: somatocarta-web
+    runtime: python
+    buildCommand: python -m pip install -r requirements-web.txt
+    startCommand: python -m uvicorn web_main:create_web_app --factory --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /
+    envVars:
+      - key: APP_RUNTIME
+        value: web
+      - key: API_URL
+        value: https://nyquist.app/somatocarta
+      - key: PYTHON_VERSION
+        value: 3.11.9

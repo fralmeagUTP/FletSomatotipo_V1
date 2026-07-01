@@ -48,6 +48,8 @@ git status --short
 - `app_config.py`
 - `start_backend.bat`
 - `start_frontend.bat`
+- `start_web.bat`
+- `web_main.py`
 - `src/backend/`
 - `src/frontend/`
 - `views/`
@@ -57,6 +59,37 @@ git status --short
 - `.env.example`
 - `.gitignore`
 - `passenger_wsgi.py` si se va a desplegar en cPanel/Passenger
+
+## Publicación Flet Web
+
+Antes de exponer la interfaz web:
+
+- definir `API_URL` con HTTPS;
+- definir `WEB_ALLOWED_ORIGINS` sin comodines;
+- ejecutar Flet mediante `web_main:create_web_app --factory`;
+- configurar el proxy inverso para conservar WebSocket;
+- completar `docs/flet_web_qa_checklist.md` en escritorio, tablet y móvil;
+- confirmar que fotografías y PDF funcionan desde el dominio final.
+- excluir la ruta pública de API de desafíos Imunify360 Bot Protection; Android/Python no pueden resolver challenges JavaScript.
+
+## Publicación Android
+
+- incrementar `build-version` y `build-number` respecto del APK instalado;
+- compilar con `requirements-apk.txt`; el APK interno universal incluye `arm64-v8a`, `armeabi-v7a` y `x86_64`;
+- verificar firma, `versionName`, `versionCode`, paquete `com.nyquist.somatocarta` y ABI;
+- comprobar que el manifiesto conserva `FileProvider` y permisos temporales para compartir PDF;
+- probar login, CRUD móviles, cierre de sesión, visor PDF y selector de aplicaciones;
+- calcular SHA-256 y registrar nombre, tamaño y hash del artefacto en el changelog.
+
+Bloqueantes vigentes para publicación pública:
+
+- migrar `PSW_USER` de texto plano a bcrypt/Argon2;
+- eliminar la clave JWT predeterminada y exigir `SECRET_KEY` fuerte;
+- aplicar rate limiting al login;
+- firmar con keystore de release;
+- sustituir controles Flet obsoletos antes de actualizar a Flet 1.0.
+
+Sin VPS, use `render.yaml`, `requirements-web.txt` y la guía `docs/flet_web_no_vps.md`; el backend y los uploads permanecen en cPanel.
 
 ## Cambios que requieren decisión manual
 
@@ -106,7 +139,7 @@ En la base activa, las migraciones `002`, `003` y `004` están aplicadas. La ver
 ## Comando de commit sugerido
 
 ```powershell
-git add .gitignore .env.example README.md docs main.py app_config.py passenger_wsgi.py start_backend.bat start_frontend.bat requirements.txt scripts/preflight_publicacion.ps1 scripts/migrations src/backend src/frontend views tests
+git add .gitignore .env.example README.md docs main.py web_main.py app_config.py passenger_wsgi.py start_backend.bat start_frontend.bat start_web.bat requirements.txt scripts/preflight_publicacion.ps1 scripts/migrations src/backend src/frontend views tests
 git commit -m "Mejora arquitectura frontend backend y pruebas"
 ```
 

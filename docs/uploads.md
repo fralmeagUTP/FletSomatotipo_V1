@@ -1,7 +1,7 @@
 # Política de uploads
 
-**Fecha de actualización:** 21 de junio de 2026
-**Estado:** validado por flujo E2E autenticado.
+**Fecha de actualización:** 22 de junio de 2026
+**Estado:** validado por flujo E2E autenticado y pruebas del selector Android/Web.
 
 ## Alcance
 
@@ -15,6 +15,8 @@ Los archivos subidos por usuarios se guardan en `src/backend/static/uploads/` y 
 - Los uploads nuevos no deben versionarse en Git.
 - El archivo `.gitkeep` conserva la carpeta vacía dentro del repositorio.
 - El flujo E2E verifica carga PNG, almacenamiento temporal y asociación de la URL al deportista.
+- Android y Web usan `FilePicker` como servicio y envían bytes junto con nombre y MIME explícito mediante `ApiClient.upload_photo()`.
+- La previsualización usa bytes locales antes de guardar y la URL devuelta por FastAPI después de guardar.
 
 ## Operación local
 
@@ -32,6 +34,7 @@ Si se clona el proyecto y no existe la carpeta, crearla antes de subir fotos o m
 - Hacer backup de la carpeta de uploads antes de migraciones o despliegues.
 - No incluir imágenes personales de deportistas en commits, salvo decisión explícita.
 - Revisar permisos de escritura del proceso backend sobre la carpeta de uploads.
+- Si Web y FastAPI se publican en dominios distintos, permitir el origen web autorizado y servir las fotos por HTTPS.
 
 ## Riesgos a controlar
 

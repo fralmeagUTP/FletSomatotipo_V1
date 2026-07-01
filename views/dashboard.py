@@ -3,8 +3,7 @@ import flet as ft
 from app_config import session_get, show_snack
 from src.frontend import theme
 from src.frontend.api_client import ApiClient, ApiError
-from src.frontend.assets import MODULE_IMAGES, asset_path
-from src.frontend.components import content_card, primary_button, responsive_padding, secondary_button
+from src.frontend.components import content_card, is_mobile, mobile_list_card, page_width, primary_button, responsive_padding, secondary_button
 from src.frontend.navigation import (
     show_acerca,
     show_asignaciones,
@@ -39,58 +38,61 @@ def DashboardView(page: ft.Page):
             content=ft.Row(
                 [
                     ft.Container(
-                        content=ft.Icon(icon, size=26, color=color),
-                        width=48,
-                        height=48,
+                        content=ft.Icon(icon, size=20, color=color),
+                        width=38,
+                        height=38,
                         bgcolor=theme.INFO_BACKGROUND if color == theme.PRIMARY_COLOR else ft.Colors.GREEN_50,
-                        border_radius=14,
+                        border_radius=9,
                         alignment=ft.alignment.center,
                     ),
                     ft.Column(
                         [
-                            ft.Text(title, size=12, color=theme.SUBTITLE_COLOR),
-                            ft.Text(str(value), size=24, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                            ft.Text(subtitle, size=11, color=theme.SUBTITLE_COLOR),
+                            ft.Text(title, size=11, color=theme.SUBTITLE_COLOR),
+                            ft.Text(str(value), size=22, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
+                            ft.Text(subtitle, size=10, color=theme.SUBTITLE_COLOR),
                         ],
                         spacing=2,
                         expand=True,
                     ),
                 ],
-                spacing=12,
+                spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             bgcolor=ft.Colors.WHITE,
             border=ft.border.all(1, theme.SURFACE_BORDER),
-            border_radius=theme.RADIUS_LARGE,
-            padding=16,
+            border_radius=theme.RADIUS_MEDIUM,
+            padding=14,
             shadow=theme.card_shadow(),
             col={"xs": 12, "sm": 6, "lg": 3},
         )
 
-    def module_card(label, description, image_name, icon, action):
-        visual = (
-            ft.Image(src=asset_path(image_name), width=56, height=56, fit=ft.ImageFit.CONTAIN)
-            if image_name
-            else ft.Icon(icon, size=34, color=theme.PRIMARY_COLOR)
+    def module_card(label, description, icon, action):
+        visual = ft.Container(
+            content=ft.Icon(icon, size=20, color=theme.PRIMARY_COLOR),
+            width=36,
+            height=36,
+            bgcolor=theme.INFO_BACKGROUND,
+            border_radius=theme.RADIUS_SMALL,
+            alignment=ft.alignment.center,
         )
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Container(content=visual, width=64, height=64, alignment=ft.alignment.center),
+                    visual,
                     ft.Column(
                         [
-                            ft.Text(label, size=14, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                            ft.Text(description, size=11, color=theme.SUBTITLE_COLOR),
+                            ft.Text(label, size=13, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
+                            ft.Text(description, size=10, color=theme.SUBTITLE_COLOR),
                         ],
-                        spacing=4,
+                        spacing=2,
                         expand=True,
                     ),
-                    ft.Icon(ft.Icons.CHEVRON_RIGHT, color=theme.SUBTITLE_COLOR),
+                    ft.Icon(ft.Icons.CHEVRON_RIGHT, color=theme.SUBTITLE_COLOR, size=18),
                 ],
-                spacing=10,
+                spacing=9,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=14,
+            padding=12,
             bgcolor=ft.Colors.WHITE,
             border=ft.border.all(1, theme.SURFACE_BORDER),
             border_radius=theme.RADIUS_MEDIUM,
@@ -102,8 +104,13 @@ def DashboardView(page: ft.Page):
         return content_card(
             ft.Column(
                 [
-                    ft.Text(title, size=17, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
-                    ft.Text(subtitle, size=12, color=theme.SUBTITLE_COLOR),
+                    ft.Row(
+                        [
+                            ft.Text(title, size=15, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR, expand=True),
+                            ft.Text(subtitle, size=11, color=theme.SUBTITLE_COLOR),
+                        ],
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
                     ft.ResponsiveRow(
                         [
                             ft.Container(module_card(*module), col={"xs": 12, "md": 6})
@@ -113,9 +120,9 @@ def DashboardView(page: ft.Page):
                         run_spacing=12,
                     ),
                 ],
-                spacing=12,
+                spacing=10,
             ),
-            padding=18,
+            padding=14,
         )
 
     view_contract = summary.get("vista_contrato") or {}
@@ -124,7 +131,45 @@ def DashboardView(page: ft.Page):
     system_status = "Operativo" if view_ok else "Revisar"
     system_subtitle = "Base de datos lista" if view_ok else f"Faltan {len(missing_columns)} columnas"
 
-    hero = content_card(
+    hero = ft.ResponsiveRow(
+        [
+            ft.Container(
+                ft.Column(
+                    [
+                        ft.Text(f"Hola, {username}!", size=24, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
+                        ft.Text("Bienvenido al panel operativo", size=12, color=theme.SUBTITLE_COLOR),
+                    ],
+                    spacing=2,
+                ),
+                col={"xs": 12, "md": 6},
+            ),
+            ft.Container(
+                content=content_card(
+                    ft.Column(
+                        [
+                            ft.Text("Acciones rapidas", size=12, weight=ft.FontWeight.BOLD, color=theme.HEADING_COLOR),
+                            ft.Row(
+                                [
+                                    primary_button("Nueva valoracion", icon=ft.Icons.ADD, on_click=lambda event: show_valoracion(page)),
+                                    secondary_button("Ver analisis", icon=ft.Icons.ANALYTICS_OUTLINED, on_click=lambda event: show_historial(page)),
+                                ],
+                                spacing=10,
+                                wrap=True,
+                            ),
+                        ],
+                        spacing=10,
+                    ),
+                    padding=14,
+                ),
+                col={"xs": 12, "md": 6},
+            ),
+        ],
+        spacing=18,
+        run_spacing=12,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    legacy_hero = content_card(
         ft.ResponsiveRow(
             [
                 ft.Container(
@@ -184,22 +229,117 @@ def DashboardView(page: ft.Page):
     )
 
     operation_modules = [
-        ("Valoración corporal", "Registrar una nueva medición", MODULE_IMAGES["valoracion"], ft.Icons.MONITOR_WEIGHT_OUTLINED, show_valoracion),
-        ("Análisis de valoración corporal", "Consultar resultados y PDF individual", MODULE_IMAGES["historial"], ft.Icons.ANALYTICS_OUTLINED, show_historial),
-        ("Análisis longitudinal", "Revisar evolución temporal", MODULE_IMAGES["analisis_longitudinal"], ft.Icons.SHOW_CHART, show_analisis_longitudinal),
+        ("Valoración corporal", "Registrar una nueva medición", ft.Icons.MONITOR_WEIGHT_OUTLINED, show_valoracion),
+        ("Análisis de valoración corporal", "Consultar resultados y PDF individual", ft.Icons.ANALYTICS_OUTLINED, show_historial),
+        ("Análisis longitudinal", "Revisar evolución temporal", ft.Icons.SHOW_CHART, show_analisis_longitudinal),
     ]
     management_modules = [
-        ("Deportistas", "Crear y administrar deportistas", MODULE_IMAGES["deportistas"], ft.Icons.PEOPLE_OUTLINE, show_deportistas),
-        ("Deportes", "Gestionar catálogo deportivo", MODULE_IMAGES["deportes"], ft.Icons.SPORTS_SOCCER, show_deportes),
-        ("Entidades", "Administrar instituciones", MODULE_IMAGES["entidades"], ft.Icons.BUSINESS_OUTLINED, show_entidades),
-        ("Asignaciones", "Relacionar deportistas, deportes y entidades", MODULE_IMAGES["asignaciones"], ft.Icons.LINK, show_asignaciones),
+        ("Deportistas", "Crear y administrar deportistas", ft.Icons.PEOPLE_OUTLINE, show_deportistas),
+        ("Deportes", "Gestionar catálogo deportivo", ft.Icons.SPORTS_SOCCER, show_deportes),
+        ("Entidades", "Administrar instituciones", ft.Icons.BUSINESS_OUTLINED, show_entidades),
+        ("Asignaciones", "Relacionar deportistas, deportes y entidades", ft.Icons.LINK, show_asignaciones),
     ]
     system_modules = [
-        ("Acerca del proyecto", "Información del alcance y soporte", None, ft.Icons.INFO_OUTLINE, show_acerca),
+        ("Acerca del proyecto", "Información del alcance y soporte", ft.Icons.INFO_OUTLINE, show_acerca),
     ]
 
+    if is_mobile(page):
+        def mobile_metric(title, value, subtitle):
+            return ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Text(title, size=11, color=theme.MUTED_TEXT_COLOR),
+                        ft.Text(str(value), size=22, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                        ft.Text(subtitle, size=10, color=theme.MUTED_TEXT_COLOR),
+                    ],
+                    spacing=4,
+                ),
+                bgcolor=ft.Colors.WHITE,
+                border=ft.border.all(1, theme.SURFACE_BORDER),
+                border_radius=12,
+                padding=16,
+                col={"xs": 6},
+            )
+
+        def quick_action(icon, label, action, muted=False):
+            return ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Container(
+                            content=ft.Icon(icon, color=theme.PRIMARY_BLUE if muted else ft.Colors.WHITE, size=22),
+                            width=44,
+                            height=44,
+                            bgcolor=theme.INFO_BACKGROUND if muted else theme.PRIMARY_BLUE,
+                            border_radius=10,
+                            alignment=ft.alignment.center,
+                        ),
+                        ft.Text(label, size=10, color=theme.INK_COLOR, text_align=ft.TextAlign.CENTER),
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                ),
+                expand=True,
+                ink=True,
+                on_click=lambda _: action(page),
+            )
+
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.Text(f"Hola, {username}!", size=28, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                    ft.Text("Bienvenido al panel operativo", size=13, color=theme.MUTED_TEXT_COLOR),
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Text("Acciones rapidas", size=13, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                                ft.Row(
+                                    [
+                                        quick_action(ft.Icons.ADD, "Nueva valoracion", show_valoracion),
+                                        quick_action(ft.Icons.ANALYTICS_OUTLINED, "Ver analisis", show_historial, muted=True),
+                                    ],
+                                    spacing=16,
+                                ),
+                            ],
+                            spacing=12,
+                        ),
+                        bgcolor=ft.Colors.WHITE,
+                        border=ft.border.all(1, theme.SURFACE_BORDER),
+                        border_radius=16,
+                        padding=16,
+                    ),
+                    ft.ResponsiveRow(
+                        [
+                            mobile_metric("Deportistas", summary.get("total_deportistas", "-"), "Activos"),
+                            mobile_metric("Valoraciones", summary.get("total_valoraciones", "-"), "Registradas"),
+                            mobile_metric("Asignaciones", summary.get("total_asignaciones", "-"), "Relaciones"),
+                            mobile_metric("Sistema", system_status, "Base de datos"),
+                        ],
+                        spacing=12,
+                        run_spacing=12,
+                    ),
+                    ft.Text("Operacion y analisis", size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                    mobile_list_card("Valoracion corporal", "Registrar nueva medicion", "VC", "#e8f0fe", on_click=lambda _: show_valoracion(page)),
+                    mobile_list_card("Analisis de valoracion", "Ver resultados y reportes", "AV", "#e8f0fe", on_click=lambda _: show_historial(page)),
+                    mobile_list_card("Analisis longitudinal", "Revisar evolucion temporal", "AL", "#e8f0fe", on_click=lambda _: show_analisis_longitudinal(page)),
+                    ft.Text("Gestion de datos", size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                    mobile_list_card("Deportistas", "Crear y administrar deportistas", "DP", "#dbeafe", on_click=lambda _: show_deportistas(page)),
+                    mobile_list_card("Deportes", "Gestionar catalogo deportivo", "DE", "#dcfce7", on_click=lambda _: show_deportes(page)),
+                    mobile_list_card("Entidades", "Administrar instituciones", "EN", "#f3e8ff", on_click=lambda _: show_entidades(page)),
+                    mobile_list_card("Asignaciones", "Relacionar deportistas, deportes y entidades", "AS", "#fef3c7", on_click=lambda _: show_asignaciones(page)),
+                    ft.Text("Sistema", size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR),
+                    mobile_list_card("Acerca del proyecto", "Informacion del alcance y soporte", "AP", "#e8f0fe", on_click=lambda _: show_acerca(page)),
+                ],
+                spacing=12,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            padding=ft.padding.only(left=22, right=22, top=22, bottom=18),
+            bgcolor=theme.MOBILE_BACKGROUND,
+            expand=True,
+        )
+
     return ft.Container(
-        content=ft.Column(
+        content=ft.Container(
+            content=ft.Column(
             [
                 hero,
                 metrics,
@@ -207,10 +347,13 @@ def DashboardView(page: ft.Page):
                 module_group("Gestión de datos", "Módulos administrativos y catálogos.", management_modules),
                 module_group("Sistema", "Información general del proyecto y estado operativo.", system_modules),
             ],
-            spacing=16,
-            scroll=ft.ScrollMode.AUTO,
+                spacing=14,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            width=min(page_width(page), 1320),
         ),
         padding=responsive_padding(page),
         bgcolor=theme.BACKGROUND_COLOR,
         expand=True,
+        alignment=ft.alignment.top_center,
     )

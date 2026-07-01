@@ -4,6 +4,11 @@ from app_config import show_snack
 from src.frontend.components import (
     content_card,
     empty_state as make_empty_state,
+    is_mobile,
+    mobile_list_card,
+    mobile_primary_button,
+    mobile_search_field,
+    mobile_screen,
     page_header,
     responsive_dialog_size,
     responsive_padding,
@@ -37,6 +42,8 @@ def DeportistasView(page: ft.Page):
     # State
     current_edit_id = None 
     selected_photo = None
+    mobile_step = 0
+    mobile_root = ft.Container(expand=True)
     api = ApiClient(page)
 
     def open_control(control):
@@ -174,7 +181,24 @@ def DeportistasView(page: ft.Page):
     nombre_institu = ft.TextField(label="Institución")
 
     # Extra
-    observaciones = ft.TextField(label="Observaciones", multiline=True, height=80)
+    observaciones = ft.TextField(
+        label="Observaciones",
+        multiline=True,
+        min_lines=4,
+        max_lines=6,
+        height=150,
+        text_vertical_align=ft.VerticalAlignment.START,
+    )
+
+    for field in [
+        identi, tipo_identi, nombre, sexo, fecha_nac, pais_nac, dep_nac,
+        ciudad_nac, dep_resi, ciudad_resi, direcc_resi, telefono, email,
+        estrato_dd, nivel_edu_dd, nombre_institu, observaciones,
+    ]:
+        field.bgcolor = ft.Colors.WHITE
+        field.border_color = theme.SURFACE_BORDER
+        field.focused_border_color = PRIMARY_COLOR
+        field.border_radius = theme.MOBILE_RADIUS
 
     deportista_fields = {
         "identi": identi,
@@ -263,7 +287,10 @@ def DeportistasView(page: ft.Page):
 
             show_snack(page, "Deportista guardado exitosamente")
             clean_form()
-            close_control(dlg_modal)
+            if is_mobile(page):
+                show_mobile_list()
+            else:
+                close_control(dlg_modal)
             load_deportistas()
         except ApiError as error:
             show_snack(page, str(error))
@@ -346,9 +373,11 @@ def DeportistasView(page: ft.Page):
         close_control(dlg_modal)
 
     def open_add_modal(e):
-        print("Opening add modal...")
         try:
             clean_form()
+            if is_mobile(page):
+                show_mobile_form(0)
+                return
             size = responsive_dialog_size(page)
             dlg_modal.content.width = size["width"]
             dlg_modal.content.height = size["height"]
@@ -395,7 +424,10 @@ def DeportistasView(page: ft.Page):
         dlg_modal.content.width = size["width"]
         dlg_modal.content.height = size["height"]
         dlg_modal.title.value = "Editar Deportista"
-        open_control(dlg_modal)
+        if is_mobile(page):
+            show_mobile_form(0)
+        else:
+            open_control(dlg_modal)
 
     # Delete Confirmation Logic
     def delete_deportista(id_deportista):
@@ -442,6 +474,7 @@ def DeportistasView(page: ft.Page):
         ],
         rows=[]
     )
+    mobile_rows = ft.Column(spacing=8)
     result_text = ft.Text("Cargando deportistas...", color=theme.SUBTITLE_COLOR, size=13)
     empty_state = make_empty_state("No hay deportistas para mostrar")
     empty_state.visible = False
@@ -492,6 +525,259 @@ def DeportistasView(page: ft.Page):
         on_click=open_add_modal,
     )
 
+    def set_mobile_shell_visible(visible):
+        header = getattr(page, "_somatocarta_mobile_header", None)
+        bottom = getattr(page, "_somatocarta_bottom_navigation", None)
+        if header is not None:
+            header.visible = visible
+        if bottom is not None:
+            bottom.visible = visible
+
+    def mobile_progress(active_step):
+        controls = []
+        for index in range(4):
+            selected = index == active_step
+            completed = index < active_step
+            controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        str(index + 1),
+                        size=11,
+                        color=ft.Colors.WHITE if selected or completed else theme.MUTED_TEXT_COLOR,
+                    ),
+                    width=24,
+                    height=24,
+                    border_radius=12,
+                    bgcolor=PRIMARY_COLOR if selected or completed else "#e3e8ef",
+                    alignment=ft.alignment.center,
+                )
+            )
+            if index < 3:
+                controls.append(
+                    ft.Container(
+                        height=2,
+                        bgcolor=PRIMARY_COLOR if index < active_step else "#d8e1ee",
+                        expand=True,
+                    )
+                )
+        return ft.Row(controls, spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+
+    def validate_basic_step():
+        message = required_missing(
+            [
+                (identi, "La identificacion es obligatoria"),
+                (tipo_identi, "El tipo de documento es obligatorio"),
+                (nombre, "El nombre es obligatorio"),
+                (sexo, "El sexo es obligatorio"),
+            ]
+        )
+        if message:
+            show_snack(page, message)
+            return False
+        return True
+
+    def mobile_step_body(step):
+        if step == 0:
+            return "Datos básicos", [
+                tipo_identi,
+                identi,
+                nombre,
+                sexo,
+                ft.Row([fecha_nac, fecha_nac_btn], spacing=4),
+            ]
+        if step == 1:
+            return "Contacto y ubicación", [
+                telefono,
+                email,
+                ft.Text("Lugar de nacimiento", size=12, weight=ft.FontWeight.BOLD, color=theme.MUTED_TEXT_COLOR),
+                pais_nac,
+                dep_nac,
+                ciudad_nac,
+                ft.Text("Residencia", size=12, weight=ft.FontWeight.BOLD, color=theme.MUTED_TEXT_COLOR),
+                dep_resi,
+                ciudad_resi,
+                direcc_resi,
+            ]
+        if step == 2:
+            return "Información socioeconómica", [
+                estrato_dd,
+                nivel_edu_dd,
+                nombre_institu,
+                observaciones,
+            ]
+
+        photo_preview = ft.Stack(
+            [
+                ft.Container(
+                    content=ft.Icon(ft.Icons.PERSON, size=70, color="#6b7280"),
+                    width=198,
+                    height=198,
+                    bgcolor="#d1d5db",
+                    border_radius=99,
+                    alignment=ft.alignment.center,
+                ),
+                ft.Container(
+                    content=img_preview,
+                    width=198,
+                    height=198,
+                    border_radius=99,
+                    clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                ),
+                ft.Container(
+                    content=ft.IconButton(
+                        ft.Icons.ADD_A_PHOTO,
+                        icon_color=ft.Colors.WHITE,
+                        tooltip="Seleccionar foto",
+                        on_click=pick_photo,
+                    ),
+                    width=54,
+                    height=54,
+                    left=150,
+                    top=150,
+                    bgcolor=PRIMARY_COLOR,
+                    border_radius=27,
+                    alignment=ft.alignment.center,
+                ),
+            ],
+            width=204,
+            height=204,
+        )
+        img_preview.width = 198
+        img_preview.height = 198
+        img_preview.fit = ft.ImageFit.COVER
+        return "Foto del deportista", [
+            ft.Container(photo_preview, alignment=ft.alignment.center, padding=ft.padding.only(top=28)),
+            ft.Container(photo_name, alignment=ft.alignment.center),
+        ]
+
+    def show_mobile_form(step):
+        nonlocal mobile_step
+        if step > mobile_step and mobile_step == 0 and not validate_basic_step():
+            return
+        mobile_step = max(0, min(step, 3))
+        set_mobile_shell_visible(False)
+        def handle_system_back():
+            if mobile_step == 0:
+                show_mobile_list()
+            else:
+                show_mobile_form(mobile_step - 1)
+            return True
+
+        page._somatocarta_local_back_handler = handle_system_back
+        section, fields = mobile_step_body(mobile_step)
+
+        def go_previous(_):
+            if mobile_step == 0:
+                show_mobile_list()
+            else:
+                show_mobile_form(mobile_step - 1)
+
+        title = "Editar deportista" if current_edit_id else "Nuevo deportista"
+        trailing = []
+        if current_edit_id:
+            trailing.append(
+                ft.IconButton(
+                    ft.Icons.DELETE_OUTLINE,
+                    icon_color=theme.ERROR_COLOR,
+                    tooltip="Eliminar deportista",
+                    on_click=lambda _: confirm_delete(current_edit_id),
+                )
+            )
+        mobile_form_header = ft.SafeArea(
+            content=ft.Container(
+                content=ft.Row(
+                    [
+                        ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_previous, icon_color=theme.INK_COLOR),
+                        ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme.INK_COLOR, expand=True),
+                        *trailing,
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                height=64,
+                bgcolor=ft.Colors.WHITE,
+                border=ft.border.only(bottom=ft.BorderSide(1, theme.SURFACE_BORDER)),
+                padding=ft.padding.only(right=8),
+            ),
+            avoid_intrusions_top=True,
+            avoid_intrusions_left=True,
+            avoid_intrusions_right=True,
+            avoid_intrusions_bottom=False,
+        )
+        action_controls = []
+        if mobile_step > 0:
+            action_controls.append(
+                ft.OutlinedButton(
+                    "Anterior",
+                    on_click=lambda _: show_mobile_form(mobile_step - 1),
+                    height=44,
+                    expand=True,
+                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12)),
+                )
+            )
+        action_controls.append(
+            ft.ElevatedButton(
+                "Guardar" if mobile_step == 3 else "Siguiente",
+                icon=ft.Icons.SAVE_OUTLINED if mobile_step == 3 else None,
+                on_click=save_deportista if mobile_step == 3 else lambda _: show_mobile_form(mobile_step + 1),
+                height=44,
+                expand=True,
+                bgcolor=theme.SUCCESS_COLOR if mobile_step == 3 else PRIMARY_COLOR,
+                color=ft.Colors.WHITE,
+                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12), elevation=0),
+            )
+        )
+        body = ft.Column(
+            [
+                mobile_progress(mobile_step),
+                ft.Text(section, size=18, weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
+                *fields,
+            ],
+            spacing=12,
+            scroll=ft.ScrollMode.AUTO,
+        )
+        mobile_root.content = ft.Column(
+            [
+                mobile_form_header,
+                mobile_screen(
+                    body,
+                    bottom_action=ft.Row(action_controls, spacing=14),
+                ),
+            ],
+            spacing=0,
+            expand=True,
+        )
+        page.update()
+
+    def show_mobile_list():
+        set_mobile_shell_visible(True)
+        page._somatocarta_local_back_handler = None
+        mobile_search = mobile_search_field(
+            "Buscar deportista...",
+            value=search_field.value,
+            on_search=lambda query: load_deportistas(query, 1),
+        )
+        mobile_search.expand = True
+        pagination = ft.Row(
+            [prev_button, pagination_text, next_button],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            visible=total_count > page_size,
+        )
+        mobile_root.content = mobile_screen(
+            ft.Column(
+                [
+                    mobile_search,
+                    mobile_primary_button("Nuevo deportista", on_click=open_add_modal),
+                    mobile_rows,
+                    empty_state,
+                    pagination,
+                ],
+                spacing=10,
+                scroll=ft.ScrollMode.AUTO,
+            )
+        )
+        page.update()
+
     def load_deportistas(search_query="", requested_page=1):
         nonlocal current_page, total_count
         current_page = max(1, requested_page)
@@ -502,14 +788,25 @@ def DeportistasView(page: ft.Page):
             data = page_data["items"]
             total_count = page_data["total"]
             table.rows = []
+            mobile_rows.controls.clear()
             empty_state.visible = not data
             result_text.value = f"{len(data)} de {total_count} deportistas"
             for d in data:
                 table.rows.append(build_deportista_row(d, open_edit_modal, confirm_delete))
+                mobile_rows.controls.append(
+                    mobile_list_card(
+                        d.get("NOMBRE_DEPORTISTA") or "-",
+                        f"ID: {d.get('IDENTI_DEPORTISTA') or '-'}",
+                        d.get("NOMBRE_DEPORTISTA") or "",
+                        "#dbeafe",
+                        on_click=lambda e, item=d: open_edit_modal(item),
+                    )
+                )
             update_pagination_controls()
             page.update()
         except ApiError as error:
             table.rows = []
+            mobile_rows.controls.clear()
             empty_state.visible = True
             result_text.value = "No se pudo cargar la lista"
             total_count = 0
@@ -518,6 +815,7 @@ def DeportistasView(page: ft.Page):
             page.update()
         except Exception as error:
             table.rows = []
+            mobile_rows.controls.clear()
             empty_state.visible = True
             result_text.value = "No se pudo cargar la lista"
             total_count = 0
@@ -535,6 +833,10 @@ def DeportistasView(page: ft.Page):
 
     def go_back(e):
         show_dashboard(page)
+
+    if is_mobile(page):
+        show_mobile_list()
+        return mobile_root
 
     return ft.Container(
         content=ft.Column(

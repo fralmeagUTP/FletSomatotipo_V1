@@ -2,6 +2,7 @@ from pathlib import Path
 
 from src.frontend.assets import (
     APP_ICON,
+    INSTITUTIONAL_LOGOS,
     LOGO_CDR,
     LOGO_ISC,
     LOGO_NYQUIST,
@@ -11,12 +12,22 @@ from src.frontend.assets import (
     REFERENCE_IMAGES,
     WINDOW_ICON,
     asset_path,
+    asset_src,
 )
+
+
+class FakePage:
+    def __init__(self, web):
+        self.web = web
 
 
 def test_brand_assets_exist():
     for filename in [LOGO_SOMATOCARTA, LOGO_CDR, LOGO_ISC, LOGO_UTP, LOGO_NYQUIST]:
         assert Path(asset_path(filename)).exists()
+
+
+def test_institutional_logos_use_required_order():
+    assert INSTITUTIONAL_LOGOS == (LOGO_UTP, LOGO_ISC, LOGO_CDR, LOGO_NYQUIST)
 
 
 def test_flet_launcher_icon_uses_somatocarta_logo():
@@ -41,6 +52,24 @@ def test_reference_images_exist():
         assert Path(asset_path(filename)).exists()
 
 
+def test_web_assets_use_public_logical_names():
+    assert asset_src(FakePage(web=True), LOGO_SOMATOCARTA) == LOGO_SOMATOCARTA
+
+
+def test_native_assets_keep_existing_local_resolution():
+    assert Path(asset_src(FakePage(web=False), LOGO_SOMATOCARTA)).exists()
+
+
+def test_static_image_controls_do_not_send_local_paths_to_web():
+    sources = [
+        Path("main.py").read_text(encoding="utf-8"),
+        Path("views/dashboard.py").read_text(encoding="utf-8"),
+        Path("views/acerca.py").read_text(encoding="utf-8"),
+    ]
+
+    assert all("src=asset_path(" not in source for source in sources)
+
+
 def test_main_sets_window_icon_to_somatocarta_logo():
     source = Path("main.py").read_text(encoding="utf-8")
 
@@ -54,3 +83,10 @@ def test_main_blocks_reentrant_login_submits():
     assert "login_in_progress = False" in source
     assert "if login_in_progress:" in source
     assert "login_button_control.disabled = True" in source
+
+
+def test_password_field_can_toggle_visibility():
+    source = Path("main.py").read_text(encoding="utf-8")
+
+    assert "can_reveal_password=True" in source
+    assert "suffix_icon=ft.Icons.VISIBILITY_OUTLINED" not in source

@@ -1,7 +1,7 @@
-# Gobernanza documental — Somatocarta v1.2.1
+# Gobernanza documental — Somatocarta v1.2.11
 
 **Origen:** consolidación de inventario, reporte de obsolescencia y changelog histórico.
-**Fecha de actualización:** 21 de junio de 2026
+**Fecha de actualización:** 30 de junio de 2026
 
 ---
 
@@ -12,7 +12,8 @@
 ```text
 docs/
 ├── specs/
-│   └── somatocarta_spec.md          # Especificación unificada (SDD + Spec Kit)
+│   ├── somatocarta_spec.md          # Especificación unificada (SDD + Spec Kit)
+│   └── flet_web/                    # Especificación, plan y tareas Web
 ├── qa/
 │   ├── informe_qa_boxeo.md          # Evidencia QA histórica
 │   ├── informe_qa_somatocarta.md    # Evidencia QA histórica
@@ -30,7 +31,10 @@ docs/
 ├── documentation_governance.md       # Este documento
 ├── changelog_documentation.md         # Registro cronológico de cambios
 ├── publicacion.md                    # Checklist de publicación
-└── uploads.md                        # Política de uploads
+├── uploads.md                        # Política de uploads
+├── flet_web_deployment.md            # Ejecución y despliegue Web
+├── flet_web_no_vps.md                 # Despliegue administrado con backend cPanel
+└── flet_web_qa_checklist.md           # Checklist QA Web
 ```
 
 ### 1.2 Documentos en la raíz del proyecto
@@ -156,9 +160,35 @@ Los informes dentro de `docs/qa/` son evidencia histórica y no representan el e
 - Fórmulas y 76 valoraciones MySQL verificadas sin diferencias.
 - Integridad referencial `RESTRICT`, duplicados y confirmaciones documentados como resueltos.
 - Responsive dinámico, E2E crítico y PDFs variables/optimizados incorporados.
-- Suite actualizada a 183 pruebas y 3 subpruebas.
+- Suite actualizada a 206 pruebas y 7 subpruebas.
 - Informes QA antiguos etiquetados como históricos y credenciales retiradas.
 - Creado `docs/changelog_documentation.md` como registro independiente.
+
+### 2026-06-22 — Frontend Flet Web y paridad visual
+
+- Añadida especificación Spec Kit específica para Flet Web.
+- Documentados entrada local, fábrica ASGI, variables, CORS, HTTPS y proxy WebSocket.
+- Incorporados checklist QA Web y validación de assets compartidos Android/Web.
+- Dashboard documentado con iconografía Material vectorial en lugar de miniaturas raster.
+- Estado ponderado actualizado a 95% y suite vigente a 206 pruebas y 7 subpruebas.
+
+### 2026-06-29 — Release v1.2.5 y separación Web/Android
+
+- Actualizadas versión, arquitectura, módulos, guía de usuario, pruebas, QA, despliegue y publicación.
+- Documentados CRUD móviles específicos, análisis longitudinal móvil completo y layouts Web independientes.
+- Documentados revelado de contraseña, logout superior y orden institucional de logotipos.
+- Documentada entrega PDF por plataforma y compartir Android mediante `ACTION_SEND`/`FileProvider`.
+- Registrada la exclusión requerida de Imunify360 Bot Protection para la API pública.
+- Generado build Android universal `1.2.5` con `versionCode=12`, firma de pruebas v2 verificada y SHA-256 `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+- Suite final verificada en esa entrega: 227 pruebas y 7 subpruebas aprobadas.
+
+### 2026-06-30 — Release interna v1.2.11 y evaluación integral
+
+- Documentadas la pila Atrás de Android, cierre desde raíz, logout seguro, búsqueda unificada y acciones CRUD móviles.
+- Registrado APK `v1.2.11`, `versionCode=22`, SHA-256 `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
+- Suite vigente: 244 pruebas, 7 subpruebas y cobertura global del 74%.
+- Reforzada la separación visual por plataforma: una página Web estrecha no activa las composiciones exclusivas del APK.
+- Creado `docs/qa/informe_pruebas_integrales_2026-06-30.md` con dictamen: apto para pruebas internas, no aprobado para publicación hasta corregir seguridad y firma.
 
 ---
 

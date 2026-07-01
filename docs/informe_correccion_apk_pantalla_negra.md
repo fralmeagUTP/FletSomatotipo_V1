@@ -1,5 +1,7 @@
 # Informe técnico — Corrección de pantalla negra en Android
 
+> **Documento histórico de incidente.** Describe el APK validado el 21 de junio de 2026. Para ejecución y estado vigentes consulte `README.md`, `docs/quickstart.md` y `docs/estado_funcional.md`.
+
 **Proyecto:** Somatocarta v1.2.1  
 **Fecha:** 21 de junio de 2026  
 **Estado:** Corregido y verificado

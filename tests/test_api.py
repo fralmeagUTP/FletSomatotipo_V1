@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from sqlalchemy.exc import OperationalError
 
 from src.backend.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_token, get_current_user
 from src.backend.database import get_db
@@ -32,6 +33,24 @@ class ApiSecurityTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "Not authenticated")
+
+    def test_login_reports_database_unavailable(self):
+        class UnavailableSession:
+            def query(self, *_):
+                raise OperationalError("SELECT", {}, Exception("database unavailable"))
+
+            def rollback(self):
+                pass
+
+        app.dependency_overrides[get_db] = lambda: UnavailableSession()
+
+        response = self.client.post(
+            "/auth/login",
+            json={"username": "admin", "password": "secret"},
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("base de datos", response.json()["detail"])
 
     def test_access_token_decodes_subject(self):
         token = create_access_token({"sub": "tester", "id": 1})

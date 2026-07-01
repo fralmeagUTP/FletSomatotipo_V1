@@ -1,4 +1,7 @@
+import os
+
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from .database import engine, get_db, Base
@@ -7,6 +10,20 @@ from fastapi.staticfiles import StaticFiles
 from .routers import auth, catalogos, dashboard, deportistas, entidades_deportes, files, somatotipo
 
 app = FastAPI()
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("WEB_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
 # Mount Static Files
 app.mount("/static", StaticFiles(directory="src/backend/static"), name="static")

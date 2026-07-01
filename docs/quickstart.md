@@ -1,7 +1,7 @@
-# Guía rápida de inicio — Somatocarta v1.2.1
+# Guía rápida de inicio — Somatocarta v1.2.12
 
 **Fusionado de:** `EJECUTAR_POWERSHELL.txt` + `comandos.txt`
-**Fecha:** 21 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
@@ -31,6 +31,9 @@ python -m venv .venv
 
 # Terminal 2: Frontend (en otra terminal)
 .\start_frontend.bat
+
+# Alternativa Web
+.\start_web.bat
 ```
 
 ### Opción manual (comandos directos)
@@ -41,6 +44,9 @@ python -m venv .venv
 
 # Frontend
 .\.venv\Scripts\python.exe main.py
+
+# Flet Web
+.\.venv\Scripts\python.exe web_main.py
 ```
 
 ---
@@ -49,7 +55,15 @@ python -m venv .venv
 
 La URL de la API se toma desde la variable `API_URL` en `.env`.
 
-Si no existe, se usa por defecto: `http://127.0.0.1:8085`
+Si no existe, la aplicación usa el backend público `https://nyquist.app/somatocarta`. Para desarrollo local se recomienda definir explícitamente `API_URL=http://127.0.0.1:8085`.
+
+Para Flet Web también se admiten:
+
+```text
+WEB_HOST=0.0.0.0
+WEB_PORT=8550
+WEB_ALLOWED_ORIGINS=http://localhost:8550,http://127.0.0.1:8550
+```
 
 ### Acceder desde otro dispositivo en la red local
 
@@ -74,6 +88,7 @@ API_URL=http://192.168.1.106:8085
 | API raíz | `http://127.0.0.1:8085/` |
 | Documentación Swagger | `http://127.0.0.1:8085/docs` |
 | Health check | `http://127.0.0.1:8085/health` |
+| Flet Web | `http://127.0.0.1:8550/` |
 
 ---
 
@@ -85,7 +100,7 @@ API_URL=http://192.168.1.106:8085
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-Estado esperado: **183 tests y 3 subpruebas pasando**.
+Estado esperado: **244 tests y 7 subpruebas pasando**.
 
 ### Ejecutar con resumen
 
@@ -98,10 +113,10 @@ Estado esperado: **183 tests y 3 subpruebas pasando**.
 ## 6. Build APK (Android)
 
 ```powershell
-.\.venv\Scripts\flet.exe build apk
+.\.venv\Scripts\flet.exe build apk . --project somatocarta --product Somatocarta --org com.nyquist --bundle-id com.nyquist.somatocarta --build-version 1.2.12 --build-number 23
 ```
 
-El archivo queda en: `build\apk\app-release.apk`
+El archivo queda en: `build\apk\Somatocarta.apk`
 
 El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En escritorio, `API_URL` definido en `.env` sigue teniendo prioridad.
 
@@ -110,23 +125,27 @@ El APK no incluye `.env`; por defecto usa `https://nyquist.app/somatocarta`. En 
 El build optimizado usa `requirements-apk.txt` para evitar empaquetar dependencias exclusivas del backend. Artefacto verificado:
 
 ```text
-build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.12.apk
 ```
 
 - Paquete: `com.nyquist.somatocarta`
-- Versión: `1.2.1` (`versionCode=8`)
+- Versión: `1.2.12` (`versionCode=23`)
 - Android mínimo: API 24 (Android 7.0)
-- Arquitectura: ARM64
+- Arquitecturas: `arm64-v8a`, `armeabi-v7a` y `x86_64`
 - Runtime: Flet `0.85.3` y `flet-charts 0.85.3`
 - Firma: debug, válida únicamente para instalación y pruebas internas
 
 Instalación mediante USB con depuración habilitada:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_ARM64_v1.2.1.apk
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\build\apk\INSTALAR_Somatocarta_MOVIL_v1.2.12.apk
 ```
 
-Este APK fue validado directamente en un dispositivo Android 16 con ABI `arm64-v8a`.
+La estructura, firma, manifiesto, versión y arquitecturas del APK fueron verificadas con Android Build Tools 35.0.0.
+
+SHA-256: `EEDEA4C61A194EFD28E1FCA73918BE6EDE1BA71602F534E1405D2B0C587B1341`.
+
+La entrega móvil permite compartir PDF individuales y longitudinales mediante `ft.Share`; Android entrega una URI temporal con MIME `application/pdf` al selector nativo.
 
 Para publicación se debe generar y proteger un keystore de release propio; no distribuir públicamente el APK firmado con certificado debug.
 
@@ -155,3 +174,5 @@ git push origin main --tags
 | Estado funcional vigente | `docs/estado_funcional.md` |
 | Plan de pruebas | `docs/testing_plan.md` |
 | Gobernanza y changelog | `docs/documentation_governance.md`, `docs/changelog_documentation.md` |
+| Despliegue Flet Web | `docs/flet_web_deployment.md` |
+| QA Flet Web | `docs/flet_web_qa_checklist.md` |

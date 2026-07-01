@@ -1,6 +1,84 @@
 # Changelog documental
 
+## 30 de junio de 2026 - Cierre con Atrás desde pantalla raiz v1.2.11
+
+- Corregida la pantalla blanca al pulsar Atrás desde Dashboard o Login.
+- Cuando existe una sola vista, Android cierra explicitamente la ventana de la aplicacion.
+- APK generado e instalado: `v1.2.11`, `versionCode=22`.
+- SHA-256: `97E4359BD28C8D2D9E38990086D4F8FE86BC95BB830FDB0252160A558149FE31`.
+- Sincronizados README, arquitectura, módulos, guías, planes, checklist, especificación y publicación con el informe integral: 236 pruebas, 74% de cobertura y dictamen para uso interno.
+
+## 30 de junio de 2026 - Correccion de cierre de sesion v1.2.10
+
+- Corregido el logout despues de habilitar la pila nativa de vistas.
+- El cierre de sesion elimina rutas protegidas y reemplaza la pila completa por la vista raiz `/login`.
+- APK generado e instalado: `v1.2.10`, `versionCode=21`.
+- SHA-256: `9D8B325807BA4D4663D86A153875AA838FC746ACBCCA9716BEAE668B7AD78974`.
+
+## 30 de junio de 2026 - Navegacion Atrás Android v1.2.9
+
+- Implementada una pila nativa de vistas Flet para todas las rutas principales.
+- El boton Atrás de Android restaura la pantalla anterior y su comportamiento responsive.
+- En historial, Atrás cierra primero el detalle; en el formulario movil de deportistas retrocede paso a paso.
+- APK final generado e instalado: `v1.2.9`, `versionCode=20`.
+- SHA-256: `A1B805425BAC461B71640835C7D35979A3623BD7244111E6B2376970FE273FA5`.
+- La pila se verifico con pruebas automatizadas; MIUI bloqueo la inyeccion USB de `KEYCODE_BACK` al no estar habilitada Depuracion USB (ajustes de seguridad).
+
+## 30 de junio de 2026 - Acciones CRUD moviles v1.2.8
+
+- Ubicado el boton de creacion inmediatamente despues de la busqueda en deportistas, deportes, entidades y asignaciones.
+- Eliminada la accion fija inferior de deportes, entidades y asignaciones.
+- APK generado e instalado: `v1.2.8`, `versionCode=17`.
+- SHA-256: `7A143204B1C33E891EA2A8FBEC6DE4361B6ED018352B654DC86DBDC2409112F5`.
+
+## 30 de junio de 2026 - Busqueda movil unificada v1.2.7
+
+- Unificado el campo de busqueda movil en deportistas, deportes, entidades, asignaciones, historial, analisis longitudinal y valoracion corporal.
+- Estandarizados altura, borde, radio, tipografia, foco azul y lupa interna accionable.
+- Eliminados los botones de busqueda externos duplicados; Enter y la lupa ejecutan el mismo flujo.
+- APK generado e instalado: `v1.2.7`, `versionCode=16`.
+- SHA-256: `B0D542A214255E8DBE27323668A52EE7608AF8AB61CFF7E2084D39B1FBCB1522`.
+
+## 30 de junio de 2026 - Correccion de compartir PDF v1.2.6
+
+- Estandarizado el boton PDF de historial corporal y analisis longitudinal mediante un componente compartido.
+- Sustituido el comando Android `am` por el servicio nativo `ft.Share` y `ShareFile.from_bytes` con MIME `application/pdf`.
+- Eliminada la dependencia de permisos de almacenamiento para compartir reportes desde Android.
+- Flujo verificado por USB en un Xiaomi `22101316UG`: Android recibio `ACTION_SEND`, MIME `application/pdf`, URI temporal y mostro WhatsApp, Acrobat e impresion.
+- APK final: `v1.2.6`, `versionCode=15`.
+- SHA-256 del APK final: `37FE3317D10F41D114362DAE9FFBAE07E6DE6CD446E35B813A0D4C5F4C80074C`.
+
+## 29 de junio de 2026 — Release v1.2.5
+
+- Separadas las composiciones visuales Web y Android sin duplicar reglas de negocio.
+- Rediseñado CRUD móvil de deportistas (cuatro pasos), deportes, entidades y asignaciones.
+- Corregidos nombres y datos completos del deportista en asignaciones.
+- Restaurado todo el contenido longitudinal en móvil con secciones adaptadas.
+- Habilitados mostrar/ocultar contraseña y cierre de sesión desde el encabezado móvil.
+- Normalizado el orden de logotipos: UTP, ISC, Programa de Deportes y Nyquist.
+- Añadido compartir PDF individual y longitudinal mediante selector Android, `ACTION_SEND` y `FileProvider`.
+- Mejorado login backend con respuesta 503 controlada ante indisponibilidad SQL.
+- Documentada la incompatibilidad de Imunify360 Bot Protection con clientes API nativos.
+- APK generado: `INSTALAR_Somatocarta_MOVIL_v1.2.5.apk`, `versionCode=12`, API 24+, arquitecturas `arm64-v8a`, `armeabi-v7a` y `x86_64`.
+- Firma de pruebas Android v2 verificada y SHA-256 `68AFB85A48A6475653F3A0D55A90F97936BF283953A2BD597538DBE7A4E38B8F`.
+- Suite final: 227 pruebas y 7 subpruebas aprobadas.
+
 Este archivo registra cambios que afectan el estado, alcance o interpretación de la documentación de Somatocarta.
+
+## 22 de junio de 2026 — Primera versión Flet Web
+
+- Añadida especificación Spec Kit en `docs/specs/flet_web/`.
+- Añadidos `web_main.py` y `start_web.bat` reutilizando la entrada, vistas, tema, activos y `ApiClient` existentes.
+- Añadida fábrica ASGI para despliegue web sin interfaz gráfica.
+- Fijada la dependencia `flet-web==0.85.3` para mantener compatibilidad con Flet.
+- Añadida configuración de host, puerto y orígenes CORS mediante variables de entorno.
+- Adaptadas las descargas PDF para navegador sin cambiar el guardado nativo de Android/escritorio.
+- Añadidas guía de despliegue, checklist QA web y pruebas automatizadas de arranque HTTP.
+- Corregidas las rutas absolutas de Login, Dashboard y Acerca para servir en Web los mismos assets de Android.
+- Verificados todos los recursos de `assets/` desde ASGI y el login responsive real en Chrome a 390 × 844 px.
+- Sustituidas las miniaturas PNG del Dashboard por iconos Material vectoriales uniformes, legibles en Web y Android.
+- Sincronizados README, arquitectura, módulos, guía de usuario, quickstart, publicación, uploads, planes y checklists con el estado funcional del 95% y 206 pruebas aprobadas.
+- Añadida configuración sin VPS mediante Render, dependencias Web separadas y dominio recomendado `somatocarta.nyquist.app`, conservando FastAPI/MySQL en cPanel.
 
 ## 22 de junio de 2026 — Release v1.2.1
 
@@ -91,3 +169,9 @@ Los archivos de `docs/qa/` conservan resultados de sesiones anteriores. Se etiqu
 - Consolidación inicial de documentos redundantes.
 - Organización de especificaciones en `docs/specs/` e informes en `docs/qa/`.
 - Creación de la arquitectura, guía rápida y gobernanza documental iniciales.
+# 1 de julio de 2026 - Layout Android independiente v1.2.12
+
+- El APK conserva el diseño móvil en celulares y tabletas, sin activar componentes de la versión web por el ancho de pantalla.
+- El ancho disponible se usa solamente para adaptar espaciados y distribución interna.
+- Se unificó la detección de layout en login, shell y módulos funcionales.
+- Validación automatizada: `249 passed`.

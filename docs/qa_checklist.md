@@ -1,6 +1,6 @@
-# Checklist de evaluación QA — Somatocarta v1.2.1
+# Checklist de evaluación QA — Somatocarta v1.2.11
 
-**Fecha:** 21 de junio de 2026
+**Fecha:** 30 de junio de 2026
 
 ---
 
@@ -22,6 +22,8 @@ Marque cada ítem con:
 | 1.2 | Login con usuario incorrecto retorna 401 | ✅ | |
 | 1.3 | Login con contraseña incorrecta retorna 401 | ✅ | |
 | 1.4 | Login con campos vacíos retorna error | ✅ | |
+| 1.5 | El icono de ojo alterna visibilidad de contraseña | ✅ | Cubierto por prueba de configuración Flet |
+| 1.6 | El icono superior móvil cierra sesión | ✅ | Callback conectado al flujo central de logout |
 | 1.5 | Endpoints protegidos sin token retornan 401 | ✅ | |
 | 1.6 | Token inválido retorna 401 | ✅ | |
 | 1.7 | Cerrar sesión limpia el token | ✅ | |
@@ -36,7 +38,7 @@ Marque cada ítem con:
 | 2.3 | Muestra total de deportes | ✅ | |
 | 2.4 | Muestra total de entidades | ✅ | |
 | 2.5 | Muestra total de asignaciones | ✅ | |
-| 2.6 | Muestra actividad reciente | ⚠️ | No siempre refleja las más nuevas |
+| 2.6 | Accesos rápidos usan iconos vectoriales legibles | ✅ | Iconos Material compartidos por Web y Android |
 | 2.7 | Muestra estado del contrato de vista SQL | ✅ | |
 | 2.8 | Navegación a módulos funciona | ✅ | |
 
@@ -148,15 +150,19 @@ Marque cada ítem con:
 | 10.6 | PDF longitudinal es válido | ✅ | |
 | 10.7 | PDF longitudinal contiene datos correctos | ✅ | |
 | 10.8 | PDFs varían entre deportistas | ✅ | Identidad, métricas y bytes comparados automáticamente |
+| 10.9 | Android comparte PDF con aplicaciones instaladas | ✅ | `ft.Share`, URI temporal y MIME PDF verificados en dispositivo |
 
 ## 11. Responsive
 
 | # | Criterio | Estado | Observaciones |
 |---|----------|--------|---------------|
-| 11.1 | Login en móvil | 🔲 | No evaluado visualmente |
-| 11.2 | Dashboard en móvil | 🔲 | No evaluado visualmente |
+| 11.1 | Login en navegador móvil | ✅ | Validado en Chrome a 390 × 844 px con assets completos |
+| 11.2 | Dashboard en móvil | ✅ | Validado en Xiaomi Android 14 |
 | 11.3 | Historial master-detail en escritorio | 🔲 | No evaluado visualmente |
-| 11.4 | Historial toggle en móvil | 🔲 | No evaluado visualmente |
+| 11.4 | Historial toggle en móvil | ✅ | Layout y retorno local cubiertos; campaña visual exhaustiva pendiente |
+| 11.5 | CRUD móvil usa layouts independientes de Web | ✅ | Deportistas, deportes, entidades y asignaciones cubiertos |
+| 11.6 | Longitudinal móvil conserva todos los bloques del análisis | ✅ | Prueba estructural específica |
+| 11.7 | Web estrecha no carga composiciones exclusivas del APK | ✅ | Selección por `page.web` y prueba automatizada |
 | 11.5 | Sin scroll horizontal no deseado | 🔲 | No evaluado visualmente |
 
 ## 12. Seguridad
@@ -164,35 +170,28 @@ Marque cada ítem con:
 | # | Criterio | Estado | Observaciones |
 |---|----------|--------|---------------|
 | 12.1 | Contraseñas en texto plano | ❌ | Riesgo de seguridad |
-| 12.2 | SECRET_KEY configurable por .env | ✅ | |
+| 12.2 | SECRET_KEY obligatoria y segura | ❌ | Existe un valor por defecto inseguro |
 | 12.3 | Token JWT con expiración | ✅ | 30 min por defecto, configurable por entorno |
 | 12.4 | Auditoría de operaciones CRUD | ✅ | |
 | 12.5 | Control de roles y permisos | ❌ | No implementado |
-| 12.6 | CORS configurado | ❌ | No configurado explícitamente |
+| 12.6 | CORS configurable por entorno | ✅ | Origen permitido aceptado y origen externo rechazado en producción |
+| 12.7 | Limitación de intentos de login | ❌ | No implementada |
+| 12.8 | Firma APK de release | ❌ | El APK vigente usa certificado debug |
+| 12.9 | Cabeceras HTTP defensivas | ❌ | HSTS, nosniff, frame y referrer ausentes |
 
 ---
 
-## Resumen
+## Resumen vigente
 
-| Categoría | Total | Pass | Fail | Parcial | No evaluado |
-|-----------|-------|------|------|---------|-------------|
-| Autenticación | 8 | 8 | 0 | 0 | 0 |
-| Dashboard | 8 | 7 | 0 | 1 | 0 |
-| CRUD Deportistas | 14 | 14 | 0 | 0 | 0 |
-| CRUD Entidades | 7 | 7 | 0 | 0 | 0 |
-| CRUD Deportes | 7 | 7 | 0 | 0 | 0 |
-| CRUD Asignaciones | 6 | 6 | 0 | 0 | 0 |
-| Valoración Corporal | 11 | 11 | 0 | 0 | 0 |
-| Análisis Individual | 10 | 10 | 0 | 0 | 0 |
-| Análisis Longitudinal | 6 | 6 | 0 | 0 | 0 |
-| Informes PDF | 8 | 8 | 0 | 0 | 0 |
-| Responsive | 5 | 0 | 0 | 0 | 5 |
-| Seguridad | 6 | 3 | 3 | 0 | 0 |
-| **Total** | **96** | **87** | **3** | **1** | **5** |
-
-**Tasa de aprobación:** 90.6% (87/96)
-**Tasa de fallo:** 3.1% (3/96)
+| Evidencia | Resultado |
+|---|---|
+| Suite automatizada | 244 pruebas y 7 subpruebas aprobadas |
+| Cobertura | 74% global; Historial 6% y Dashboard 18% requieren refuerzo |
+| API productiva | Health, autenticación, lecturas y dos PDF aprobados |
+| Android real | Instalación, arranque, login, Dashboard, logout, Atrás desde raíz y compartir PDF aprobados |
+| Seguridad | 3 controles aprobados y 6 hallazgos pendientes |
+| Publicación | Apta para pruebas internas; no aprobada para distribución pública |
 
 ---
 
-*Checklist actualizado el 21 de junio de 2026. Las pruebas responsive requieren evaluación visual manual. El porcentaje funcional ponderado se documenta en `docs/estado_funcional.md`.*
+*Checklist actualizado el 30 de junio de 2026. El detalle y las prioridades están en `docs/qa/informe_pruebas_integrales_2026-06-30.md`.*

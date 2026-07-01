@@ -10,6 +10,7 @@ LOGO_CDR = "Logo_CDR_60px.jpg"
 LOGO_ISC = "Logo_ISC_60px.jpg"
 LOGO_UTP = "Logo_UTP_60px.jpg"
 LOGO_NYQUIST = "Logo_Nyquist_60px.jpg"
+INSTITUTIONAL_LOGOS = (LOGO_UTP, LOGO_ISC, LOGO_CDR, LOGO_NYQUIST)
 
 MODULE_IMAGES = {
     "deportistas": "Deportistas.png",
@@ -35,3 +36,9 @@ def asset_path(filename: str) -> str:
     if candidate.exists():
         return str(candidate)
     return filename
+
+
+def asset_src(page, filename: str) -> str:
+    if bool(getattr(page, "web", False)):
+        return filename
+    return asset_path(filename)

@@ -1,6 +1,6 @@
-# Arquitectura de Somatocarta v1.2.1
+# Arquitectura de Somatocarta v1.2.11
 
-**Fecha de actualización:** 21 de junio de 2026
+**Fecha de actualización:** 30 de junio de 2026
 
 ---
 
@@ -8,13 +8,26 @@
 
 Somatocarta es una aplicación Flet + FastAPI para gestionar deportistas, registrar valoraciones antropométricas, consultar historial de somatotipo, generar análisis individuales y longitudinales, y producir informes PDF. Forma parte de SINVADE (Sistema Integral de Valoración Deportiva).
 
+## Cambios arquitectónicos v1.2.11
+
+- El APK Android selecciona siempre el layout móvil, independientemente del ancho lógico del celular o la tableta. Los breakpoints se reservan para ajustar espaciado y distribución interna; la versión web conserva su layout independiente.
+
+- `main.py` sigue siendo la entrada compartida, pero las vistas seleccionan composiciones específicas mediante `is_mobile`; Android no renderiza forzosamente los paneles Web.
+- `app_shell.py` mantiene sidebar en escritorio/Web y encabezado, menú y navegación inferior en móvil. `uses_mobile_app_layout()` exige una página nativa y un ancho móvil: una página Web estrecha continúa usando la composición Web. El cierre de sesión superior invoca el mismo flujo centralizado que el menú.
+- `runtime.py` diferencia tres entregas de PDF: guardado del navegador Web, apertura nativa de escritorio y compartir Android mediante `ft.Share` con bytes y MIME `application/pdf`.
+- `navigation.py` mantiene una pila de `ft.View`: Atrás restaura la vista anterior, los flujos internos registran manejadores locales y la vista raíz cierra la actividad.
+- Deportistas usa un formulario móvil de cuatro pasos. Deportes, entidades y asignaciones usan listas compactas y formularios exclusivos para móvil.
+- El listado de asignaciones incorpora nombres descriptivos de deportista, deporte y entidad sin eliminar sus identificadores contractuales.
+- La indisponibilidad SQL durante login se traduce a HTTP 503 con mensaje controlado.
+
 ## Estructura principal
 
 ```text
-main.py                         # Entrada del frontend Flet (v1.2.1)
+main.py                         # Entrada del frontend Flet (v1.2.11)
+web_main.py                     # Entrada y fábrica ASGI de Flet Web
 app_config.py                   # Configuración compartida del frontend
 views/                          # Pantallas Flet (9 vistas)
-  dashboard.py                  # Dashboard con métricas y actividad reciente
+  dashboard.py                  # Dashboard con métricas y accesos rápidos
   deportistas.py                # CRUD de deportistas
   valoracion.py                 # Captura de valoración corporal
   historial.py                  # Análisis individual de valoración
@@ -31,12 +44,13 @@ src/frontend/                   # Cliente API, navegación, tema y helpers UI
   components.py                 # Componentes UI reutilizables
   form_helpers.py               # Construcción de payloads
   table_builders.py             # Filas y agrupación de tablas
-  assets.py                     # Rutas de imágenes
+  assets.py                     # Inventario y resolución Web/nativa de imágenes
   somatocarta.py                # Calibración y render de somatocarta
   composition_analysis.py       # Análisis de composición corporal
   longitudinal_analysis.py      # Análisis temporal
   interpretation.py             # Notas metodológicas
   formatters.py                 # Formateo de valores
+  runtime.py                    # Diferencias controladas de archivos Web/nativo
 src/backend/main.py             # Entrada FastAPI (7 routers)
 src/backend/routers/            # Capa HTTP/API
   auth.py                       # Autenticación (login, JWT)
@@ -64,7 +78,7 @@ src/backend/database.py         # Configuración de conexión MySQL
 src/backend/auth_utils.py       # JWT, verificación de contraseña, get_current_user
 src/backend/audit.py            # Sistema de auditoría (DB + archivo log)
 src/anthropometry.py            # Reglas de validación de mediciones
-tests/                          # 183 pruebas en 27 archivos
+tests/                          # 244 pruebas en 37 archivos
 scripts/                        # Migraciones, inspección y verificación MySQL
 ```
 
@@ -74,9 +88,11 @@ scripts/                        # Migraciones, inspección y verificación MySQL
 2. `ApiClient.login()` autentica contra `/auth/login`.
 3. La sesión guarda `access_token`, `username`, `login_user` y `user_id`.
 4. `navigation.py` redirige al dashboard.
-5. `app_shell.py` alterna dinámicamente sidebar (desktop) y menú hamburguesa (móvil) al cambiar el ancho, con búsqueda global.
+5. `app_shell.py` selecciona por plataforma y ancho: Web conserva el shell Web y Android nativo usa menú hamburguesa y navegación inferior en ancho móvil.
 6. Las vistas usan `ApiClient` para consumir backend.
 7. Componentes reutilizables en `components.py`, `theme.py`, `form_helpers.py`, `table_builders.py`.
+8. `web_main.py` reutiliza la misma función `main` y expone `create_web_app()` para despliegue ASGI.
+9. `asset_src()` entrega nombres públicos en Web y rutas locales en nativo; los controles visuales son compartidos.
 
 ## Flujo backend
 
@@ -86,6 +102,7 @@ scripts/                        # Migraciones, inspección y verificación MySQL
 4. Los servicios usan modelos SQLAlchemy y controlan `commit()` / `rollback()`.
 5. Las rutas privadas usan `Depends(get_current_user)`.
 6. `audit.py` registra operaciones en `CDRTablaAuditoria` y `audit.log`.
+7. `WEB_ALLOWED_ORIGINS` habilita CORS solo para los orígenes declarados por ambiente.
 
 ## Endpoints principales
 
@@ -182,7 +199,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 
 ## Pruebas
 
-183 tests y 3 subpruebas en 27 archivos. Comando:
+244 tests y 7 subpruebas en 37 archivos, con cobertura global medida del 74%. Comando:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v
@@ -197,7 +214,7 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 - Los schemas Pydantic viven fuera de routers para mantener separación de capas.
 - Los cálculos clínicos viven en la vista SQL.
 - Las relaciones críticas usan política `RESTRICT`; la API responde HTTP 409 cuando existen dependencias.
-- Las contraseñas están en texto plano por compatibilidad con base de datos heredada.
+- Las contraseñas siguen en texto plano por compatibilidad heredada; es un bloqueante de publicación, no una decisión objetivo.
 - El despliegue en cPanel usa `passenger_wsgi.py` con `a2wsgi`.
 
 ## Pendientes recomendados
@@ -205,8 +222,10 @@ Operaciones auditadas: login (éxito/fallo), CRUD de deportistas, operaciones de
 - Validar clínicamente la definición SQL de `CDRVistaValoracionCorporal`.
 - Aplicar las migraciones `002`, `003` y `004` únicamente en bases adicionales o restauradas; la base activa ya está migrada y verificada.
 - Migrar contraseñas a hash seguro.
-- Añadir control de roles y permisos y definir CORS por ambiente.
-- Completar pruebas E2E visuales responsive.
+- Eliminar la clave JWT por defecto, exigir `SECRET_KEY` fuerte y limitar intentos de login.
+- Añadir control de roles/permisos, cabeceras HTTP defensivas y CORS por ambiente.
+- Firmar con keystore de release y reducir el APK de aproximadamente 330 MB.
+- Elevar cobertura de Historial (6%) y Dashboard (18%); completar pruebas visuales tablet/escritorio.
 - Añadir migraciones de base de datos con Alembic.
 - Limpiar binarios/backups antes de publicar.
 
